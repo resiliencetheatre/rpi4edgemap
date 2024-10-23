@@ -5,7 +5,7 @@ After=multi-user.target
 [Service]
 WorkingDirectory=/opt/edgemap
 KillMode=process
-ExecStart=gwsocket -p 8997 --pipein=/tmp/reticulumstatusin --ssl-cert=/etc/apache2/edgemap.crt --ssl-key=/etc/apache2/edgemap.key
+ExecStart=gwsocket -p 8997 --pipeout=/tmp/reticulumcontrol --pipein=/tmp/reticulumstatusin --ssl-cert=/etc/apache2/edgemap.crt --ssl-key=/etc/apache2/edgemap.key
 Restart=always
 RestartSec=1
 TimeoutStartSec=5

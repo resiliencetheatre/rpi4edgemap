@@ -799,7 +799,14 @@ var v3compat = (v4) => (requestParameters, arg2) => {
   return { cancel: () => abortController.abort() };
 };
 var Protocol = class {
-  constructor() {
+  /**
+   * Initialize the MapLibre PMTiles protocol.
+   *
+   * * metadata: also load the metadata section of the PMTiles. required for some "inspect" functionality
+   * and to automatically populate the map attribution. Requires an extra HTTP request.
+   */
+  constructor(options) {
+    /** @hidden */
     this.tilev4 = (params, abortController) => __async(this, null, function* () {
       if (params.type === "json") {
         const pmtilesUrl2 = params.url.substr(10);
@@ -807,6 +814,11 @@ var Protocol = class {
         if (!instance2) {
           instance2 = new PMTiles(pmtilesUrl2);
           this.tiles.set(pmtilesUrl2, instance2);
+        }
+        if (this.metadata) {
+          return {
+            data: yield instance2.getTileJson(params.url)
+          };
         }
         const h = yield instance2.getHeader();
         return {
@@ -848,10 +860,20 @@ var Protocol = class {
     });
     this.tile = v3compat(this.tilev4);
     this.tiles = /* @__PURE__ */ new Map();
+    this.metadata = (options == null ? void 0 : options.metadata) || false;
   }
+  /**
+   * Add a {@link PMTiles} instance to the global protocol instance.
+   *
+   * For remote fetch sources, references in MapLibre styles like pmtiles://http://...
+   * will resolve to the same instance if the URLs match.
+   */
   add(p) {
     this.tiles.set(p.source.getKey(), p);
   }
+  /**
+   * Fetch a {@link PMTiles} instance by URL, for remote PMTiles instances.
+   */
   get(url) {
     return this.tiles.get(url);
   }
@@ -1043,6 +1065,19 @@ var TileType = /* @__PURE__ */ ((TileType2) => {
   TileType2[TileType2["Avif"] = 5] = "Avif";
   return TileType2;
 })(TileType || {});
+function tileTypeExt(t) {
+  if (t === 1 /* Mvt */)
+    return ".mvt";
+  if (t === 2 /* Png */)
+    return ".png";
+  if (t === 3 /* Jpeg */)
+    return ".jpg";
+  if (t === 4 /* Webp */)
+    return ".webp";
+  if (t === 5 /* Avif */)
+    return ".avif";
+  return "";
+}
 var HEADER_SIZE_BYTES = 127;
 function findTile(entries, tileId) {
   let m = 0;
@@ -1088,10 +1123,23 @@ var FetchSource = class {
     this.url = url;
     this.customHeaders = customHeaders;
     this.mustReload = false;
+    let userAgent = "";
+    if ("navigator" in globalThis) {
+      userAgent = globalThis.navigator.userAgent || "";
+    }
+    const isWindows = userAgent.indexOf("Windows") > -1;
+    const isChromiumBased = /Chrome|Chromium|Edg|OPR|Brave/.test(userAgent);
+    this.chromeWindowsNoCache = false;
+    if (isWindows && isChromiumBased) {
+      this.chromeWindowsNoCache = true;
+    }
   }
   getKey() {
     return this.url;
   }
+  /**
+   * Mutate the custom [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) set for all requests to the remote archive.
+   */
   setHeaders(customHeaders) {
     this.customHeaders = customHeaders;
   }
@@ -1110,6 +1158,8 @@ var FetchSource = class {
       let cache;
       if (this.mustReload) {
         cache = "reload";
+      } else if (this.chromeWindowsNoCache) {
+        cache = "no-store";
       }
       let resp = yield fetch(this.url, {
         signal,
@@ -1136,7 +1186,9 @@ var FetchSource = class {
       }
       if (resp.status === 416 || etag && newEtag && newEtag !== etag) {
         this.mustReload = true;
-        throw new EtagMismatch(etag);
+        throw new EtagMismatch(
+          `Server returned non-matching ETag ${etag} after one retry. Check browser extensions and servers for issues that may affect correct ETag headers.`
+        );
       }
       if (resp.status >= 300) {
         throw Error(`Bad response code: ${resp.status}`);
@@ -1560,7 +1612,7 @@ var PMTiles = class {
     });
   }
   /**
-   * Primary method to get a single tile bytes from an archive.
+   * Primary method to get a single tile's bytes from an archive.
    *
    * Returns undefined if the tile does not exist in the archive.
    */
@@ -1611,6 +1663,35 @@ var PMTiles = class {
       }
     });
   }
+  /**
+   * Construct a [TileJSON](https://github.com/mapbox/tilejson-spec) object.
+   *
+   * baseTilesUrl is the desired tiles URL, excluding the suffix `/{z}/{x}/{y}.{ext}`.
+   * For example, if the desired URL is `http://example.com/tileset/{z}/{x}/{y}.mvt`,
+   * the baseTilesUrl should be `https://example.com/tileset`.
+   */
+  getTileJson(baseTilesUrl) {
+    return __async(this, null, function* () {
+      const header = yield this.getHeader();
+      const metadata = yield this.getMetadata();
+      const ext = tileTypeExt(header.tileType);
+      return {
+        tilejson: "3.0.0",
+        scheme: "xyz",
+        tiles: [`${baseTilesUrl}/{z}/{x}/{y}${ext}`],
+        // biome-ignore lint: TileJSON spec
+        vector_layers: metadata.vector_layers,
+        attribution: metadata.attribution,
+        description: metadata.description,
+        name: metadata.name,
+        version: metadata.version,
+        bounds: [header.minLon, header.minLat, header.maxLon, header.maxLat],
+        center: [header.centerLon, header.centerLat, header.centerZoom],
+        minzoom: header.minZoom,
+        maxzoom: header.maxZoom
+      };
+    });
+  }
 };
 export {
   Compression,
@@ -1628,5 +1709,6 @@ export {
   leafletRasterLayer,
   readVarint,
   tileIdToZxy,
+  tileTypeExt,
   zxyToTileId
 };

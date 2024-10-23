@@ -87,6 +87,7 @@
     <svg id="svg-icon-poweroff" xmlns="http://www.w3.org/2000/svg" width="2" height="2" viewBox="0 0 24 24"><path fill="#FF0" d="m16.56 5.44l-1.45 1.45A5.97 5.97 0 0 1 18 12a6 6 0 0 1-6 6a6 6 0 0 1-6-6c0-2.17 1.16-4.06 2.88-5.12L7.44 5.44A7.96 7.96 0 0 0 4 12a8 8 0 0 0 8 8a8 8 0 0 0 8-8c0-2.72-1.36-5.12-3.44-6.56M13 3h-2v10h2"/></svg>
     
     <div id="map"></div>
+    
     <pre id="features"></pre>
     <pre id="coordinates" class="coordinates"></pre>
     
@@ -138,7 +139,7 @@
                 <svg id="meshtasticStatusRed"   >
                   <use href="#svg-icon-meshtastic-red-topbar"></use>
                 </svg>
-                <svg id="reticulumStatus"  >
+                <svg id="reticulumStatus" onClick="sendReticulumControlMessage('announce');" >
                   <use href="#svg-icon-reticulum-topbar"></use>
                 </svg>
                 <svg id="reticulumStatusRed"  >
@@ -163,6 +164,8 @@
         </table>
     </center>
     </div>
+    
+    
     
     <div class="map-top-callsign-overlay">
         <center>
@@ -286,6 +289,7 @@
 
     <div class="delivery-status" id="delivery-status-window">	
     <div id="logo" class="toprightlogoreticulumblock"><img src="img/rnsg.png" width=40px; ></img></div>
+    <div id="delivery_status_header"></div>
     <div id="delivery_status"></div>
     </div>
 
@@ -450,14 +454,14 @@
       container: 'map',
       zoom: 1,
       minZoom: 1,
+      maxPitch: 85,
+      hash: true,
       style: "styles/style.json"
     });
     
-    const edgemapUiVersion = "v0.72";
+    const edgemapUiVersion = "v0.73";
     var intialZoomLevel=1;
 	var symbolSize = 30;
-    
-
     
     // geojson url
     var geojsonUrl = 'meshtastic_geojson.php?linkline=1';
@@ -571,6 +575,18 @@
     // Manual location globals
     var manualLocationCreateInProgress=0;
 
+    // Set sky as you like
+    function setSkyFromUi() {
+        map.setSky({
+            'sky-color': "#0f0881",
+            'sky-horizon-blend': 0.16,
+            'horizon-color': "#ed333b",
+            'horizon-fog-blend': 0.58,
+            'fog-color': "#9a9996",
+            'fog-ground-blend': 0.65
+        });
+    }
+
     // Create marker from messaging window
 	function createNewDragableMarker() {
 		newDragableMarker();
@@ -586,6 +602,10 @@
     //
     var reticulumMsgSocket;
     var reticulumMsgSocketConnected=false;
+    
+    var reticulumStatusSocket;
+    var reticulumStatusSocketConnected=false;
+    
     var meshtasticMsgSocket;
     var meshtasticMsgSocketConnected=false;
     
@@ -1128,8 +1148,16 @@
         console.log("Send message debug: ", getElementItem('#myCallSign').value);
         var msgPayload = getElementItem('#myCallSign').value + '|' + getElementItem('#msgInput').value + '\n';
         console.log("Send message msgPayload: ", msgPayload);
+        
         // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
         // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+        
+        document.getElementById("delivery_status").innerHTML = ""
+        fadeIn(deliveryStatusDiv,400);
+        // fireup timeout for fadeout
+        window.setInterval(function () {
+        fadeOut(deliveryStatusDiv,1000);
+        }, 10000 );
         
         sendRetiCulumAndMeshtasticMessage( msgPayload );
         
@@ -1158,24 +1186,6 @@
             }
         }
     };
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     
     // 
@@ -1279,17 +1289,20 @@
         // Menubar icon
         document.getElementById('reticulumStatus').style="display:block; padding-top:5px;"; 
         document.getElementById('reticulumStatusRed').style="display:none;";
+        reticulumStatusSocketConnected=true;
         // document.getElementById('reticulumButton').style="display:block;";
         // fadeOut(reticulumNotifyDotDiv,50);
     };
     reticulumStatusSocket.onclose = function(event) {
         document.getElementById('reticulumStatusRed').style="display:block; padding-top:5px;";
         document.getElementById('reticulumStatus').style="display:none;";
+        reticulumStatusSocketConnected=false;
     };
     
     reticulumStatusSocket.onmessage = function(event) {
         var incomingMessage = event.data;
         var trimmedString = incomingMessage.substring(0, 80);
+        // console.log("DEBUG: ", trimmedString)
         const nodeArray = trimmedString.split(",");
         // reticulumnode,[callsign],[timestamp],[hash]
         if ( nodeArray[0] === "reticulumnode" )
@@ -1300,6 +1313,20 @@
         fadeIn(reticulumNotifyDotDiv,200);
         if ( ! isHidden(reticulumListblockDiv) ) {
             fadeOut(reticulumNotifyDotDiv,10000);
+        }
+        // announcereceived,[callsign],[hash]
+        if ( nodeArray[0] === "announcereceived" ) {
+            notifyMessage("Announce from " + nodeArray[1], 5000);
+        }
+        // message-ack,[callsign]
+        if ( nodeArray[0] === "message-ack" ) {
+            delivery_ack_node = nodeArray[1];
+            document.getElementById("delivery_status_header").innerHTML = "Delivery acknowledge from:";
+            document.getElementById("delivery_status").innerHTML += "<span style='color:#0F0;'> "+delivery_ack_node+"</span>";  
+        }
+        if ( nodeArray[0] === "client_count" ) { 
+            clients_connected = nodeArray[1];
+            notifyMessage("Clients connected: " + clients_connected, 5000);
         }
     };
     
@@ -1539,8 +1566,13 @@
             showTails();
         }
         console.log("Map loaded.");
+        map.setTerrain(null);
         loadCallSign();
+        sendReticulumControlMessage('clients_connected');
         mapLoaded = true;
+        setSkyFromUi();
+        
+        
     });
     
     // 

@@ -54,6 +54,7 @@ export declare enum TileType {
     Webp = 4,
     Avif = 5
 }
+export declare function tileTypeExt(t: TileType): string;
 /**
  * PMTiles v3 header storing basic archive-level information.
  */
@@ -120,13 +121,26 @@ export declare class FileSource implements Source {
  *
  * This method does not send conditional request headers If-Match because of CORS.
  * Instead, it detects ETag mismatches via the response ETag or the 416 response code.
+ *
+ * This also works around browser and storage-specific edge cases.
  */
 export declare class FetchSource implements Source {
     url: string;
+    /**
+     * A [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) object, specfying custom [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) set for all requests to the remote archive.
+     *
+     * This should be used instead of maplibre's [transformRequest](https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#example) for PMTiles archives.
+     */
     customHeaders: Headers;
+    /** @hidden */
     mustReload: boolean;
+    /** @hidden */
+    chromeWindowsNoCache: boolean;
     constructor(url: string, customHeaders?: Headers);
     getKey(): string;
+    /**
+     * Mutate the custom [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) set for all requests to the remote archive.
+     */
     setHeaders(customHeaders: Headers): void;
     getBytes(offset: number, length: number, passedSignal?: AbortSignal, etag?: string): Promise<RangeResponse>;
 }
@@ -218,7 +232,7 @@ export declare class PMTiles {
     /** @hidden */
     getZxyAttempt(z: number, x: number, y: number, signal?: AbortSignal): Promise<RangeResponse | undefined>;
     /**
-     * Primary method to get a single tile bytes from an archive.
+     * Primary method to get a single tile's bytes from an archive.
      *
      * Returns undefined if the tile does not exist in the archive.
      */
@@ -229,4 +243,12 @@ export declare class PMTiles {
      * Return the arbitrary JSON metadata of the archive.
      */
     getMetadata(): Promise<unknown>;
+    /**
+     * Construct a [TileJSON](https://github.com/mapbox/tilejson-spec) object.
+     *
+     * baseTilesUrl is the desired tiles URL, excluding the suffix `/{z}/{x}/{y}.{ext}`.
+     * For example, if the desired URL is `http://example.com/tileset/{z}/{x}/{y}.mvt`,
+     * the baseTilesUrl should be `https://example.com/tileset`.
+     */
+    getTileJson(baseTilesUrl: string): Promise<unknown>;
 }

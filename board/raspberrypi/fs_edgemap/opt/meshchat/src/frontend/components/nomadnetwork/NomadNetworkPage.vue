@@ -9,7 +9,7 @@
     <div class="flex flex-col flex-1 overflow-hidden min-w-full sm:min-w-[500px]">
 
         <!-- node -->
-        <div v-if="selectedNode" class="m-2 flex flex-col h-full border rounded-xl bg-white shadow overflow-hidden">
+        <div v-if="selectedNode" class="flex flex-col h-full bg-white overflow-hidden sm:m-2 sm:border sm:rounded-xl sm:shadow">
 
             <!-- header -->
             <div class="flex p-2 border-b border-gray-300">
@@ -107,9 +107,9 @@
 <script>
 
 import DialogUtils from "../../js/DialogUtils";
-import Utils from "../../js/Utils";
 import WebSocketConnection from "../../js/WebSocketConnection";
 import NomadNetworkSidebar from "./NomadNetworkSidebar.vue";
+import GlobalEmitter from "../../js/GlobalEmitter";
 
 export default {
     name: 'NomadNetworkPage',
@@ -319,9 +319,13 @@ export default {
                     return;
                 }
 
+                // check if page url ends with .mu but remove page data first
+                // address:/page/index.mu`Data=123
+                const [ pagePathWithoutData, pageData ] = pagePath.split("`");
+
                 // convert micron to html if page ends with .mu extension
                 // otherwise, we will just serve the content as is
-                if(pagePath.endsWith(".mu")){
+                if(pagePathWithoutData.endsWith(".mu")){
                     this.nodePageContent = MicronParser.convertMicronToHtml(pageContent);
                 } else {
                     this.nodePageContent = pageContent;
@@ -387,23 +391,33 @@ export default {
 
             // parse relative urls
             if(url.startsWith(":")){
+
+                // remove leading ":"
+                var path = url.substring(1);
+
+                // if page path is empty we should load "/page/index.mu"
+                if(path === ""){
+                    path = "/page/index.mu";
+                }
+
                 return {
                     destination_hash: null, // node hash was not in provided url
-                    path: url.substring(1), // remove leading ":"
+                    path: path,
                 };
+
             }
 
             // parse absolute urls such as 00000000000000000000000000000000:/page/index.mu
             if(url.includes(":")){
 
                 // parse destination hash and url
-                const [destinationHash, relativeUrl] = url.split(":");
+                const [destinationHash, ...relativeUrl] = url.split(":");
 
                 // ensure destination is expected length
                 if(destinationHash.length === 32){
                     return {
                         destination_hash: destinationHash,
-                        path: relativeUrl,
+                        path: relativeUrl.join(":"),
                     };
                 }
 
@@ -421,7 +435,7 @@ export default {
             return null;
 
         },
-        onNodePageUrlClick: function(url, addToHistory = true, useCache = true) {
+        async onNodePageUrlClick(url, addToHistory = true, useCache = true) {
 
             // open http urls in new tab
             if(url.startsWith("http://") || url.startsWith("https://")){
@@ -433,7 +447,8 @@ export default {
             if(url.startsWith("lxmf@")){
                 const destinationHash = url.replace("lxmf@", "");
                 if(destinationHash.length === 32){
-                    this.openLXMFConversation(destinationHash);
+                    await this.$router.push({ name: "messages" });
+                    GlobalEmitter.emit("compose-new-message", destinationHash);
                     return;
                 }
             }

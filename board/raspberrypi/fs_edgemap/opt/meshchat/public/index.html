@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="manifest" href="/manifest.json">
     <title>Reticulum MeshChat</title>
 
     <!-- scripts -->
@@ -20,9 +21,15 @@
     <script src="assets/js/codec2-emscripten/wav-encoder.js"></script>
     <script src="assets/js/codec2-emscripten/codec2-microphone-recorder.js"></script>
 
-  <script type="module" crossorigin src="/assets/app-CqTJZnNE.js"></script>
+  <script type="module" crossorigin src="/assets/app-BYQp0TIl.js"></script>
 </head>
 <body class="bg-gray-100">
 <div id="app"></div>
+<script>
+    // install service worker
+    if('serviceWorker' in navigator){
+        navigator.serviceWorker.register('/service-worker.js');
+    }
+</script>
 </body>
 </html>

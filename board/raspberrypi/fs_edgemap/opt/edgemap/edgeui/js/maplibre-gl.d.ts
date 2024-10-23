@@ -3,9 +3,9 @@
 import Point from '@mapbox/point-geometry';
 import TinySDF from '@mapbox/tiny-sdf';
 import { VectorTileFeature, VectorTileLayer } from '@mapbox/vector-tile';
-import { Color, CompositeExpression, DiffCommand, DiffOperations, Feature, FeatureFilter, FeatureState, FilterSpecification, Formatted, FormattedSection, GeoJSONSourceSpecification, GlobalProperties, ICanonicalTileID, IMercatorCoordinate, ImageSourceSpecification, InterpolationType, LayerSpecification, LightSpecification, Padding, PromoteIdSpecification, PropertyValueSpecification, RasterDEMSourceSpecification, RasterSourceSpecification, ResolvedImage, SkySpecification, SourceExpression, SourceSpecification, SpriteSpecification, StylePropertyExpression, StylePropertySpecification, StyleSpecification, TerrainSpecification, TransitionSpecification, VariableAnchorOffsetCollection, VectorSourceSpecification, VideoSourceSpecification } from '@maplibre/maplibre-gl-style-spec';
+import { Color, CompositeExpression, DiffCommand, DiffOperations, Feature, FeatureFilter, FeatureState, FilterSpecification, Formatted, FormattedSection, GeoJSONSourceSpecification, GlobalProperties, ICanonicalTileID, IMercatorCoordinate, ImageSourceSpecification, InterpolationType, LayerSpecification, LightSpecification, Padding, ProjectionSpecification, PromoteIdSpecification, PropertyValueSpecification, RasterDEMSourceSpecification, RasterSourceSpecification, ResolvedImage, SkySpecification, SourceExpression, SourceSpecification, SpriteSpecification, StylePropertyExpression, StylePropertySpecification, StyleSpecification, TerrainSpecification, TransitionSpecification, VariableAnchorOffsetCollection, VectorSourceSpecification, VideoSourceSpecification } from '@maplibre/maplibre-gl-style-spec';
 import { Options as GeoJSONVTOptions } from 'geojson-vt';
-import { mat2, mat4, vec4 } from 'gl-matrix';
+import { mat2, mat4, vec3, vec4 } from 'gl-matrix';
 import KDBush from 'kdbush';
 import { PotpackBox } from 'potpack';
 import { ClusterProperties, Options as SuperclusterOptions } from 'supercluster';
@@ -178,7 +178,7 @@ export type StructArrayMember = {
 	offset: number;
 };
 /**
- * An array that can be desialized
+ * An array that can be deserialized
  */
 export type SerializedStructArray = {
 	length: number;
@@ -241,13 +241,6 @@ declare class StructArrayLayout3i6 extends StructArray {
 	_refreshViews(): void;
 	emplaceBack(v0: number, v1: number, v2: number): number;
 	emplace(i: number, v0: number, v1: number, v2: number): number;
-}
-declare class StructArrayLayout4i8 extends StructArray {
-	uint8: Uint8Array;
-	int16: Int16Array;
-	_refreshViews(): void;
-	emplaceBack(v0: number, v1: number, v2: number, v3: number): number;
-	emplace(i: number, v0: number, v1: number, v2: number, v3: number): number;
 }
 declare class StructArrayLayout2i4i12 extends StructArray {
 	uint8: Uint8Array;
@@ -500,8 +493,6 @@ declare class FeatureIndexArray extends StructArrayLayout1ul2ui8 {
 }
 declare class PosArray extends StructArrayLayout2i4 {
 }
-declare class RasterBoundsArray extends StructArrayLayout4i8 {
-}
 declare class CircleLayoutArray extends StructArrayLayout2i4 {
 }
 declare class FillLayoutArray extends StructArrayLayout2i4 {
@@ -572,7 +563,13 @@ export type LngLatLike = LngLat | {
  * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
  */
 export declare class LngLat {
+	/**
+	 * Longitude, measured in degrees.
+	 */
 	lng: number;
+	/**
+	 * Latitude, measured in degrees.
+	 */
 	lat: number;
 	/**
 	 * @param lng - Longitude, measured in degrees.
@@ -748,7 +745,12 @@ declare class OverscaledTileID {
 	wrap: number;
 	canonical: CanonicalTileID;
 	key: string;
-	posMatrix: mat4;
+	/**
+	 * This matrix is used during terrain's render-to-texture stage only.
+	 * If the render-to-texture stage is active, this matrix will be present
+	 * and should be used, otherwise this matrix will be null.
+	 */
+	terrainRttPosMatrix: mat4 | null;
 	constructor(overscaledZ: number, wrap: number, z: number, x: number, y: number);
 	clone(): OverscaledTileID;
 	equals(id: OverscaledTileID): boolean;
@@ -774,6 +776,16 @@ export type Listeners = {
 declare class Event$1 {
 	readonly type: string;
 	constructor(type: string, data?: any);
+}
+export interface ErrorLike {
+	message: string;
+}
+/**
+ * An error event
+ */
+declare class ErrorEvent$1 extends Event$1 {
+	error: ErrorLike;
+	constructor(error: ErrorLike, data?: any);
 }
 /**
  * Methods mixed in to other classes for event capabilities.
@@ -1240,6 +1252,12 @@ declare class IndexBuffer {
 	updateData(array: StructArray): void;
 	destroy(): void;
 }
+export type PreparedShader = {
+	fragmentSource: string;
+	vertexSource: string;
+	staticAttributes: Array<string>;
+	staticUniforms: Array<string>;
+};
 export type SerializedFeaturePositionMap = {
 	ids: Float64Array;
 	positions: Uint32Array;
@@ -1329,8 +1347,26 @@ export type Segment = {
 declare class SegmentVector {
 	static MAX_VERTEX_ARRAY_LENGTH: number;
 	segments: Array<Segment>;
+	private _forceNewSegmentOnNextPrepare;
 	constructor(segments?: Array<Segment>);
+	/**
+	 * Returns the last segment if `numVertices` fits into it.
+	 * If there are no segments yet or `numVertices` doesn't fit into the last one, creates a new empty segment and returns it.
+	 */
 	prepareSegment(numVertices: number, layoutVertexArray: StructArray, indexArray: StructArray, sortKey?: number): Segment;
+	/**
+	 * Creates a new empty segment and returns it.
+	 */
+	createNewSegment(layoutVertexArray: StructArray, indexArray: StructArray, sortKey?: number): Segment;
+	/**
+	 * Returns the last segment, or creates a new segments if there are no segments yet.
+	 */
+	getOrCreateLatestSegment(layoutVertexArray: StructArray, indexArray: StructArray, sortKey?: number): Segment;
+	/**
+	 * Causes the next call to {@link prepareSegment} to always return a new segment,
+	 * not reusing the current segment even if the new geometry would fit it.
+	 */
+	forceNewSegmentOnNextPrepare(): void;
 	get(): Segment[];
 	destroy(): void;
 	static simpleSegment(vertexOffset: number, primitiveOffset: number, vertexLength: number, primitiveLength: number): SegmentVector;
@@ -1918,7 +1954,7 @@ export declare class LngLatBounds {
 }
 /**
  * An `EdgeInset` object represents screen space padding applied to the edges of the viewport.
- * This shifts the apprent center or the vanishing point of the map. This is useful for adding floating UI elements
+ * This shifts the apparent center or the vanishing point of the map. This is useful for adding floating UI elements
  * on top of the map and having the vanishing point shift as UI elements resize.
  *
  * @group Geography and Geometry
@@ -2220,9 +2256,8 @@ export declare class ImageSource extends Evented implements Source {
 	texture: Texture | null;
 	image: HTMLImageElement | ImageBitmap;
 	tileID: CanonicalTileID;
-	_boundsArray: RasterBoundsArray;
-	boundsBuffer: VertexBuffer;
-	boundsSegments: SegmentVector;
+	tileCoords: Array<Point>;
+	flippedWindingOrder: boolean;
 	_loaded: boolean;
 	_request: AbortController;
 	/** @internal */
@@ -2469,6 +2504,13 @@ export type SourceClass = {
  * @returns a promise that is resolved when the source type is ready or rejected with an error.
  */
 export declare const addSourceType: (name: string, SourceType: SourceClass) => Promise<void>;
+export type TileResult = {
+	tile: Tile;
+	tileID: OverscaledTileID;
+	queryGeometry: Array<Point>;
+	cameraQueryGeometry: Array<Point>;
+	scale: number;
+};
 declare class SourceCache extends Evented {
 	id: string;
 	dispatcher: Dispatcher;
@@ -2501,7 +2543,7 @@ declare class SourceCache extends Evented {
 	_coveredTiles: {
 		[_: string]: boolean;
 	};
-	transform: Transform;
+	transform: ITransform;
 	terrain: Terrain;
 	used: boolean;
 	usedForTerrain: boolean;
@@ -2581,7 +2623,7 @@ declare class SourceCache extends Evented {
 	 * are more likely to be found on devices with more memory and on pages where
 	 * the map is more important.
 	 */
-	updateCacheSize(transform: Transform): void;
+	updateCacheSize(transform: IReadonlyTransform): void;
 	handleWrapJump(lng: number): void;
 	_updateCoveredAndRetainedTiles(retain: {
 		[_: string]: OverscaledTileID;
@@ -2590,7 +2632,7 @@ declare class SourceCache extends Evented {
 	 * Removes tiles that are outside the viewport and adds new tiles that
 	 * are inside the viewport.
 	 */
-	update(transform: Transform, terrain?: Terrain): void;
+	update(transform: ITransform, terrain?: Terrain): void;
 	releaseSymbolFadeTiles(): void;
 	_updateRetainedTiles(idealTileIDs: Array<OverscaledTileID>, zoom: number): {
 		[_: string]: OverscaledTileID;
@@ -2626,7 +2668,7 @@ declare class SourceCache extends Evented {
 	 * @param pointQueryGeometry - coordinates of the corners of bounding rectangle
 	 * @returns result items have `{tile, minX, maxX, minY, maxY}`, where min/max bounding values are the given bounds transformed in into the coordinate space of this tile.
 	 */
-	tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean): any[];
+	tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean): TileResult[];
 	getVisibleCoordinates(symbolLayer?: boolean): Array<OverscaledTileID>;
 	hasTransition(): boolean;
 	/**
@@ -3045,8 +3087,6 @@ declare class SymbolBucket implements Bucket {
 	sortedAngle: number;
 	featureSortOrder: Array<number>;
 	collisionCircleArray: Array<number>;
-	placementInvProjMatrix: mat4;
-	placementViewportMatrix: mat4;
 	text: SymbolBuffers;
 	icon: SymbolBuffers;
 	textCollisionBox: CollisionBuffers;
@@ -3070,7 +3110,7 @@ declare class SymbolBucket implements Bucket {
 	upload(context: Context): void;
 	destroyDebugData(): void;
 	destroy(): void;
-	addToLineVertexArray(anchor: Anchor, line: any): {
+	addToLineVertexArray(anchor: Anchor, line: Array<Point>): {
 		lineStartIndex: number;
 		lineLength: number;
 	};
@@ -3183,95 +3223,12 @@ declare class ColorMode {
 	static unblended: Readonly<ColorMode>;
 	static alphaBlended: Readonly<ColorMode>;
 }
-export type PoolObject = {
-	id: number;
-	fbo: Framebuffer;
-	texture: Texture;
-	stamp: number;
-	inUse: boolean;
-};
-declare class RenderPool {
-	private readonly _context;
-	private readonly _size;
-	private readonly _tileSize;
-	private _objects;
-	/**
-	 * An index array of recently used pool objects.
-	 * Items that are used recently are last in the array
-	 */
-	private _recentlyUsed;
-	private _stamp;
-	constructor(_context: Context, _size: number, _tileSize: number);
-	destruct(): void;
-	private _createObject;
-	getObjectForId(id: number): PoolObject;
-	useObject(obj: PoolObject): void;
-	stampObject(obj: PoolObject): void;
-	getOrCreateFreeObject(): PoolObject;
-	freeObject(obj: PoolObject): void;
-	freeAllObjects(): void;
-	isFull(): boolean;
-}
-declare class RenderToTexture {
-	painter: Painter;
-	terrain: Terrain;
-	pool: RenderPool;
-	/**
-	 * coordsDescendingInv contains a list of all tiles which should be rendered for one render-to-texture tile
-	 * e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
-	 */
-	_coordsDescendingInv: {
-		[_: string]: {
-			[_: string]: Array<OverscaledTileID>;
-		};
-	};
-	/**
-	 * create a string representation of all to tiles rendered to render-to-texture tiles
-	 * this string representation is used to check if tile should be re-rendered.
-	 */
-	_coordsDescendingInvStr: {
-		[_: string]: {
-			[_: string]: string;
-		};
-	};
-	/**
-	 * store for render-stacks
-	 * a render stack is a set of layers which should be rendered into one texture
-	 * every stylesheet can have multiple stacks. A new stack is created if layers which should
-	 * not rendered to texture sit between layers which should rendered to texture. e.g. hillshading or symbols
-	 */
-	_stacks: Array<Array<string>>;
-	/**
-	 * remember the previous processed layer to check if a new stack is needed
-	 */
-	_prevType: string;
-	/**
-	 * a list of tiles that can potentially rendered
-	 */
-	_renderableTiles: Array<Tile>;
-	/**
-	 * a list of tiles that should be rendered to screen in the next render-call
-	 */
-	_rttTiles: Array<Tile>;
-	/**
-	 * a list of all layer-ids which should be rendered
-	 */
-	_renderableLayerIds: Array<string>;
-	constructor(painter: Painter, terrain: Terrain);
-	destruct(): void;
-	getTexture(tile: Tile): Texture;
-	prepareForRender(style: Style, zoom: number): void;
-	/**
-	 * due that switching textures is relatively slow, the render
-	 * layer-by-layer context is not practicable. To bypass this problem
-	 * this lines of code stack all layers and later render all at once.
-	 * Because of the stylesheet possibility to mixing render-to-texture layers
-	 * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
-	 * a symbol-layer is in between of fill-layers.
-	 * @param layer - the layer to render
-	 * @returns if true layer is rendered to texture, otherwise false
-	 */
-	renderLayer(layer: StyleLayer): boolean;
+declare class Mesh {
+	vertexBuffer: VertexBuffer;
+	indexBuffer: IndexBuffer;
+	segments: SegmentVector;
+	constructor(vertexBuffer: VertexBuffer, indexBuffer: IndexBuffer, segments: SegmentVector);
+	destroy(): void;
 }
 /**
  * A dash entry
@@ -3370,6 +3327,96 @@ declare class GlyphManager {
 	_doesCharSupportLocalGlyph(id: number): boolean;
 	_tinySDF(entry: Entry, stack: string, id: number): StyleGlyph;
 }
+export type PoolObject = {
+	id: number;
+	fbo: Framebuffer;
+	texture: Texture;
+	stamp: number;
+	inUse: boolean;
+};
+declare class RenderPool {
+	private readonly _context;
+	private readonly _size;
+	private readonly _tileSize;
+	private _objects;
+	/**
+	 * An index array of recently used pool objects.
+	 * Items that are used recently are last in the array
+	 */
+	private _recentlyUsed;
+	private _stamp;
+	constructor(_context: Context, _size: number, _tileSize: number);
+	destruct(): void;
+	private _createObject;
+	getObjectForId(id: number): PoolObject;
+	useObject(obj: PoolObject): void;
+	stampObject(obj: PoolObject): void;
+	getOrCreateFreeObject(): PoolObject;
+	freeObject(obj: PoolObject): void;
+	freeAllObjects(): void;
+	isFull(): boolean;
+}
+declare class RenderToTexture {
+	painter: Painter;
+	terrain: Terrain;
+	pool: RenderPool;
+	/**
+	 * coordsDescendingInv contains a list of all tiles which should be rendered for one render-to-texture tile
+	 * e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
+	 */
+	_coordsDescendingInv: {
+		[_: string]: {
+			[_: string]: Array<OverscaledTileID>;
+		};
+	};
+	/**
+	 * create a string representation of all to tiles rendered to render-to-texture tiles
+	 * this string representation is used to check if tile should be re-rendered.
+	 */
+	_coordsDescendingInvStr: {
+		[_: string]: {
+			[_: string]: string;
+		};
+	};
+	/**
+	 * store for render-stacks
+	 * a render stack is a set of layers which should be rendered into one texture
+	 * every stylesheet can have multiple stacks. A new stack is created if layers which should
+	 * not rendered to texture sit between layers which should rendered to texture. e.g. hillshading or symbols
+	 */
+	_stacks: Array<Array<string>>;
+	/**
+	 * remember the previous processed layer to check if a new stack is needed
+	 */
+	_prevType: string;
+	/**
+	 * a list of tiles that can potentially rendered
+	 */
+	_renderableTiles: Array<Tile>;
+	/**
+	 * a list of tiles that should be rendered to screen in the next render-call
+	 */
+	_rttTiles: Array<Tile>;
+	/**
+	 * a list of all layer-ids which should be rendered
+	 */
+	_renderableLayerIds: Array<string>;
+	constructor(painter: Painter, terrain: Terrain);
+	destruct(): void;
+	getTexture(tile: Tile): Texture;
+	prepareForRender(style: Style, zoom: number): void;
+	/**
+	 * due that switching textures is relatively slow, the render
+	 * layer-by-layer context is not practicable. To bypass this problem
+	 * this lines of code stack all layers and later render all at once.
+	 * Because of the stylesheet possibility to mixing render-to-texture layers
+	 * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
+	 * a symbol-layer is in between of fill-layers.
+	 * @param layer - the layer to render
+	 * @returns if true layer is rendered to texture, otherwise false
+	 */
+	renderLayer(layer: StyleLayer): boolean;
+}
 export type RenderPass = "offscreen" | "opaque" | "translucent";
 export type PainterOptions = {
 	showOverdrawInspector: boolean;
@@ -3382,7 +3429,7 @@ export type PainterOptions = {
 };
 declare class Painter {
 	context: Context;
-	transform: Transform;
+	transform: IReadonlyTransform;
 	renderToTexture: RenderToTexture;
 	_tileTextures: {
 		[_: number]: Array<Texture>;
@@ -3395,10 +3442,13 @@ declare class Painter {
 	pixelRatio: number;
 	tileExtentBuffer: VertexBuffer;
 	tileExtentSegments: SegmentVector;
+	tileExtentMesh: Mesh;
 	debugBuffer: VertexBuffer;
 	debugSegments: SegmentVector;
 	rasterBoundsBuffer: VertexBuffer;
 	rasterBoundsSegments: SegmentVector;
+	rasterBoundsBufferPosOnly: VertexBuffer;
+	rasterBoundsSegmentsPosOnly: SegmentVector;
 	viewportBuffer: VertexBuffer;
 	viewportSegments: SegmentVector;
 	quadTriangleIndexBuffer: IndexBuffer;
@@ -3432,14 +3482,26 @@ declare class Painter {
 		matrix: mat4;
 		renderTime: number;
 	};
-	constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, transform: Transform);
+	constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, transform: IReadonlyTransform);
 	resize(width: number, height: number, pixelRatio: number): void;
 	setup(): void;
 	clearStencil(): void;
-	_renderTileClippingMasks(layer: StyleLayer, tileIDs: Array<OverscaledTileID>): void;
+	_renderTileClippingMasks(layer: StyleLayer, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean): void;
+	_renderTileMasks(tileStencilRefs: {
+		[_: string]: number;
+	}, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean, useBorders: boolean): void;
 	stencilModeFor3D(): StencilMode;
 	stencilModeForClipping(tileID: OverscaledTileID): StencilMode;
 	stencilConfigForOverlap(tileIDs: Array<OverscaledTileID>): [
+		{
+			[_: number]: Readonly<StencilMode>;
+		},
+		Array<OverscaledTileID>
+	];
+	stencilConfigForOverlapTwoPass(tileIDs: Array<OverscaledTileID>): [
+		{
+			[_: number]: Readonly<StencilMode>;
+		},
 		{
 			[_: number]: Readonly<StencilMode>;
 		},
@@ -3456,15 +3518,6 @@ declare class Painter {
 	 */
 	maybeDrawDepthAndCoords(requireExact: boolean): void;
 	renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>): void;
-	/**
-	 * Transform a matrix to incorporate the *-translate and *-translate-anchor properties into it.
-	 * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
-	 * @returns matrix
-	 */
-	translatePosMatrix(matrix: mat4, tile: Tile, translate: [
-		number,
-		number
-	], translateAnchor: "map" | "viewport", inViewportPixelUnitsUnits?: boolean): mat4;
 	saveTileTexture(texture: Texture): void;
 	getTileTexture(size: number): Texture;
 	/**
@@ -3473,7 +3526,16 @@ declare class Painter {
 	 * @returns true if a needed image is missing and rendering needs to be skipped.
 	 */
 	isPatternMissing(image?: CrossFaded<ResolvedImage> | null): boolean;
-	useProgram(name: string, programConfiguration?: ProgramConfiguration | null): Program<any>;
+	/**
+	 * Finds the required shader and its variant (base/terrain/globe, etc.) and binds it, compiling a new shader if required.
+	 * @param name - Name of the desired shader.
+	 * @param programConfiguration - Configuration of shader's inputs.
+	 * @param defines - Additional macros to be injected at the beginning of the shader. Expected format is `['#define XYZ']`, etc.
+	 * @param forceSimpleProjection - Whether to force the use of a shader variant with simple mercator projection vertex shader.
+	 * False by default. Use true when drawing with a simple projection matrix is desired, eg. when drawing a fullscreen quad.
+	 * @returns
+	 */
+	useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection?: boolean): Program<any>;
 	setCustomLayerDefaults(): void;
 	setBaseState(): void;
 	initDebugOverlayCanvas(): void;
@@ -3517,6 +3579,10 @@ declare class TerrainSourceCache extends Evented {
 	 * raster-dem tiles will load for performance the actualZoom - deltaZoom zoom-level.
 	 */
 	deltaZoom: number;
+	/**
+	 * used to determine whether depth & coord framebuffers need updating
+	 */
+	_lastTilesetChange: number;
 	constructor(sourceCache: SourceCache);
 	destruct(): void;
 	/**
@@ -3524,7 +3590,7 @@ declare class TerrainSourceCache extends Evented {
 	 * @param transform - the operation to do
 	 * @param terrain - the terrain
 	 */
-	update(transform: Transform, terrain: Terrain): void;
+	update(transform: ITransform, terrain: Terrain): void;
 	/**
 	 * Free render to texture cache
 	 * @param tileID - optional, free only corresponding to tileID.
@@ -3550,23 +3616,16 @@ declare class TerrainSourceCache extends Evented {
 	/**
 	 * find the covering raster-dem tile
 	 * @param tileID - the tile to look for
-	 * @param searchForDEM - Optional parameter to search for (parent) sourcetiles with loaded dem.
+	 * @param searchForDEM - Optional parameter to search for (parent) source tiles with loaded dem.
 	 * @returns the tile
 	 */
 	getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile;
 	/**
-	 * get a list of tiles, loaded after a specific time. This is used to update depth & coords framebuffers.
+	 * gets whether any tiles were loaded after a specific time. This is used to update depth & coords framebuffers.
 	 * @param time - the time
-	 * @returns the relevant tiles
+	 * @returns true if any tiles came into view at or after the specified time
 	 */
-	tilesAfterTime(time?: number): Array<Tile>;
-}
-declare class Mesh {
-	vertexBuffer: VertexBuffer;
-	indexBuffer: IndexBuffer;
-	segments: SegmentVector;
-	constructor(vertexBuffer: VertexBuffer, indexBuffer: IndexBuffer, segments: SegmentVector);
-	destroy(): void;
+	anyTilesAfterTime(time?: number): boolean;
 }
 /**
  * @internal
@@ -3702,9 +3761,9 @@ declare class Terrain {
 	 */
 	getCoordsTexture(): Texture;
 	/**
-	 * Reads a pixel from the coords-framebuffer and translate this to mercator.
+	 * Reads a pixel from the coords-framebuffer and translate this to mercator, or null, if the pixel doesn't lie on the terrain's surface (but the sky instead).
 	 * @param p - Screen-Coordinate
-	 * @returns mercator coordinate for a screen pixel
+	 * @returns Mercator coordinate for a screen pixel, or null, if the pixel is not covered by terrain (is in the sky).
 	 */
 	pointCoordinate(p: Point): MercatorCoordinate;
 	/**
@@ -3719,7 +3778,7 @@ declare class Terrain {
 	 */
 	getTerrainMesh(): Mesh;
 	/**
-	 * Calculates a height of the frame around the terrain-mesh to avoid stiching between
+	 * Calculates a height of the frame around the terrain-mesh to avoid stitching between
 	 * tile boundaries in different zoomlevels.
 	 * @param zoom - current zoomlevel
 	 * @returns the elevation delta in meters
@@ -3744,119 +3803,1020 @@ declare class Terrain {
 		mercatorY: number;
 	};
 }
-declare class Transform {
-	tileSize: number;
-	tileZoom: number;
-	lngRange: [
-		number,
-		number
-	];
-	latRange: [
-		number,
-		number
-	];
-	scale: number;
-	width: number;
-	height: number;
-	angle: number;
-	rotationMatrix: mat2;
-	pixelsToGLUnits: [
-		number,
-		number
-	];
-	cameraToCenterDistance: number;
-	mercatorMatrix: mat4;
-	projectionMatrix: mat4;
-	modelViewProjectionMatrix: mat4;
-	invModelViewProjectionMatrix: mat4;
-	alignedModelViewProjectionMatrix: mat4;
-	fogMatrix: mat4;
-	pixelMatrix: mat4;
-	pixelMatrix3D: mat4;
-	pixelMatrixInverse: mat4;
-	glCoordMatrix: mat4;
-	labelPlaneMatrix: mat4;
-	minElevationForCurrentTile: number;
-	_fov: number;
-	_pitch: number;
-	_zoom: number;
-	_unmodified: boolean;
-	_renderWorldCopies: boolean;
-	_minZoom: number;
-	_maxZoom: number;
-	_minPitch: number;
-	_maxPitch: number;
-	_center: LngLat;
-	_elevation: number;
-	_pixelPerMeter: number;
-	_edgeInsets: EdgeInsets;
-	_constraining: boolean;
-	_posMatrixCache: {
-		[_: string]: mat4;
-	};
-	_alignedPosMatrixCache: {
-		[_: string]: mat4;
-	};
-	_fogMatrixCache: {
-		[_: string]: mat4;
-	};
+/**
+ * The result of projecting a point to the screen, with some additional information about the projection.
+ */
+export type PointProjection = {
 	/**
-	 * This value represents the distance from the camera to the far clipping plane.
-	 * It is used in the calculation of the projection matrix to determine which objects are visible.
-	 * farz should be larger than nearZ.
+	 * The projected point.
 	 */
-	farZ: number;
+	point: Point;
 	/**
-	 * This value represents the distance from the camera to the near clipping plane.
-	 * It is used in the calculation of the projection matrix to determine which objects are visible.
-	 * nearZ should be smaller than farZ.
+	 * The original W component of the projection.
 	 */
-	nearZ: number;
-	constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean);
-	clone(): Transform;
-	apply(that: Transform): void;
-	get minZoom(): number;
-	set minZoom(zoom: number);
-	get maxZoom(): number;
-	set maxZoom(zoom: number);
-	get minPitch(): number;
-	set minPitch(pitch: number);
-	get maxPitch(): number;
-	set maxPitch(pitch: number);
-	get renderWorldCopies(): boolean;
-	set renderWorldCopies(renderWorldCopies: boolean);
-	get worldSize(): number;
-	get centerOffset(): Point;
-	get size(): Point;
-	get bearing(): number;
-	set bearing(bearing: number);
-	get pitch(): number;
-	set pitch(pitch: number);
-	get fov(): number;
-	set fov(fov: number);
-	get zoom(): number;
-	set zoom(zoom: number);
-	get center(): LngLat;
-	set center(center: LngLat);
+	signedDistanceFromCamera: number;
 	/**
-	 * Elevation at current center point, meters above sea level
+	 * For complex projections (such as globe), true if the point is occluded by the projection, such as by being on the backfacing side of the globe.
+	 * If the point is simply beyond the edge of the screen, this should NOT be set to false.
 	 */
-	get elevation(): number;
-	set elevation(elevation: number);
-	get padding(): PaddingOptions;
-	set padding(padding: PaddingOptions);
+	isOccluded: boolean;
+};
+export type IndexToPointCache = {
+	[lineIndex: number]: Point;
+};
+/**
+ * @internal
+ * We calculate label-plane projected points for line vertices as we place glyphs along the line
+ * Since we will use the same vertices for potentially many glyphs, cache the results for this bucket
+ * over the course of the render. Each vertex location also potentially has one offset equivalent
+ * for us to hold onto. The vertex indices are per-symbol-bucket.
+ */
+export type ProjectionCache = {
 	/**
-	 * The center of the screen in pixels with the top-left corner being (0,0)
-	 * and +y axis pointing downwards. This accounts for padding.
+	 * tile-unit vertices projected into label-plane units
 	 */
-	get centerPoint(): Point;
+	projections: IndexToPointCache;
 	/**
-	 * Returns if the padding params match
+	 * label-plane vertices which have been shifted to follow an offset line
+	 */
+	offsets: IndexToPointCache;
+	/**
+	 * Cached projected anchor point.
+	 */
+	cachedAnchorPoint: Point | undefined;
+	/**
+	 * Was any projected point occluded by the map itself (eg. occluded by the planet when using globe projection).
 	 *
-	 * @param padding - the padding to check against
-	 * @returns true if they are equal, false otherwise
+	 * Viewport-pitched line-following texts where *any* of the line points is hidden behind the planet curve becomes entirely hidden.
+	 * This is perhaps not the most ideal behavior, but it works, it is simple and planetary-scale texts such as this seem to be a rare edge case.
 	 */
-	isPaddingEqual(padding: PaddingOptions): boolean;
+	anyProjectionOccluded: boolean;
+};
+/**
+ * @internal
+ * Arguments necessary to project a vertex to the label plane
+ */
+export type SymbolProjectionContext = {
+	/**
+	 * Used to cache results, save cost if projecting the same vertex multiple times
+	 */
+	projectionCache: ProjectionCache;
+	/**
+	 * The array of tile-unit vertices transferred from worker
+	 */
+	lineVertexArray: SymbolLineVertexArray;
+	/**
+	 * Matrix for transforming from pixels (symbol shaping) to potentially rotated tile units (pitched map label plane).
+	 */
+	pitchedLabelPlaneMatrix: mat4;
+	/**
+	 * Function to get elevation at a point
+	 * @param x - the x coordinate
+	 * @param y - the y coordinate
+	*/
+	getElevation: (x: number, y: number) => number;
+	/**
+	 * Only for creating synthetic vertices if vertex would otherwise project behind plane of camera,
+	 * but still convenient to pass it inside this type.
+	 */
+	tileAnchorPoint: Point;
+	/**
+	 * True when line glyphs are projected onto the map, instead of onto the viewport.
+	 */
+	pitchWithMap: boolean;
+	transform: IReadonlyTransform;
+	unwrappedTileID: UnwrappedTileID;
+	/**
+	 * Viewport width.
+	 */
+	width: number;
+	/**
+	 * Viewport height.
+	 */
+	height: number;
+	/**
+	 * Translation in tile units, computed using text-translate and text-translate-anchor paint style properties.
+	 */
+	translation: [
+		number,
+		number
+	];
+};
+/**
+ * An event from the mouse relevant to a specific layer.
+ *
+ * @group Event Related
+ */
+export type MapLayerMouseEvent = MapMouseEvent & {
+	features?: MapGeoJSONFeature[];
+};
+/**
+ * An event from a touch device relevant to a specific layer.
+ *
+ * @group Event Related
+ */
+export type MapLayerTouchEvent = MapTouchEvent & {
+	features?: MapGeoJSONFeature[];
+};
+/**
+ * The source event data type
+ */
+export type MapSourceDataType = "content" | "metadata" | "visibility" | "idle";
+/**
+ * `MapLayerEventType` - a mapping between the event name and the event.
+ * **Note:** These events are compatible with the optional `layerId` parameter.
+ * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
+ * event action contains a visible portion of the specified layer.
+ * The following example can be used for all the events.
+ *
+ * @group Event Related
+ * @example
+ * ```ts
+ * // Initialize the map
+ * let map = new Map({ // map options });
+ * // Set an event listener for a specific layer
+ * map.on('the-event-name', 'poi-label', (e) => {
+ *   console.log('An event has occurred on a visible portion of the poi-label layer');
+ * });
+ * ```
+ */
+export type MapLayerEventType = {
+	/**
+	 * Fired when a pointing device (usually a mouse) is pressed and released contains a visible portion of the specified layer.
+	 *
+	 * @see [Measure distances](https://maplibre.org/maplibre-gl-js/docs/examples/measure/)
+	 * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js/docs/examples/center-on-symbol/)
+	 */
+	click: MapLayerMouseEvent;
+	/**
+	 * Fired when a pointing device (usually a mouse) is pressed and released twice contains a visible portion of the specified layer.
+	 *
+	 * **Note:** Under normal conditions, this event will be preceded by two `click` events.
+	 */
+	dblclick: MapLayerMouseEvent;
+	/**
+	 * Fired when a pointing device (usually a mouse) is pressed while inside a visible portion of the specified layer.
+	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+	 */
+	mousedown: MapLayerMouseEvent;
+	/**
+	 * Fired when a pointing device (usually a mouse) is released while inside a visible portion of the specified layer.
+	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+	 */
+	mouseup: MapLayerMouseEvent;
+	/**
+	 * Fired when a pointing device (usually a mouse) is moved while the cursor is inside a visible portion of the specified layer.
+	 * As you move the cursor across the layer, the event will fire every time the cursor changes position within that layer.
+	 *
+	 * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/mouse-position/)
+	 * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
+	 * @see [Display a popup on over](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
+	 */
+	mousemove: MapLayerMouseEvent;
+	/**
+	 * Fired when a pointing device (usually a mouse) enters a visible portion of a specified layer from
+	 * outside that layer or outside the map canvas.
+	 *
+	 * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js/docs/examples/center-on-symbol/)
+	 * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-click/)
+	 */
+	mouseenter: MapLayerMouseEvent;
+	/**
+	 * Fired when a pointing device (usually a mouse) leaves a visible portion of a specified layer, or leaves
+	 * the map canvas.
+	 *
+	 * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
+	 * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-click/)
+	 */
+	mouseleave: MapLayerMouseEvent;
+	/**
+	 * Fired when a pointing device (usually a mouse) is moved inside a visible portion of the specified layer.
+	 *
+	 * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/mouse-position/)
+	 * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
+	 * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
+	 */
+	mouseover: MapLayerMouseEvent;
+	/**
+	 * Fired when a point device (usually a mouse) leaves the visible portion of the specified layer.
+	 */
+	mouseout: MapLayerMouseEvent;
+	/**
+	 * Fired when the right button of the mouse is clicked or the context menu key is pressed within visible portion of the specified layer.
+	 */
+	contextmenu: MapLayerMouseEvent;
+	/**
+	 * Fired when a [`touchstart`](https://developer.mozilla.org/en-US/docs/Web/Events/touchstart) event occurs within the visible portion of the specified layer.
+	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+	 */
+	touchstart: MapLayerTouchEvent;
+	/**
+	 * Fired when a [`touchend`](https://developer.mozilla.org/en-US/docs/Web/Events/touchend) event occurs within the visible portion of the specified layer.
+	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+	 */
+	touchend: MapLayerTouchEvent;
+	/**
+	 * Fired when a [`touchstart`](https://developer.mozilla.org/en-US/docs/Web/Events/touchstart) event occurs within the visible portion of the specified layer.
+	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+	 */
+	touchcancel: MapLayerTouchEvent;
+};
+/**
+ * `MapEventType` - a mapping between the event name and the event value.
+ * These events are used with the {@link Map#on} method.
+ * When using a `layerId` with {@link Map#on} method, please refer to {@link MapLayerEventType}.
+ * The following example can be used for all the events.
+ *
+ * @group Event Related
+ * @example
+ * ```ts
+ * // Initialize the map
+ * let map = new Map({ // map options });
+ * // Set an event listener
+ * map.on('the-event-name', () => {
+ *   console.log('An event has occurred!');
+ * });
+ * ```
+ */
+export type MapEventType = {
+	/**
+	 * Fired when an error occurs. This is GL JS's primary error reporting
+	 * mechanism. We use an event instead of `throw` to better accommodate
+	 * asynchronous operations. If no listeners are bound to the `error` event, the
+	 * error will be printed to the console.
+	 */
+	error: ErrorEvent;
+	/**
+	 * Fired immediately after all necessary resources have been downloaded
+	 * and the first visually complete rendering of the map has occurred.
+	 *
+	 * @see [Draw GeoJSON points](https://maplibre.org/maplibre-gl-js/docs/examples/geojson-markers/)
+	 * @see [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
+	 * @see [Animate a point](https://maplibre.org/maplibre-gl-js/docs/examples/animate-point-along-line/)
+	 */
+	load: MapLibreEvent;
+	/**
+	 * Fired after the last frame rendered before the map enters an
+	 * "idle" state:
+	 *
+	 * - No camera transitions are in progress
+	 * - All currently requested tiles have loaded
+	 * - All fade/transition animations have completed
+	 */
+	idle: MapLibreEvent;
+	/**
+	 * Fired immediately after the map has been removed with {@link Map#remove}.
+	 */
+	remove: MapLibreEvent;
+	/**
+	 * Fired whenever the map is drawn to the screen, as the result of
+	 *
+	 * - a change to the map's position, zoom, pitch, or bearing
+	 * - a change to the map's style
+	 * - a change to a GeoJSON source
+	 * - the loading of a vector tile, GeoJSON file, glyph, or sprite
+	 */
+	render: MapLibreEvent;
+	/**
+	 * Fired immediately after the map has been resized.
+	 */
+	resize: MapLibreEvent;
+	/**
+	 * Fired when the WebGL context is lost.
+	 */
+	webglcontextlost: MapContextEvent;
+	/**
+	 * Fired when the WebGL context is restored.
+	 */
+	webglcontextrestored: MapContextEvent;
+	/**
+	 * Fired when any map data (style, source, tile, etc) begins loading or
+	 * changing asynchronously. All `dataloading` events are followed by a `data`,
+	 * `dataabort` or `error` event.
+	 */
+	dataloading: MapDataEvent;
+	/**
+	 * Fired when any map data loads or changes. See {@link MapDataEvent} for more information.
+	 * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js/docs/examples/cluster-html/)
+	 */
+	data: MapDataEvent;
+	tiledataloading: MapDataEvent;
+	/**
+	 * Fired when one of the map's sources begins loading or changing asynchronously.
+	 * All `sourcedataloading` events are followed by a `sourcedata`, `sourcedataabort` or `error` event.
+	 */
+	sourcedataloading: MapSourceDataEvent;
+	/**
+	 * Fired when the map's style begins loading or changing asynchronously.
+	 * All `styledataloading` events are followed by a `styledata`
+	 * or `error` event.
+	 */
+	styledataloading: MapStyleDataEvent;
+	/**
+	 * Fired when one of the map's sources loads or changes, including if a tile belonging
+	 * to a source loads or changes.
+	 */
+	sourcedata: MapSourceDataEvent;
+	/**
+	 * Fired when the map's style loads or changes.
+	 */
+	styledata: MapStyleDataEvent;
+	/**
+	 * Fired when an icon or pattern needed by the style is missing. The missing image can
+	 * be added with {@link Map#addImage} within this event listener callback to prevent the image from
+	 * being skipped. This event can be used to dynamically generate icons and patterns.
+	 * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-missing-generated/)
+	 */
+	styleimagemissing: MapStyleImageMissingEvent;
+	/**
+	 * Fired when a request for one of the map's sources' tiles or data is aborted.
+	 */
+	dataabort: MapDataEvent;
+	/**
+	 * Fired when a request for one of the map's sources' data is aborted.
+	 */
+	sourcedataabort: MapSourceDataEvent;
+	/**
+	 * Fired when the user cancels a "box zoom" interaction, or when the bounding box does not meet the minimum size threshold.
+	 * See {@link BoxZoomHandler}.
+	 */
+	boxzoomcancel: MapLibreZoomEvent;
+	/**
+	 * Fired when a "box zoom" interaction starts. See {@link BoxZoomHandler}.
+	 */
+	boxzoomstart: MapLibreZoomEvent;
+	/**
+	 * Fired when a "box zoom" interaction ends.  See {@link BoxZoomHandler}.
+	 */
+	boxzoomend: MapLibreZoomEvent;
+	/**
+	 * Fired when a [`touchcancel`](https://developer.mozilla.org/en-US/docs/Web/Events/touchcancel) event occurs within the map.
+	 */
+	touchcancel: MapTouchEvent;
+	/**
+	 * Fired when a [`touchmove`](https://developer.mozilla.org/en-US/docs/Web/Events/touchmove) event occurs within the map.
+	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+	 */
+	touchmove: MapTouchEvent;
+	/**
+	 * Fired when a [`touchend`](https://developer.mozilla.org/en-US/docs/Web/Events/touchend) event occurs within the map.
+	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+	 */
+	touchend: MapTouchEvent;
+	/**
+	 * Fired when a [`touchstart`](https://developer.mozilla.org/en-US/docs/Web/Events/touchstart) event occurs within the map.
+	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+	 */
+	touchstart: MapTouchEvent;
+	/**
+	 * Fired when a pointing device (usually a mouse) is pressed and released at the same point on the map.
+	 *
+	 * @see [Measure distances](https://maplibre.org/maplibre-gl-js/docs/examples/measure/)
+	 * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js/docs/examples/center-on-symbol/)
+	 */
+	click: MapMouseEvent;
+	/**
+	 * Fired when the right button of the mouse is clicked or the context menu key is pressed within the map.
+	 */
+	contextmenu: MapMouseEvent;
+	/**
+	 * Fired when a pointing device (usually a mouse) is pressed and released twice at the same point on the map in rapid succession.
+	 *
+	 * **Note:** Under normal conditions, this event will be preceded by two `click` events.
+	 */
+	dblclick: MapMouseEvent;
+	/**
+	 * Fired when a pointing device (usually a mouse) is moved while the cursor is inside the map.
+	 * As you move the cursor across the map, the event will fire every time the cursor changes position within the map.
+	 *
+	 * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/mouse-position/)
+	 * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
+	 * @see [Display a popup on over](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
+	 */
+	mousemove: MapMouseEvent;
+	/**
+	 * Fired when a pointing device (usually a mouse) is released within the map.
+	 *
+	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+	 */
+	mouseup: MapMouseEvent;
+	/**
+	 * Fired when a pointing device (usually a mouse) is pressed within the map.
+	 *
+	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
+	 */
+	mousedown: MapMouseEvent;
+	/**
+	 * Fired when a point device (usually a mouse) leaves the map's canvas.
+	 */
+	mouseout: MapMouseEvent;
+	/**
+	 * Fired when a pointing device (usually a mouse) is moved within the map.
+	 * As you move the cursor across a web page containing a map,
+	 * the event will fire each time it enters the map or any child elements.
+	 *
+	 * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/mouse-position/)
+	 * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
+	 * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
+	 */
+	mouseover: MapMouseEvent;
+	/**
+	 * Fired just before the map begins a transition from one
+	 * view to another, as the result of either user interaction or methods such as {@link Map#jumpTo}.
+	 *
+	 */
+	movestart: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+	/**
+	 * Fired repeatedly during an animated transition from one view to
+	 * another, as the result of either user interaction or methods such as {@link Map#flyTo}.
+	 *
+	 * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js/docs/examples/cluster-html/)
+	 */
+	move: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+	/**
+	 * Fired just after the map completes a transition from one
+	 * view to another, as the result of either user interaction or methods such as {@link Map#jumpTo}.
+	 *
+	 * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js/docs/examples/cluster-html/)
+	 */
+	moveend: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+	/**
+	 * Fired just before the map begins a transition from one zoom level to another,
+	 * as the result of either user interaction or methods such as {@link Map#flyTo}.
+	 */
+	zoomstart: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+	/**
+	 * Fired repeatedly during an animated transition from one zoom level to another,
+	 * as the result of either user interaction or methods such as {@link Map#flyTo}.
+	 */
+	zoom: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+	/**
+	 * Fired just after the map completes a transition from one zoom level to another,
+	 * as the result of either user interaction or methods such as {@link Map#flyTo}.
+	 */
+	zoomend: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
+	/**
+	 * Fired when a "drag to rotate" interaction starts. See {@link DragRotateHandler}.
+	 */
+	rotatestart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+	/**
+	 * Fired repeatedly during a "drag to rotate" interaction. See {@link DragRotateHandler}.
+	 */
+	rotate: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+	/**
+	 * Fired when a "drag to rotate" interaction ends. See {@link DragRotateHandler}.
+	 */
+	rotateend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+	/**
+	 * Fired when a "drag to pan" interaction starts. See {@link DragPanHandler}.
+	 */
+	dragstart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+	/**
+	 * Fired repeatedly during a "drag to pan" interaction. See {@link DragPanHandler}.
+	 */
+	drag: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+	/**
+	 * Fired when a "drag to pan" interaction ends. See {@link DragPanHandler}.
+	 * @see [Create a draggable marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/)
+	 */
+	dragend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+	/**
+	 * Fired whenever the map's pitch (tilt) begins a change as
+	 * the result of either user interaction or methods such as {@link Map#flyTo} .
+	 */
+	pitchstart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+	/**
+	 * Fired repeatedly during the map's pitch (tilt) animation between
+	 * one state and another as the result of either user interaction
+	 * or methods such as {@link Map#flyTo}.
+	 */
+	pitch: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+	/**
+	 * Fired immediately after the map's pitch (tilt) finishes changing as
+	 * the result of either user interaction or methods such as {@link Map#flyTo}.
+	 */
+	pitchend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
+	/**
+	 * Fired when a [`wheel`](https://developer.mozilla.org/en-US/docs/Web/Events/wheel) event occurs within the map.
+	 */
+	wheel: MapWheelEvent;
+	/**
+	 * Fired when terrain is changed
+	 */
+	terrain: MapTerrainEvent;
+	/**
+	 * Fired whenever the cooperativeGestures option prevents a gesture from being handled by the map.
+	 * This is useful for showing your own UI when this happens.
+	 */
+	cooperativegestureprevented: MapLibreEvent<WheelEvent | TouchEvent> & {
+		gestureType: "wheel_zoom" | "touch_pan";
+	};
+	/**
+	 * Fired when map's projection is modified in other ways than by map being moved.
+	 */
+	projectiontransition: MapProjectionEvent;
+};
+/**
+ * The base event for MapLibre
+ *
+ * @group Event Related
+ */
+export type MapLibreEvent<TOrig = unknown> = {
+	type: keyof MapEventType | keyof MapLayerEventType;
+	target: Map$1;
+	originalEvent: TOrig;
+};
+/**
+ * The style data event
+ *
+ * @group Event Related
+ */
+export type MapStyleDataEvent = MapLibreEvent & {
+	dataType: "style";
+};
+/**
+ * The source data event interface
+ *
+ * @group Event Related
+ */
+export type MapSourceDataEvent = MapLibreEvent & {
+	dataType: "source";
+	/**
+	 * True if the event has a `dataType` of `source` and the source has no outstanding network requests.
+	 */
+	isSourceLoaded: boolean;
+	/**
+	 * The [style spec representation of the source](https://maplibre.org/maplibre-style-spec/#sources) if the event has a `dataType` of `source`.
+	 */
+	source: SourceSpecification;
+	sourceId: string;
+	sourceDataType: MapSourceDataType;
+	/**
+	 * The tile being loaded or changed, if the event has a `dataType` of `source` and
+	 * the event is related to loading of a tile.
+	 */
+	tile: any;
+};
+/**
+ * `MapMouseEvent` is the event type for mouse-related map events.
+ *
+ * @group Event Related
+ *
+ * @example
+ * ```ts
+ * // The `click` event is an example of a `MapMouseEvent`.
+ * // Set up an event listener on the map.
+ * map.on('click', (e) => {
+ *   // The event object (e) contains information like the
+ *   // coordinates of the point on the map that was clicked.
+ *   console.log('A click event has occurred at ' + e.lngLat);
+ * });
+ * ```
+ */
+export declare class MapMouseEvent extends Event$1 implements MapLibreEvent<MouseEvent> {
+	/**
+	 * The event type
+	 */
+	type: "mousedown" | "mouseup" | "click" | "dblclick" | "mousemove" | "mouseover" | "mouseenter" | "mouseleave" | "mouseout" | "contextmenu";
+	/**
+	 * The `Map` object that fired the event.
+	 */
+	target: Map$1;
+	/**
+	 * The DOM event which caused the map event.
+	 */
+	originalEvent: MouseEvent;
+	/**
+	 * The pixel coordinates of the mouse cursor, relative to the map and measured from the top left corner.
+	 */
+	point: Point;
+	/**
+	 * The geographic location on the map of the mouse cursor.
+	 */
+	lngLat: LngLat;
+	/**
+	 * Prevents subsequent default processing of the event by the map.
+	 *
+	 * Calling this method will prevent the following default map behaviors:
+	 *
+	 *   * On `mousedown` events, the behavior of {@link DragPanHandler}
+	 *   * On `mousedown` events, the behavior of {@link DragRotateHandler}
+	 *   * On `mousedown` events, the behavior of {@link BoxZoomHandler}
+	 *   * On `dblclick` events, the behavior of {@link DoubleClickZoomHandler}
+	 *
+	 */
+	preventDefault(): void;
+	/**
+	 * `true` if `preventDefault` has been called.
+	 */
+	get defaultPrevented(): boolean;
+	_defaultPrevented: boolean;
+	constructor(type: string, map: Map$1, originalEvent: MouseEvent, data?: any);
+}
+/**
+ * `MapTouchEvent` is the event type for touch-related map events.
+ *
+ * @group Event Related
+ */
+export declare class MapTouchEvent extends Event$1 implements MapLibreEvent<TouchEvent> {
+	/**
+	 * The event type.
+	 */
+	type: "touchstart" | "touchmove" | "touchend" | "touchcancel";
+	/**
+	 * The `Map` object that fired the event.
+	 */
+	target: Map$1;
+	/**
+	 * The DOM event which caused the map event.
+	 */
+	originalEvent: TouchEvent;
+	/**
+	 * The geographic location on the map of the center of the touch event points.
+	 */
+	lngLat: LngLat;
+	/**
+	 * The pixel coordinates of the center of the touch event points, relative to the map and measured from the top left
+	 * corner.
+	 */
+	point: Point;
+	/**
+	 * The array of pixel coordinates corresponding to a
+	 * [touch event's `touches`](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/touches) property.
+	 */
+	points: Array<Point>;
+	/**
+	 * The geographical locations on the map corresponding to a
+	 * [touch event's `touches`](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/touches) property.
+	 */
+	lngLats: Array<LngLat>;
+	/**
+	 * Prevents subsequent default processing of the event by the map.
+	 *
+	 * Calling this method will prevent the following default map behaviors:
+	 *
+	 *   * On `touchstart` events, the behavior of {@link DragPanHandler}
+	 *   * On `touchstart` events, the behavior of {@link TwoFingersTouchZoomRotateHandler}
+	 *
+	 */
+	preventDefault(): void;
+	/**
+	 * `true` if `preventDefault` has been called.
+	 */
+	get defaultPrevented(): boolean;
+	_defaultPrevented: boolean;
+	constructor(type: string, map: Map$1, originalEvent: TouchEvent);
+}
+/**
+ * `MapWheelEvent` is the event type for the `wheel` map event.
+ *
+ * @group Event Related
+ */
+export declare class MapWheelEvent extends Event$1 {
+	/**
+	 * The event type.
+	 */
+	type: "wheel";
+	/**
+	 * The `Map` object that fired the event.
+	 */
+	target: Map$1;
+	/**
+	 * The DOM event which caused the map event.
+	 */
+	originalEvent: WheelEvent;
+	/**
+	 * Prevents subsequent default processing of the event by the map.
+	 *
+	 * Calling this method will prevent the behavior of {@link ScrollZoomHandler}.
+	 */
+	preventDefault(): void;
+	/**
+	 * `true` if `preventDefault` has been called.
+	 */
+	get defaultPrevented(): boolean;
+	_defaultPrevented: boolean;
+	/** */
+	constructor(type: string, map: Map$1, originalEvent: WheelEvent);
+}
+/**
+ * A `MapLibreZoomEvent` is the event type for the boxzoom-related map events emitted by the {@link BoxZoomHandler}.
+ *
+ * @group Event Related
+ */
+export type MapLibreZoomEvent = {
+	/**
+	 * The type of boxzoom event. One of `boxzoomstart`, `boxzoomend` or `boxzoomcancel`
+	 */
+	type: "boxzoomstart" | "boxzoomend" | "boxzoomcancel";
+	/**
+	 * The `Map` instance that triggered the event
+	 */
+	target: Map$1;
+	/**
+	 * The DOM event that triggered the boxzoom event. Can be a `MouseEvent` or `KeyboardEvent`
+	 */
+	originalEvent: MouseEvent;
+};
+/**
+ * A `MapDataEvent` object is emitted with the `data`
+ * and `dataloading` events. Possible values for
+ * `dataType`s are:
+ *
+ * - `'source'`: The non-tile data associated with any source
+ * - `'style'`: The [style](https://maplibre.org/maplibre-style-spec/) used by the map
+ *
+ * Possible values for `sourceDataType`s are:
+ *
+ * - `'metadata'`: indicates that any necessary source metadata has been loaded (such as TileJSON) and it is ok to start loading tiles
+ * - `'content'`: indicates the source data has changed (such as when source.setData() has been called on GeoJSONSource)
+ * - `'visibility'`: send when the source becomes used when at least one of its layers becomes visible in style sense (inside the layer's zoom range and with layout.visibility set to 'visible')
+ * - `'idle'`: indicates that no new source data has been fetched (but the source has done loading)
+ *
+ * @group Event Related
+ *
+ * @example
+ * ```ts
+ * // The sourcedata event is an example of MapDataEvent.
+ * // Set up an event listener on the map.
+ * map.on('sourcedata', (e) => {
+ *    if (e.isSourceLoaded) {
+ *        // Do something when the source has finished loading
+ *    }
+ * });
+ * ```
+ */
+export type MapDataEvent = {
+	/**
+	 * The event type.
+	 */
+	type: string;
+	/**
+	 * The type of data that has changed. One of `'source'`, `'style'`.
+	 */
+	dataType: string;
+	/**
+	 *  Included if the event has a `dataType` of `source` and the event signals that internal data has been received or changed. Possible values are `metadata`, `content`, `visibility` and `idle`.
+	 */
+	sourceDataType: MapSourceDataType;
+};
+/**
+ * The terrain event
+ *
+ * @group Event Related
+ */
+export type MapTerrainEvent = {
+	type: "terrain";
+};
+/**
+ * The map projection event
+ *
+ * @group Event Related
+ */
+export type MapProjectionEvent = {
+	type: "projectiontransition";
+	/**
+	 * Specifies the name of the new projection.
+	 * Additionally includes 'globe-mercator' to describe globe that has internally switched to mercator.
+	 */
+	newProjection: ProjectionSpecification["type"] | "globe-mercator";
+};
+/**
+ * An event related to the web gl context
+ *
+ * @group Event Related
+ */
+export type MapContextEvent = {
+	type: "webglcontextlost" | "webglcontextrestored";
+	originalEvent: WebGLContextEvent;
+};
+/**
+ * The style image missing event
+ *
+ * @group Event Related
+ *
+ * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-missing-generated/)
+ */
+export type MapStyleImageMissingEvent = MapLibreEvent & {
+	type: "styleimagemissing";
+	id: string;
+};
+/**
+ * This type contains all data necessary to project a tile to screen in MapLibre's shader system.
+ * Contains data used for both mercator and globe projection.
+ */
+export type ProjectionData = {
+	/**
+	 * The main projection matrix. For mercator projection, it usually projects in-tile coordinates 0..EXTENT to screen,
+	 * for globe projection, it projects a unit sphere planet to screen.
+	 * Uniform name: `u_projection_matrix`.
+	 */
+	mainMatrix: mat4;
+	/**
+	 * The extent of current tile in the mercator square.
+	 * Used by globe projection.
+	 * First two components are X and Y offset, last two are X and Y scale.
+	 * Uniform name: `u_projection_tile_mercator_coords`.
+	 *
+	 * Conversion from in-tile coordinates in range 0..EXTENT is done as follows:
+	 * @example
+	 * ```
+	 * vec2 mercator_coords = u_projection_tile_mercator_coords.xy + in_tile.xy * u_projection_tile_mercator_coords.zw;
+	 * ```
+	 */
+	tileMercatorCoords: [
+		number,
+		number,
+		number,
+		number
+	];
+	/**
+	 * The plane equation for a plane that intersects the planet's horizon.
+	 * Assumes the planet to be a unit sphere.
+	 * Used by globe projection for clipping.
+	 * Uniform name: `u_projection_clipping_plane`.
+	 */
+	clippingPlane: [
+		number,
+		number,
+		number,
+		number
+	];
+	/**
+	 * A value in range 0..1 indicating interpolation between mercator (0) and globe (1) projections.
+	 * Used by globe projection to hide projection transition at high zooms.
+	 * Uniform name: `u_projection_transition`.
+	 */
+	projectionTransition: number;
+	/**
+	 * Fallback matrix that projects the current tile according to mercator projection.
+	 * Used by globe projection to fall back to mercator projection in an animated way.
+	 * Uniform name: `u_projection_fallback_matrix`.
+	 */
+	fallbackMatrix: mat4;
+};
+export type CoveringZoomOptions = {
+	/**
+	 * Whether to round or floor the target zoom level. If true, the value will be rounded to the closest integer. Otherwise the value will be floored.
+	 */
+	roundZoom?: boolean;
+	/**
+	 * Tile size, expressed in screen pixels.
+	 */
+	tileSize: number;
+};
+export type CoveringTilesOptions = CoveringZoomOptions & {
+	/**
+	 * Smallest allowed tile zoom.
+	 */
+	minzoom?: number;
+	/**
+	 * Largest allowed tile zoom.
+	 */
+	maxzoom?: number;
+	/**
+	 * `true` if tiles should be sent back to the worker for each overzoomed zoom level, `false` if not.
+	 * Fill this option when computing covering tiles for a source.
+	 * When true, any tile at `maxzoom` level that should be overscaled to a greater zoom will have
+	 * its zoom set to the overscaled greater zoom. When false, such tiles will have zoom set to `maxzoom`.
+	 */
+	reparseOverscaled?: boolean;
+	/**
+	 * When terrain is present, tile visibility will be computed in regards to the min and max elevations for each tile.
+	 */
+	terrain?: Terrain;
+};
+export type TransformUpdateResult = {
+	forcePlacementUpdate?: boolean;
+	fireProjectionEvent?: MapProjectionEvent;
+	forceSourceUpdate?: boolean;
+};
+export interface ITransformGetters {
+	get tileSize(): number;
+	get tileZoom(): number;
+	/**
+	 * How many times "larger" the world is compared to zoom 0. Usually computed as `pow(2, zoom)`.
+	 * Relevant mostly for mercator projection.
+	 */
+	get scale(): number;
+	/**
+	 * How many units the current world has. Computed by multiplying {@link worldSize} by {@link tileSize}.
+	 * Relevant mostly for mercator projection.
+	 */
+	get worldSize(): number;
+	/**
+	 * Gets the transform's width in pixels. Use {@link ITransform.resize} to set the transform's size.
+	 */
+	get width(): number;
+	/**
+	 * Gets the transform's height in pixels. Use {@link ITransform.resize} to set the transform's size.
+	 */
+	get height(): number;
+	get lngRange(): [
+		number,
+		number
+	];
+	get latRange(): [
+		number,
+		number
+	];
+	get minZoom(): number;
+	get maxZoom(): number;
+	get zoom(): number;
+	get center(): LngLat;
+	get minPitch(): number;
+	get maxPitch(): number;
+	/**
+	 * Roll in degrees.
+	 */
+	get roll(): number;
+	get rollInRadians(): number;
+	/**
+	 * Pitch in degrees.
+	 */
+	get pitch(): number;
+	get pitchInRadians(): number;
+	/**
+	 * Bearing in degrees.
+	 */
+	get bearing(): number;
+	get bearingInRadians(): number;
+	/**
+	 * Vertical field of view in degrees.
+	 */
+	get fov(): number;
+	get fovInRadians(): number;
+	get elevation(): number;
+	get minElevationForCurrentTile(): number;
+	get padding(): PaddingOptions;
+	get unmodified(): boolean;
+	get renderWorldCopies(): boolean;
+}
+/**
+ * @internal
+ * All the functions that may mutate a transform.
+ */
+export interface ITransformMutators {
+	clone(): ITransform;
+	apply(that: IReadonlyTransform): void;
+	/**
+	 * Sets the transform's minimal allowed zoom level.
+	 * Automatically constrains the transform's zoom to the new range and recomputes internal matrices if needed.
+	 */
+	setMinZoom(zoom: number): void;
+	/**
+	 * Sets the transform's maximal allowed zoom level.
+	 * Automatically constrains the transform's zoom to the new range and recomputes internal matrices if needed.
+	 */
+	setMaxZoom(zoom: number): void;
+	/**
+	 * Sets the transform's minimal allowed pitch, in degrees.
+	 * Automatically constrains the transform's pitch to the new range and recomputes internal matrices if needed.
+	 */
+	setMinPitch(pitch: number): void;
+	/**
+	 * Sets the transform's maximal allowed pitch, in degrees.
+	 * Automatically constrains the transform's pitch to the new range and recomputes internal matrices if needed.
+	 */
+	setMaxPitch(pitch: number): void;
+	setRenderWorldCopies(renderWorldCopies: boolean): void;
+	/**
+	 * Sets the transform's bearing, in degrees.
+	 * Recomputes internal matrices if needed.
+	 */
+	setBearing(bearing: number): void;
+	/**
+	 * Sets the transform's pitch, in degrees.
+	 * Recomputes internal matrices if needed.
+	 */
+	setPitch(pitch: number): void;
+	/**
+	 * Sets the transform's roll, in degrees.
+	 * Recomputes internal matrices if needed.
+	 */
+	setRoll(roll: number): void;
+	/**
+	 * Sets the transform's vertical field of view, in degrees.
+	 * Recomputes internal matrices if needed.
+	 */
+	setFov(fov: number): void;
+	/**
+	 * Sets the transform's zoom.
+	 * Automatically constrains the transform's center and zoom and recomputes internal matrices if needed.
+	 */
+	setZoom(zoom: number): void;
+	/**
+	 * Sets the transform's center.
+	 * Automatically constrains the transform's center and zoom and recomputes internal matrices if needed.
+	 */
+	setCenter(center: LngLat): void;
+	setElevation(elevation: number): void;
+	setMinElevationForCurrentTile(elevation: number): void;
+	setPadding(padding: PaddingOptions): void;
+	/**
+	 * Sets the transform's width and height and recomputes internal matrices.
+	 */
+	resize(width: number, height: number): void;
 	/**
 	 * Helper method to update edge-insets in place
 	 *
@@ -3866,116 +4826,137 @@ declare class Transform {
 	 */
 	interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number): void;
 	/**
-	 * Return a zoom level that will cover all tiles the transform
-	 * @param options - the options
-	 * @returns zoom level An integer zoom level at which all tiles will be visible.
-	 */
-	coveringZoomLevel(options: {
-		/**
-		 * Target zoom level. If true, the value will be rounded to the closest integer. Otherwise the value will be floored.
-		 */
-		roundZoom?: boolean;
-		/**
-		 * Tile size, expressed in screen pixels.
-		 */
-		tileSize: number;
-	}): number;
-	/**
-	 * Return any "wrapped" copies of a given tile coordinate that are visible
-	 * in the current view.
-	 */
-	getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[];
-	/**
-	 * Return all coordinates that could cover this transform for a covering
-	 * zoom level.
-	 * @param options - the options
-	 * @returns OverscaledTileIDs
-	 */
-	coveringTiles(options: {
-		tileSize: number;
-		minzoom?: number;
-		maxzoom?: number;
-		roundZoom?: boolean;
-		reparseOverscaled?: boolean;
-		renderWorldCopies?: boolean;
-		terrain?: Terrain;
-	}): Array<OverscaledTileID>;
-	resize(width: number, height: number): void;
-	get unmodified(): boolean;
-	zoomScale(zoom: number): number;
-	scaleZoom(scale: number): number;
-	/**
-	 * Convert from LngLat to world coordinates (Mercator coordinates scaled by 512)
-	 * @param lnglat - the lngLat
-	 * @returns Point
-	 */
-	project(lnglat: LngLat): Point;
-	/**
-	 * Convert from world coordinates ([0, 512],[0, 512]) to LngLat ([-180, 180], [-90, 90])
-	 * @param point - world coordinate
-	 * @returns LngLat
-	 */
-	unproject(point: Point): LngLat;
-	get point(): Point;
-	/**
-	 * get the camera position in LngLat and altitudes in meter
-	 * @returns An object with lngLat & altitude.
-	 */
-	getCameraPosition(): {
-		lngLat: LngLat;
-		altitude: number;
-	};
-	/**
 	 * This method works in combination with freezeElevation activated.
 	 * freezeElevation is enabled during map-panning because during this the camera should sit in constant height.
-	 * After panning finished, call this method to recalculate the zoomlevel for the current camera-height in current terrain.
+	 * After panning finished, call this method to recalculate the zoom level for the current camera-height in current terrain.
 	 * @param terrain - the terrain
 	 */
 	recalculateZoom(terrain: Terrain): void;
+	/**
+	 * Set's the transform's center so that the given point on screen is at the given world coordinates.
+	 * @param lnglat - Desired world coordinates of the point.
+	 * @param point - The screen point that should lie at the given coordinates.
+	 */
 	setLocationAtPoint(lnglat: LngLat, point: Point): void;
 	/**
-	 * Given a LngLat location, return the screen point that corresponds to it
+	 * Sets or clears the map's geographical constraints.
+	 * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
+	 */
+	setMaxBounds(bounds?: LngLatBounds | null): void;
+	/**
+	 * @internal
+	 * Signals to the transform that a new frame is starting.
+	 * The transform might update some of its internal variables and animations based on this.
+	 */
+	newFrameUpdate(): TransformUpdateResult;
+	/**
+	 * @internal
+	 * Called before rendering to allow the transform implementation
+	 * to precompute data needed to render the given tiles.
+	 * Used in mercator transform to precompute tile matrices (posMatrix).
+	 * @param coords - Array of tile IDs that will be rendered.
+	 */
+	precacheTiles(coords: Array<OverscaledTileID>): void;
+}
+/**
+ * @internal
+ * A variant of {@link ITransform} without any mutating functions.
+ * Note that an instance of {@link IReadonlyTransform} may still be mutated
+ * by code that has a reference to in under the {@link ITransform} type.
+ */
+export interface IReadonlyTransform extends ITransformGetters {
+	/**
+	 * Distance from camera origin to view plane, in pixels.
+	 * Calculated using vertical fov and viewport height.
+	 * Center is considered to be in the middle of the viewport.
+	 */
+	get cameraToCenterDistance(): number;
+	get modelViewProjectionMatrix(): mat4;
+	get projectionMatrix(): mat4;
+	/**
+	 * Inverse of matrix from camera space to clip space.
+	 */
+	get inverseProjectionMatrix(): mat4;
+	get pixelsToClipSpaceMatrix(): mat4;
+	get clipSpaceToPixelsMatrix(): mat4;
+	get pixelsToGLUnits(): [
+		number,
+		number
+	];
+	get centerOffset(): Point;
+	/**
+	 * Gets the transform's width and height in pixels (viewport size). Use {@link resize} to set the transform's size.
+	 */
+	get size(): Point;
+	get rotationMatrix(): mat2;
+	/**
+	 * The center of the screen in pixels with the top-left corner being (0,0)
+	 * and +y axis pointing downwards. This accounts for padding.
+	 */
+	get centerPoint(): Point;
+	/**
+	 * @internal
+	 */
+	get pixelsPerMeter(): number;
+	/**
+	 * @internal
+	 * Returns the camera's position transformed to be in the same space as 3D features under this transform's projection. Mostly used for globe + fill-extrusion.
+	 */
+	get cameraPosition(): vec3;
+	get nearZ(): number;
+	get farZ(): number;
+	/**
+	 * Returns if the padding params match
+	 *
+	 * @param padding - the padding to check against
+	 * @returns true if they are equal, false otherwise
+	 */
+	isPaddingEqual(padding: PaddingOptions): boolean;
+	/**
+	 * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
+	 * @param options - The options, most importantly the source's tile size.
+	 * @returns An integer zoom level at which all tiles will be visible.
+	 */
+	coveringZoomLevel(options: CoveringZoomOptions): number;
+	/**
+	 * @internal
+	 * Return any "wrapped" copies of a given tile coordinate that are visible
+	 * in the current view.
+	 */
+	getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID>;
+	/**
+	 * Returns a list of tile coordinates that when rendered cover the entire screen at an optimal detail level.
+	 * Tiles are ordered by ascending distance from camera.
+	 * @param options - Additional options - min & max zoom, terrain presence, etc.
+	 * @returns Array of OverscaledTileID. All OverscaledTileID instances are newly created.
+	 */
+	coveringTiles(options: CoveringTilesOptions): Array<OverscaledTileID>;
+	/**
+	 * @internal
+	 * Given a LngLat location, return the screen point that corresponds to it.
 	 * @param lnglat - location
 	 * @param terrain - optional terrain
 	 * @returns screen point
 	 */
-	locationPoint(lnglat: LngLat, terrain?: Terrain): Point;
+	locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point;
 	/**
-	 * Given a point on screen, return its lnglat
+	 * @internal
+	 * Given a point on screen, return its LngLat location.
 	 * @param p - screen point
 	 * @param terrain - optional terrain
 	 * @returns lnglat location
 	 */
-	pointLocation(p: Point, terrain?: Terrain): LngLat;
+	screenPointToLocation(p: Point, terrain?: Terrain): LngLat;
 	/**
-	 * Given a geographical lnglat, return an unrounded
-	 * coordinate that represents it at low zoom level.
-	 * @param lnglat - the location
-	 * @returns The mercator coordinate
-	 */
-	locationCoordinate(lnglat: LngLat): MercatorCoordinate;
-	/**
-	 * Given a Coordinate, return its geographical position.
-	 * @param coord - mercator coordinates
-	 * @returns lng and lat
-	 */
-	coordinateLocation(coord: MercatorCoordinate): LngLat;
-	/**
-	 * Given a Point, return its mercator coordinate.
+	 * @internal
+	 * Given a point on screen, return its mercator coordinate.
 	 * @param p - the point
 	 * @param terrain - optional terrain
 	 * @returns lnglat
 	 */
-	pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate;
+	screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate;
 	/**
-	 * Given a coordinate, return the screen point that corresponds to it
-	 * @param coord - the coordinates
-	 * @param elevation - the elevation
-	 * @param pixelMatrix - the pixel matrix
-	 * @returns screen point
-	 */
-	coordinatePoint(coord: MercatorCoordinate, elevation?: number, pixelMatrix?: mat4): Point;
-	/**
+	 * @internal
 	 * Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
 	 * an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.
 	 * @returns Returns a {@link LngLatBounds} object describing the map's geographical bounds.
@@ -3987,42 +4968,20 @@ declare class Transform {
 	 */
 	getMaxBounds(): LngLatBounds | null;
 	/**
-	 * Calculate pixel height of the visible horizon in relation to map-center (e.g. height/2),
-	 * multiplied by a static factor to simulate the earth-radius.
-	 * The calculated value is the horizontal line from the camera-height to sea-level.
-	 * @returns Horizon above center in pixels.
+	 * @internal
+	 * Returns whether the specified screen point lies on the map.
+	 * May return false if, for example, the point is above the map's horizon, or if doesn't lie on the planet's surface if globe is enabled.
+	 * @param p - The point's coordinates.
+	 * @param terrain - Optional terrain.
 	 */
-	getHorizon(): number;
+	isPointOnMapSurface(p: Point, terrain?: Terrain): boolean;
 	/**
-	 * Sets or clears the map's geographical constraints.
-	 * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
-	 */
-	setMaxBounds(bounds?: LngLatBounds | null): void;
-	calculateTileMatrix(unwrappedTileID: UnwrappedTileID): mat4;
-	/**
-	 * Calculate the posMatrix that, given a tile coordinate, would be used to display the tile on a map.
-	 * @param unwrappedTileID - the tile ID
-	 */
-	calculatePosMatrix(unwrappedTileID: UnwrappedTileID, aligned?: boolean): mat4;
-	/**
-	 * Calculate the fogMatrix that, given a tile coordinate, would be used to calculate fog on the map.
-	 * @param unwrappedTileID - the tile ID
-	 * @private
-	 */
-	calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4;
-	customLayerMatrix(): mat4;
-	/**
-	 * Get center lngLat and zoom to ensure that
-	 * 1) everything beyond the bounds is excluded
-	 * 2) a given lngLat is as near the center as possible
-	 * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
+	 * Get center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
 	 */
 	getConstrained(lngLat: LngLat, zoom: number): {
 		center: LngLat;
 		zoom: number;
 	};
-	_constrain(): void;
-	_calcMatrices(): void;
 	maxPitchScaleFactor(): number;
 	/**
 	 * The camera looks at the map from a 3D (lng, lat, altitude) location. Let's use `cameraLocation`
@@ -4036,6 +4995,11 @@ declare class Transform {
 	 * the camera is right above the center of the map.
 	 */
 	getCameraPoint(): Point;
+	/**
+	 * The altitude of the camera above the center of the map in meters.
+	 */
+	getCameraAltitude(): number;
+	getRayDirectionFromPixel(p: Point): vec3;
 	/**
 	 * When the map is pitched, some of the 3D features that intersect a query will not intersect
 	 * the query at the surface of the earth. Instead the feature may be closer and only intersect
@@ -4056,19 +5020,102 @@ declare class Transform {
 	 * @returns depth value in clip space (between 0 and 1)
 	 */
 	lngLatToCameraDepth(lngLat: LngLat, elevation: number): number;
+	/**
+	 * @internal
+	 * Calculate the fogMatrix that, given a tile coordinate, would be used to calculate fog on the map.
+	 * Currently only supported in mercator projection.
+	 * @param unwrappedTileID - the tile ID
+	 */
+	calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4;
+	/**
+	 * @internal
+	 * True when an animation handled by the transform is in progress,
+	 * requiring MapLibre to keep rendering new frames.
+	 */
+	isRenderingDirty(): boolean;
+	/**
+	 * @internal
+	 * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
+	 * @param overscaledTileID - The ID of the current tile.
+	 * @param aligned - Set to true if a pixel-aligned matrix should be used, if possible (mostly used for raster tiles under mercator projection).
+	 */
+	getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData;
+	/**
+	 * @internal
+	 * Returns whether the supplied location is occluded in this projection.
+	 * For example during globe rendering a location on the backfacing side of the globe is occluded.
+	 */
+	isLocationOccluded(lngLat: LngLat): boolean;
+	/**
+	 * @internal
+	 */
+	getPixelScale(): number;
+	/**
+	 * @internal
+	 * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the map's latitude.
+	 * Circle radius and heatmap kernel radius is multiplied by this value.
+	 */
+	getCircleRadiusCorrection(): number;
+	/**
+	 * @internal
+	 * Allows the projection to adjust the scale of `text-pitch-alignment: 'map'` symbols's collision boxes based on the map's center and the text anchor.
+	 * Only affects the collision boxes (and click areas), scaling of the rendered text is mostly handled in shaders.
+	 * @param transform - The map's transform, with only the `center` property, describing the map's longitude and latitude.
+	 * @param textAnchorX - Text anchor position inside the tile, X axis.
+	 * @param textAnchorY - Text anchor position inside the tile, Y axis.
+	 * @param tileID - The tile coordinates.
+	 */
+	getPitchedTextCorrection(textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number;
+	/**
+	 * @internal
+	 * Returns light direction transformed to be in the same space as 3D features under this projection. Mostly used for globe + fill-extrusion.
+	 * @param transform - Current map transform.
+	 * @param dir - The light direction.
+	 * @returns A new vector with the transformed light direction.
+	 */
+	transformLightDirection(dir: vec3): vec3;
+	/**
+	 * @internal
+	 * Projects a point in tile coordinates to clip space. Used in symbol rendering.
+	 */
+	projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
+	/**
+	 * Returns a matrix that will place, rotate and scale a model to display at the given location and altitude
+	 * while also being projected by the custom layer matrix.
+	 * This function is intended to be called from custom layers.
+	 * @param location - Location of the model.
+	 * @param altitude - Altitude of the model. May be undefined.
+	 */
+	getMatrixForModel(location: LngLatLike, altitude?: number): mat4;
+	/**
+	 * Return projection data such that coordinates in mercator projection in range 0..1 will get projected to the map correctly.
+	 */
+	getProjectionDataForCustomLayer(): ProjectionData;
+	/**
+	 * Returns a tile-specific projection matrix. Used for symbol placement fast-path for mercator transform.
+	 */
+	getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 | undefined;
+}
+/**
+ * @internal
+ * The transform stores everything needed to project or otherwise transform points on a map,
+ * including most of the map's view state - center, zoom, pitch, etc.
+ * A transform is cloneable, which is used when a given map state must be retained for multiple frames, mostly during symbol placement.
+ */
+export interface ITransform extends IReadonlyTransform, ITransformMutators {
 }
 export type QueryParameters = {
 	scale: number;
 	pixelPosMatrix: mat4;
-	transform: Transform;
+	transform: IReadonlyTransform;
 	tileSize: number;
 	queryGeometry: Array<Point>;
 	cameraQueryGeometry: Array<Point>;
 	queryPadding: number;
 	params: {
-		filter: FilterSpecification;
-		layers: Array<string>;
-		availableImages: Array<string>;
+		filter?: FilterSpecification;
+		layers?: Set<string> | null;
+		availableImages?: Array<string>;
 	};
 };
 declare class FeatureIndex {
@@ -4107,14 +5154,14 @@ declare class FeatureIndex {
 			feature: GeoJSONFeature;
 			intersectionZ?: boolean | number;
 		}>;
-	}, bucketIndex: number, sourceLayerIndex: number, featureIndex: number, filter: FeatureFilter, filterLayerIDs: Array<string>, availableImages: Array<string>, styleLayers: {
+	}, bucketIndex: number, sourceLayerIndex: number, featureIndex: number, filter: FeatureFilter, filterLayerIDs: Set<string> | undefined, availableImages: Array<string>, styleLayers: {
 		[_: string]: StyleLayer;
 	}, serializedLayers: {
 		[_: string]: any;
 	}, sourceFeatureState?: SourceFeatureState, intersectionTest?: (feature: VectorTileFeature, styleLayer: StyleLayer, featureState: any, id: string | number | void) => boolean | number): void;
 	lookupSymbolFeatures(symbolFeatureIndexes: Array<number>, serializedLayers: {
 		[_: string]: StyleLayer;
-	}, bucketIndex: number, sourceLayerIndex: number, filterSpec: FilterSpecification, filterLayerIDs: Array<string>, availableImages: Array<string>, styleLayers: {
+	}, bucketIndex: number, sourceLayerIndex: number, filterSpec: FilterSpecification, filterLayerIDs: Set<string> | null, availableImages: Array<string>, styleLayers: {
 		[_: string]: StyleLayer;
 	}): {};
 	hasLayer(id: string): boolean;
@@ -4155,6 +5202,77 @@ declare class DEMData {
 	backfillBorder(borderTile: DEMData, dx: number, dy: number): void;
 }
 /**
+ * Defines the granularity of subdivision for circles with `circle-pitch-alignment: 'map'` and for heatmap kernels.
+ * More subdivision will cause circles to more closely follow the planet's surface.
+ *
+ * Possible values: 1, 3, 5, 7.
+ * Subdivision of 1 results in a simple quad.
+ */
+export type CircleGranularity = 1 | 3 | 5 | 7;
+declare class SubdivisionGranularityExpression {
+	/**
+	 * A tile of zoom level 0 will be subdivided to this granularity level.
+	 * Each subsequent zoom level will have its granularity halved.
+	 */
+	private readonly _baseZoomGranularity;
+	/**
+	 * No tile will have granularity level smaller than this.
+	 */
+	private readonly _minGranularity;
+	constructor(baseZoomGranularity: number, minGranularity: number);
+	getGranularityForZoomLevel(zoomLevel: number): number;
+}
+declare class SubdivisionGranularitySetting {
+	/**
+	 * Granularity settings used for fill and fill-extrusion layers (for fill, both polygons and their anti-aliasing outlines).
+	 */
+	readonly fill: SubdivisionGranularityExpression;
+	/**
+	 * Granularity used for the line layer.
+	 */
+	readonly line: SubdivisionGranularityExpression;
+	/**
+	 * Granularity used for geometry covering the entire tile: raster tiles, etc.
+	 */
+	readonly tile: SubdivisionGranularityExpression;
+	/**
+	 * Granularity used for stencil masks for tiles.
+	 */
+	readonly stencil: SubdivisionGranularityExpression;
+	/**
+	 * Controls the granularity of `pitch-alignment: map` circles and heatmap kernels.
+	 * More granular circles will more closely follow the map's surface.
+	 */
+	readonly circle: CircleGranularity;
+	constructor(options: {
+		/**
+		 * Granularity settings used for fill and fill-extrusion layers (for fill, both polygons and their anti-aliasing outlines).
+		 */
+		fill: SubdivisionGranularityExpression;
+		/**
+		 * Granularity used for the line layer.
+		 */
+		line: SubdivisionGranularityExpression;
+		/**
+		 * Granularity used for geometry covering the entire tile: stencil masks, raster tiles, etc.
+		 */
+		tile: SubdivisionGranularityExpression;
+		/**
+		 * Granularity used for stencil masks for tiles.
+		 */
+		stencil: SubdivisionGranularityExpression;
+		/**
+		 * Controls the granularity of `pitch-alignment: map` circles and heatmap kernels.
+		 * More granular circles will more closely follow the map's surface.
+		 */
+		circle: CircleGranularity;
+	});
+	/**
+	 * Granularity settings that disable subdivision altogether.
+	 */
+	static readonly noSubdivision: SubdivisionGranularitySetting;
+}
+/**
  * Parameters to identify a tile
  */
 export type TileParameters = {
@@ -4176,9 +5294,10 @@ export type WorkerTileParameters = TileParameters & {
 	showCollisionBoxes: boolean;
 	collectResourceTiming?: boolean;
 	returnDependencies?: boolean;
+	subdivisionGranularity: SubdivisionGranularitySetting;
 };
 /**
- * The paremeters needed in order to load a DEM tile
+ * The parameters needed in order to load a DEM tile
  */
 export type WorkerDEMTileParameters = TileParameters & {
 	rawImageData: RGBAImage | ImageBitmap | ImageData;
@@ -4208,6 +5327,318 @@ export type WorkerTileResult = ExpiryData & {
 		[_: string]: StyleImage;
 	} | null;
 	glyphPositions?: GlyphPositions | null;
+};
+/**
+ * The overlap mode for properties like `icon-overlap`and `text-overlap`
+ */
+export type OverlapMode = "never" | "always" | "cooperative";
+export type QueryResult<T> = {
+	key: T;
+	x1: number;
+	y1: number;
+	x2: number;
+	y2: number;
+};
+/**
+ * A key for the grid
+ */
+export type GridKey = {
+	overlapMode?: OverlapMode;
+};
+declare class GridIndex<T extends GridKey> {
+	circleKeys: Array<T>;
+	boxKeys: Array<T>;
+	boxCells: Array<Array<number>>;
+	circleCells: Array<Array<number>>;
+	bboxes: Array<number>;
+	circles: Array<number>;
+	xCellCount: number;
+	yCellCount: number;
+	width: number;
+	height: number;
+	xScale: number;
+	yScale: number;
+	boxUid: number;
+	circleUid: number;
+	constructor(width: number, height: number, cellSize: number);
+	keysLength(): number;
+	insert(key: T, x1: number, y1: number, x2: number, y2: number): void;
+	insertCircle(key: T, x: number, y: number, radius: number): void;
+	private _insertBoxCell;
+	private _insertCircleCell;
+	private _query;
+	query(x1: number, y1: number, x2: number, y2: number): Array<QueryResult<T>>;
+	hitTest(x1: number, y1: number, x2: number, y2: number, overlapMode: OverlapMode, predicate?: (key: T) => boolean): boolean;
+	hitTestCircle(x: number, y: number, radius: number, overlapMode: OverlapMode, predicate?: (key: T) => boolean): boolean;
+	private _queryCell;
+	private _queryCellCircle;
+	private _forEachCell;
+	private _convertToXCellCoord;
+	private _convertToYCellCoord;
+	private _circlesCollide;
+	private _circleAndRectCollide;
+}
+export type PlacedCircles = {
+	circles: Array<number>;
+	offscreen: boolean;
+	collisionDetected: boolean;
+};
+export type PlacedBox = {
+	box: Array<number>;
+	placeable: boolean;
+	offscreen: boolean;
+	occluded: boolean;
+};
+export type FeatureKey = {
+	bucketInstanceId: number;
+	featureIndex: number;
+	collisionGroupID: number;
+	overlapMode: OverlapMode;
+};
+declare class CollisionIndex {
+	grid: GridIndex<FeatureKey>;
+	ignoredGrid: GridIndex<FeatureKey>;
+	transform: IReadonlyTransform;
+	pitchFactor: number;
+	screenRightBoundary: number;
+	screenBottomBoundary: number;
+	gridRightBoundary: number;
+	gridBottomBoundary: number;
+	perspectiveRatioCutoff: number;
+	constructor(transform: IReadonlyTransform, grid?: GridIndex<FeatureKey>, ignoredGrid?: GridIndex<FeatureKey>);
+	placeCollisionBox(collisionBox: SingleCollisionBox, overlapMode: OverlapMode, textPixelRatio: number, unwrappedTileID: UnwrappedTileID, pitchWithMap: boolean, rotateWithMap: boolean, translation: [
+		number,
+		number
+	], collisionGroupPredicate?: (key: FeatureKey) => boolean, getElevation?: (x: number, y: number) => number, shift?: Point, simpleProjectionMatrix?: mat4): PlacedBox;
+	placeCollisionCircles(overlapMode: OverlapMode, symbol: any, lineVertexArray: SymbolLineVertexArray, glyphOffsetArray: GlyphOffsetArray, fontSize: number, unwrappedTileID: UnwrappedTileID, pitchedLabelPlaneMatrix: mat4, showCollisionCircles: boolean, pitchWithMap: boolean, collisionGroupPredicate: (key: FeatureKey) => boolean, circlePixelDiameter: number, textPixelPadding: number, translation: [
+		number,
+		number
+	], getElevation: (x: number, y: number) => number): PlacedCircles;
+	projectPathToScreenSpace(projectedPath: Array<Point>, projectionContext: SymbolProjectionContext): Array<PointProjection>;
+	/**
+	 * Because the geometries in the CollisionIndex are an approximation of the shape of
+	 * symbols on the map, we use the CollisionIndex to look up the symbol part of
+	 * `queryRenderedFeatures`.
+	 */
+	queryRenderedSymbols(viewportQueryGeometry: Array<Point>): {};
+	insertCollisionBox(collisionBox: Array<number>, overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number): void;
+	insertCollisionCircles(collisionCircles: Array<number>, overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number): void;
+	projectAndGetPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number, simpleProjectionMatrix?: mat4): {
+		x: number;
+		y: number;
+		perspectiveRatio: number;
+		isOccluded: boolean;
+		signedDistanceFromCamera: any;
+	};
+	getPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number): number;
+	isOffscreen(x1: number, y1: number, x2: number, y2: number): boolean;
+	isInsideGrid(x1: number, y1: number, x2: number, y2: number): boolean;
+	getViewportMatrix(): mat4;
+	/**
+	 * Applies all layout+paint properties of the given box in order to find as good approximation of its screen-space bounding box as possible.
+	 */
+	private _projectCollisionBox;
+}
+declare enum TextAnchorEnum {
+	"center" = 1,
+	"left" = 2,
+	"right" = 3,
+	"top" = 4,
+	"bottom" = 5,
+	"top-left" = 6,
+	"top-right" = 7,
+	"bottom-left" = 8,
+	"bottom-right" = 9
+}
+export type TextAnchor = keyof typeof TextAnchorEnum;
+declare class OpacityState {
+	opacity: number;
+	placed: boolean;
+	constructor(prevState: OpacityState, increment: number, placed: boolean, skipFade?: boolean | null);
+	isHidden(): boolean;
+}
+declare class JointOpacityState {
+	text: OpacityState;
+	icon: OpacityState;
+	constructor(prevState: JointOpacityState, increment: number, placedText: boolean, placedIcon: boolean, skipFade?: boolean | null);
+	isHidden(): boolean;
+}
+declare class JointPlacement {
+	text: boolean;
+	icon: boolean;
+	skipFade: boolean;
+	constructor(text: boolean, icon: boolean, skipFade: boolean);
+}
+declare class RetainedQueryData {
+	bucketInstanceId: number;
+	featureIndex: FeatureIndex;
+	sourceLayerIndex: number;
+	bucketIndex: number;
+	tileID: OverscaledTileID;
+	featureSortOrder: Array<number>;
+	constructor(bucketInstanceId: number, featureIndex: FeatureIndex, sourceLayerIndex: number, bucketIndex: number, tileID: OverscaledTileID);
+}
+export type CollisionGroup = {
+	ID: number;
+	predicate?: (key: FeatureKey) => boolean;
+};
+declare class CollisionGroups {
+	collisionGroups: {
+		[groupName: string]: CollisionGroup;
+	};
+	maxGroupID: number;
+	crossSourceCollisions: boolean;
+	constructor(crossSourceCollisions: boolean);
+	get(sourceID: string): CollisionGroup;
+}
+export type VariableOffset = {
+	textOffset: [
+		number,
+		number
+	];
+	width: number;
+	height: number;
+	anchor: TextAnchor;
+	textBoxScale: number;
+	prevAnchor?: TextAnchor;
+};
+export type TileLayerParameters = {
+	bucket: SymbolBucket;
+	layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
+	translationText: [
+		number,
+		number
+	];
+	translationIcon: [
+		number,
+		number
+	];
+	unwrappedTileID: UnwrappedTileID;
+	pitchedLabelPlaneMatrix: mat4;
+	scale: number;
+	textPixelRatio: number;
+	holdingForFade: boolean;
+	collisionBoxArray: CollisionBoxArray;
+	partiallyEvaluatedTextSize: {
+		uSize: number;
+		uSizeT: number;
+	};
+	collisionGroup: CollisionGroup;
+};
+export type BucketPart = {
+	sortKey?: number | void;
+	symbolInstanceStart: number;
+	symbolInstanceEnd: number;
+	parameters: TileLayerParameters;
+};
+export type CrossTileID = string | number;
+declare class Placement {
+	transform: IReadonlyTransform;
+	terrain: Terrain;
+	collisionIndex: CollisionIndex;
+	placements: {
+		[_ in CrossTileID]: JointPlacement;
+	};
+	opacities: {
+		[_ in CrossTileID]: JointOpacityState;
+	};
+	variableOffsets: {
+		[_ in CrossTileID]: VariableOffset;
+	};
+	placedOrientations: {
+		[_ in CrossTileID]: number;
+	};
+	commitTime: number;
+	prevZoomAdjustment: number;
+	lastPlacementChangeTime: number;
+	stale: boolean;
+	fadeDuration: number;
+	retainedQueryData: {
+		[_: number]: RetainedQueryData;
+	};
+	collisionGroups: CollisionGroups;
+	prevPlacement: Placement;
+	zoomAtLastRecencyCheck: number;
+	collisionCircleArrays: {
+		[k in any]: Array<number>;
+	};
+	collisionBoxArrays: Map<number, Map<number, {
+		text: number[];
+		icon: number[];
+	}>>;
+	constructor(transform: ITransform, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement);
+	private _getTerrainElevationFunc;
+	getBucketParts(results: Array<BucketPart>, styleLayer: StyleLayer, tile: Tile, sortAcrossTiles: boolean): void;
+	attemptAnchorPlacement(textAnchorOffset: TextAnchorOffset, textBox: SingleCollisionBox, width: number, height: number, textBoxScale: number, rotateWithMap: boolean, pitchWithMap: boolean, textPixelRatio: number, unwrappedTileID: any, collisionGroup: CollisionGroup, textOverlapMode: OverlapMode, symbolInstance: SymbolInstance, bucket: SymbolBucket, orientation: number, translationText: [
+		number,
+		number
+	], translationIcon: [
+		number,
+		number
+	], iconBox?: SingleCollisionBox | null, getElevation?: (x: number, y: number) => number, simpleProjectionMatrix?: mat4): {
+		shift: Point;
+		placedGlyphBoxes: PlacedBox;
+	};
+	placeLayerBucketPart(bucketPart: BucketPart, seenCrossTileIDs: {
+		[k in string | number]: boolean;
+	}, showCollisionBoxes: boolean): void;
+	storeCollisionData(bucketInstanceId: number, symbolIndex: number, collisionArrays: CollisionArrays, placedGlyphBoxes: PlacedBox, placedIconBoxes: PlacedBox, placedGlyphCircles: PlacedCircles): void;
+	markUsedJustification(bucket: SymbolBucket, placedAnchor: TextAnchor, symbolInstance: SymbolInstance, orientation: number): void;
+	markUsedOrientation(bucket: SymbolBucket, orientation: number, symbolInstance: SymbolInstance): void;
+	commit(now: number): void;
+	updateLayerOpacities(styleLayer: StyleLayer, tiles: Array<Tile>): void;
+	updateBucketOpacities(bucket: SymbolBucket, tileID: OverscaledTileID, seenCrossTileIDs: {
+		[k in string | number]: boolean;
+	}, collisionBoxArray?: CollisionBoxArray | null): void;
+	symbolFadeChange(now: number): number;
+	zoomAdjustment(zoom: number): number;
+	hasTransitions(now: number): boolean;
+	stillRecent(now: number, zoom: number): boolean;
+	setStale(): void;
+}
+/**
+ * Options to pass to query the map for the rendered features
+ */
+export type QueryRenderedFeaturesOptions = {
+	/**
+	 * An array or set of [style layer IDs](https://maplibre.org/maplibre-style-spec/#layer-id) for the query to inspect.
+	 * Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
+	 */
+	layers?: Array<string> | Set<string>;
+	/**
+	 * A [filter](https://maplibre.org/maplibre-style-spec/layers/#filter) to limit query results.
+	 */
+	filter?: FilterSpecification;
+	/**
+	 * An array of string representing the available images
+	 */
+	availableImages?: Array<string>;
+	/**
+	 * Whether to check if the [options.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+	 */
+	validate?: boolean;
+};
+export type QueryRenderedFeaturesOptionsStrict = Omit<QueryRenderedFeaturesOptions, "layers"> & {
+	layers: Set<string> | null;
+};
+/**
+ * The options object related to the {@link Map#querySourceFeatures} method
+ */
+export type QuerySourceFeatureOptions = {
+	/**
+	 * The name of the source layer to query. *For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.
+	 */
+	sourceLayer?: string;
+	/**
+	 * A [filter](https://maplibre.org/maplibre-style-spec/layers/#filter)
+	 * to limit query results.
+	 */
+	filter?: FilterSpecification;
+	/**
+	 * Whether to check if the [parameters.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+	 * @defaultValue true
+	 */
+	validate?: boolean;
 };
 /**
  * The tile's state, can be:
@@ -4304,11 +5735,7 @@ declare class Tile {
 		[_: string]: StyleLayer;
 	}, serializedLayers: {
 		[_: string]: any;
-	}, sourceFeatureState: SourceFeatureState, queryGeometry: Array<Point>, cameraQueryGeometry: Array<Point>, scale: number, params: {
-		filter: FilterSpecification;
-		layers: Array<string>;
-		availableImages: Array<string>;
-	}, transform: Transform, maxPitchScaleFactor: number, pixelPosMatrix: mat4): {
+	}, sourceFeatureState: SourceFeatureState, queryGeometry: Array<Point>, cameraQueryGeometry: Array<Point>, scale: number, params: Pick<QueryRenderedFeaturesOptionsStrict, "filter" | "layers" | "availableImages"> | undefined, transform: IReadonlyTransform, maxPitchScaleFactor: number, pixelPosMatrix: mat4): {
 		[_: string]: Array<{
 			featureIndex: number;
 			feature: GeoJSONFeature;
@@ -4375,7 +5802,7 @@ declare class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> i
 	uploadPending(): boolean;
 	upload(context: Context): void;
 	destroy(): void;
-	addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID): void;
+	addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, granularity?: CircleGranularity): void;
 }
 export type CircleLayoutProps = {
 	"circle-sort-key": DataDrivenProperty<number>;
@@ -4424,7 +5851,7 @@ declare class CircleStyleLayer extends StyleLayer {
 	constructor(layer: LayerSpecification);
 	createBucket(parameters: BucketParameters<any>): CircleBucket<any>;
 	queryRadius(bucket: Bucket): number;
-	queryIntersectsFeature(queryGeometry: Array<Point>, feature: VectorTileFeature, featureState: FeatureState, geometry: Array<Array<Point>>, zoom: number, transform: Transform, pixelsToTileUnits: number, pixelPosMatrix: mat4): boolean;
+	queryIntersectsFeature(queryGeometry: Array<Point>, feature: VectorTileFeature, featureState: FeatureState, geometry: Array<Array<Point>>, zoom: number, transform: IReadonlyTransform, pixelsToTileUnits: number, pixelPosMatrix: mat4): boolean;
 }
 declare class FillBucket implements Bucket {
 	index: number;
@@ -4460,7 +5887,7 @@ declare class FillBucket implements Bucket {
 	destroy(): void;
 	addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {
 		[_: string]: ImagePosition;
-	}): void;
+	}, subdivisionGranularity: SubdivisionGranularitySetting): void;
 }
 export type FillLayoutProps = {
 	"fill-sort-key": DataDrivenProperty<number>;
@@ -4502,7 +5929,7 @@ declare class FillStyleLayer extends StyleLayer {
 	recalculate(parameters: EvaluationParameters, availableImages: Array<string>): void;
 	createBucket(parameters: BucketParameters<any>): FillBucket;
 	queryRadius(): number;
-	queryIntersectsFeature(queryGeometry: Array<Point>, feature: VectorTileFeature, featureState: FeatureState, geometry: Array<Array<Point>>, zoom: number, transform: Transform, pixelsToTileUnits: number): boolean;
+	queryIntersectsFeature(queryGeometry: Array<Point>, feature: VectorTileFeature, featureState: FeatureState, geometry: Array<Array<Point>>, zoom: number, transform: IReadonlyTransform, pixelsToTileUnits: number): boolean;
 	isTileClipped(): boolean;
 }
 declare class FillExtrusionBucket implements Bucket {
@@ -4538,7 +5965,13 @@ declare class FillExtrusionBucket implements Bucket {
 	destroy(): void;
 	addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {
 		[_: string]: ImagePosition;
-	}): void;
+	}, subdivisionGranularity: SubdivisionGranularitySetting): void;
+	private processPolygon;
+	/**
+	 * Generates side faces for the supplied geometry. Assumes `geometry` to be a line string, like the output of {@link subdivideVertexLine}.
+	 * For rings, it is assumed that the first and last vertex of `geometry` are equal.
+	 */
+	private _generateSideFaces;
 }
 export type FillExtrusionPaintProps = {
 	"fill-extrusion-opacity": DataConstantProperty<number>;
@@ -4574,7 +6007,7 @@ declare class FillExtrusionStyleLayer extends StyleLayer {
 	createBucket(parameters: BucketParameters<FillExtrusionStyleLayer>): FillExtrusionBucket;
 	queryRadius(): number;
 	is3D(): boolean;
-	queryIntersectsFeature(queryGeometry: Array<Point>, feature: VectorTileFeature, featureState: FeatureState, geometry: Array<Array<Point>>, zoom: number, transform: Transform, pixelsToTileUnits: number, pixelPosMatrix: mat4): boolean | number;
+	queryIntersectsFeature(queryGeometry: Array<Point>, feature: VectorTileFeature, featureState: FeatureState, geometry: Array<Array<Point>>, zoom: number, transform: IReadonlyTransform, pixelsToTileUnits: number, pixelPosMatrix: mat4): boolean | number;
 }
 export type HillshadePaintProps = {
 	"hillshade-illumination-direction": DataConstantProperty<number>;
@@ -4653,8 +6086,8 @@ declare class LineBucket implements Bucket {
 	lineFeatureClips(feature: BucketFeature): LineClips | undefined;
 	addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {
 		[_: string]: ImagePosition;
-	}): void;
-	addLine(vertices: Array<Point>, feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number): void;
+	}, subdivisionGranularity: SubdivisionGranularitySetting): void;
+	addLine(vertices: Array<Point>, feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number, canonical: CanonicalTileID | undefined, subdivisionGranularity: SubdivisionGranularitySetting): void;
 	/**
 	 * Add two vertices to the buffers.
 	 *
@@ -4730,7 +6163,7 @@ declare class LineStyleLayer extends StyleLayer {
 	recalculate(parameters: EvaluationParameters, availableImages: Array<string>): void;
 	createBucket(parameters: BucketParameters<any>): LineBucket;
 	queryRadius(bucket: Bucket): number;
-	queryIntersectsFeature(queryGeometry: Array<Point>, feature: VectorTileFeature, featureState: FeatureState, geometry: Array<Array<Point>>, zoom: number, transform: Transform, pixelsToTileUnits: number): boolean;
+	queryIntersectsFeature(queryGeometry: Array<Point>, feature: VectorTileFeature, featureState: FeatureState, geometry: Array<Array<Point>>, zoom: number, transform: IReadonlyTransform, pixelsToTileUnits: number): boolean;
 	isTileClipped(): boolean;
 }
 export type TypedStyleLayer = CircleStyleLayer | FillStyleLayer | FillExtrusionStyleLayer | HeatmapStyleLayer | HillshadeStyleLayer | LineStyleLayer | SymbolStyleLayer;
@@ -4828,7 +6261,15 @@ declare class CullFaceMode {
 	frontFace: FrontFaceType;
 	constructor(enable: boolean, mode: CullFaceModeType, frontFace: FrontFaceType);
 	static disabled: Readonly<CullFaceMode>;
+	/**
+	 * The standard GL cull mode. Culls backfacing triangles when counterclockwise vertex order is used.
+	 * Use for 3D geometry such as terrain.
+	 */
 	static backCCW: Readonly<CullFaceMode>;
+	/**
+	 * Opposite of {@link backCCW}. Culls front-facing triangles when counterclockwise vertex order is used.
+	 */
+	static frontCCW: Readonly<CullFaceMode>;
 }
 export type SkyProps = {
 	"sky-color": DataConstantProperty<Color>;
@@ -4854,6 +6295,7 @@ declare class Sky extends Evented {
 	 * This is used to cache the gl mesh for the sky, it should be initialized only once.
 	 */
 	mesh: Mesh | undefined;
+	atmosphereMesh: Mesh | undefined;
 	_transitionable: Transitionable<SkyProps>;
 	_transitioning: Transitioning<SkyProps>;
 	constructor(sky?: SkySpecification);
@@ -4883,6 +6325,13 @@ export type TerrainPreludeUniformsType = {
 	"u_terrain_unpack": Uniform4f;
 	"u_terrain_exaggeration": Uniform1f;
 };
+export type ProjectionPreludeUniformsType = {
+	"u_projection_matrix": UniformMatrix4f;
+	"u_projection_tile_mercator_coords": Uniform4f;
+	"u_projection_clipping_plane": Uniform4f;
+	"u_projection_transition": Uniform1f;
+	"u_projection_fallback_matrix": UniformMatrix4f;
+};
 export type DrawMode = WebGLRenderingContextBase["LINES"] | WebGLRenderingContextBase["TRIANGLES"] | WebGL2RenderingContext["LINE_STRIP"];
 declare class Program<Us extends UniformBindings> {
 	program: WebGLProgram;
@@ -4892,15 +6341,11 @@ declare class Program<Us extends UniformBindings> {
 	numAttributes: number;
 	fixedUniforms: Us;
 	terrainUniforms: TerrainPreludeUniformsType;
+	projectionUniforms: ProjectionPreludeUniformsType;
 	binderUniforms: Array<BinderUniform>;
 	failedToCreate: boolean;
-	constructor(context: Context, source: {
-		fragmentSource: string;
-		vertexSource: string;
-		staticAttributes: Array<string>;
-		staticUniforms: Array<string>;
-	}, configuration: ProgramConfiguration, fixedUniforms: (b: Context, a: UniformLocations) => Us, showOverdrawInspector: boolean, terrain: Terrain);
-	draw(context: Context, drawMode: DrawMode, depthMode: Readonly<DepthMode>, stencilMode: Readonly<StencilMode>, colorMode: Readonly<ColorMode>, cullFaceMode: Readonly<CullFaceMode>, uniformValues: UniformValues<Us>, terrain: TerrainData, layerID: string, layoutVertexBuffer: VertexBuffer, indexBuffer: IndexBuffer, segments: SegmentVector, currentProperties?: any, zoom?: number | null, configuration?: ProgramConfiguration | null, dynamicLayoutBuffer?: VertexBuffer | null, dynamicLayoutBuffer2?: VertexBuffer | null, dynamicLayoutBuffer3?: VertexBuffer | null): void;
+	constructor(context: Context, source: PreparedShader, configuration: ProgramConfiguration, fixedUniforms: (b: Context, a: UniformLocations) => Us, showOverdrawInspector: boolean, hasTerrain: boolean, projectionPrelude: PreparedShader, projectionDefine: string);
+	draw(context: Context, drawMode: DrawMode, depthMode: Readonly<DepthMode>, stencilMode: Readonly<StencilMode>, colorMode: Readonly<ColorMode>, cullFaceMode: Readonly<CullFaceMode>, uniformValues: UniformValues<Us>, terrain: TerrainData, projectionData: ProjectionData, layerID: string, layoutVertexBuffer: VertexBuffer, indexBuffer: IndexBuffer, segments: SegmentVector, currentProperties?: any, zoom?: number | null, configuration?: ProgramConfiguration | null, dynamicLayoutBuffer?: VertexBuffer | null, dynamicLayoutBuffer2?: VertexBuffer | null, dynamicLayoutBuffer3?: VertexBuffer | null): void;
 }
 declare class VertexBuffer {
 	length: number;
@@ -5184,442 +6629,6 @@ declare class Light extends Evented {
 		validate?: boolean;
 	}): boolean;
 }
-/**
- * The overlap mode for properties like `icon-overlap`and `text-overlap`
- */
-export type OverlapMode = "never" | "always" | "cooperative";
-export type QueryResult<T> = {
-	key: T;
-	x1: number;
-	y1: number;
-	x2: number;
-	y2: number;
-};
-/**
- * A key for the grid
- */
-export type GridKey = {
-	overlapMode?: OverlapMode;
-};
-declare class GridIndex<T extends GridKey> {
-	circleKeys: Array<T>;
-	boxKeys: Array<T>;
-	boxCells: Array<Array<number>>;
-	circleCells: Array<Array<number>>;
-	bboxes: Array<number>;
-	circles: Array<number>;
-	xCellCount: number;
-	yCellCount: number;
-	width: number;
-	height: number;
-	xScale: number;
-	yScale: number;
-	boxUid: number;
-	circleUid: number;
-	constructor(width: number, height: number, cellSize: number);
-	keysLength(): number;
-	insert(key: T, x1: number, y1: number, x2: number, y2: number): void;
-	insertCircle(key: T, x: number, y: number, radius: number): void;
-	private _insertBoxCell;
-	private _insertCircleCell;
-	private _query;
-	query(x1: number, y1: number, x2: number, y2: number): Array<QueryResult<T>>;
-	hitTest(x1: number, y1: number, x2: number, y2: number, overlapMode: OverlapMode, predicate?: (key: T) => boolean): boolean;
-	hitTestCircle(x: number, y: number, radius: number, overlapMode: OverlapMode, predicate?: (key: T) => boolean): boolean;
-	private _queryCell;
-	private _queryCellCircle;
-	private _forEachCell;
-	private _convertToXCellCoord;
-	private _convertToYCellCoord;
-	private _circlesCollide;
-	private _circleAndRectCollide;
-}
-/**
- * A greatly reduced version of the `Projection` interface from the globe branch,
- * used to port symbol bugfixes over to the main branch. Will be replaced with
- * the proper interface once globe is merged.
- */
-export type Projection = {
-	useSpecialProjectionForSymbols: boolean;
-	isOccluded(_x: any, _y: any, _t: any): boolean;
-	projectTileCoordinates(_x: any, _y: any, _t: any, _ele: any): PointProjection;
-	getPitchedTextCorrection(_transform: any, _anchor: any, _tile: any): number;
-	translatePosition(transform: {
-		angle: number;
-		zoom: number;
-	}, tile: Tile, translate: [
-		number,
-		number
-	], translateAnchor: "map" | "viewport"): [
-		number,
-		number
-	];
-	getCircleRadiusCorrection(tr: any): number;
-};
-/**
- * The result of projecting a point to the screen, with some additional information about the projection.
- */
-export type PointProjection = {
-	/**
-	 * The projected point.
-	 */
-	point: Point;
-	/**
-	 * The original W component of the projection.
-	 */
-	signedDistanceFromCamera: number;
-	/**
-	 * For complex projections (such as globe), true if the point is occluded by the projection, such as by being on the backfacing side of the globe.
-	 */
-	isOccluded: boolean;
-};
-export type IndexToPointCache = {
-	[lineIndex: number]: Point;
-};
-/**
- * @internal
- * We calculate label-plane projected points for line vertices as we place glyphs along the line
- * Since we will use the same vertices for potentially many glyphs, cache the results for this bucket
- * over the course of the render. Each vertex location also potentially has one offset equivalent
- * for us to hold onto. The vertex indices are per-symbol-bucket.
- */
-export type ProjectionCache = {
-	/**
-	 * tile-unit vertices projected into label-plane units
-	 */
-	projections: IndexToPointCache;
-	/**
-	 * label-plane vertices which have been shifted to follow an offset line
-	 */
-	offsets: IndexToPointCache;
-	/**
-	 * Cached projected anchor point.
-	 */
-	cachedAnchorPoint: Point | undefined;
-	/**
-	 * Was any projected point occluded by the map itself (eg. occluded by the planet when using globe projection).
-	 *
-	 * Viewport-pitched line-following texts where *any* of the line points is hidden behind the planet curve becomes entirely hidden.
-	 * This is perhaps not the most ideal behavior, but it works, it is simple and planetary-scale texts such as this seem to be a rare edge case.
-	 */
-	anyProjectionOccluded: boolean;
-};
-/**
- * @internal
- * Arguments necessary to project a vertex to the label plane
- */
-export type SymbolProjectionContext = {
-	/**
-	 * Used to cache results, save cost if projecting the same vertex multiple times
-	 */
-	projectionCache: ProjectionCache;
-	/**
-	 * The array of tile-unit vertices transferred from worker
-	 */
-	lineVertexArray: SymbolLineVertexArray;
-	/**
-	 * Label plane projection matrix
-	 */
-	labelPlaneMatrix: mat4;
-	/**
-	 * Function to get elevation at a point
-	 * @param x - the x coordinate
-	 * @param y - the y coordinate
-	*/
-	getElevation: (x: number, y: number) => number;
-	/**
-	 * Only for creating synthetic vertices if vertex would otherwise project behind plane of camera,
-	 * but still convenient to pass it inside this type.
-	 */
-	tileAnchorPoint: Point;
-	/**
-	 * True when line glyphs are projected onto the map, instead of onto the viewport.
-	 */
-	pitchWithMap: boolean;
-	projection: Projection;
-	unwrappedTileID: UnwrappedTileID;
-	/**
-	 * Viewport width.
-	 */
-	width: number;
-	/**
-	 * Viewport height.
-	 */
-	height: number;
-	/**
-	 * Translation in tile units, computed using text-translate and text-translate-anchor paint style properties.
-	 */
-	translation: [
-		number,
-		number
-	];
-};
-export type PlacedCircles = {
-	circles: Array<number>;
-	offscreen: boolean;
-	collisionDetected: boolean;
-};
-export type PlacedBox = {
-	box: Array<number>;
-	placeable: boolean;
-	offscreen: boolean;
-};
-export type FeatureKey = {
-	bucketInstanceId: number;
-	featureIndex: number;
-	collisionGroupID: number;
-	overlapMode: OverlapMode;
-};
-declare class CollisionIndex {
-	grid: GridIndex<FeatureKey>;
-	ignoredGrid: GridIndex<FeatureKey>;
-	transform: Transform;
-	pitchFactor: number;
-	screenRightBoundary: number;
-	screenBottomBoundary: number;
-	gridRightBoundary: number;
-	gridBottomBoundary: number;
-	mapProjection: Projection;
-	perspectiveRatioCutoff: number;
-	constructor(transform: Transform, projection: Projection, grid?: GridIndex<FeatureKey>, ignoredGrid?: GridIndex<FeatureKey>);
-	placeCollisionBox(collisionBox: SingleCollisionBox, overlapMode: OverlapMode, textPixelRatio: number, posMatrix: mat4, unwrappedTileID: UnwrappedTileID, pitchWithMap: boolean, rotateWithMap: boolean, translation: [
-		number,
-		number
-	], collisionGroupPredicate?: (key: FeatureKey) => boolean, getElevation?: (x: number, y: number) => number, shift?: Point): PlacedBox;
-	placeCollisionCircles(overlapMode: OverlapMode, symbol: any, lineVertexArray: SymbolLineVertexArray, glyphOffsetArray: GlyphOffsetArray, fontSize: number, posMatrix: mat4, unwrappedTileID: UnwrappedTileID, labelPlaneMatrix: mat4, labelToScreenMatrix: mat4, showCollisionCircles: boolean, pitchWithMap: boolean, collisionGroupPredicate: (key: FeatureKey) => boolean, circlePixelDiameter: number, textPixelPadding: number, translation: [
-		number,
-		number
-	], getElevation: (x: number, y: number) => number): PlacedCircles;
-	projectPathToScreenSpace(projectedPath: Array<Point>, projectionContext: SymbolProjectionContext, labelToScreenMatrix: mat4): PointProjection[];
-	/**
-	 * Because the geometries in the CollisionIndex are an approximation of the shape of
-	 * symbols on the map, we use the CollisionIndex to look up the symbol part of
-	 * `queryRenderedFeatures`.
-	 */
-	queryRenderedSymbols(viewportQueryGeometry: Array<Point>): {};
-	insertCollisionBox(collisionBox: Array<number>, overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number): void;
-	insertCollisionCircles(collisionCircles: Array<number>, overlapMode: OverlapMode, ignorePlacement: boolean, bucketInstanceId: number, featureIndex: number, collisionGroupID: number): void;
-	projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, _unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number): {
-		point: Point;
-		perspectiveRatio: number;
-		isOccluded: boolean;
-		signedDistanceFromCamera: any;
-	};
-	getPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number): number;
-	isOffscreen(x1: number, y1: number, x2: number, y2: number): boolean;
-	isInsideGrid(x1: number, y1: number, x2: number, y2: number): boolean;
-	getViewportMatrix(): mat4;
-	/**
-	 * Applies all layout+paint properties of the given box in order to find as good approximation of its screen-space bounding box as possible.
-	 */
-	private _projectCollisionBox;
-}
-declare enum TextAnchorEnum {
-	"center" = 1,
-	"left" = 2,
-	"right" = 3,
-	"top" = 4,
-	"bottom" = 5,
-	"top-left" = 6,
-	"top-right" = 7,
-	"bottom-left" = 8,
-	"bottom-right" = 9
-}
-export type TextAnchor = keyof typeof TextAnchorEnum;
-declare class OpacityState {
-	opacity: number;
-	placed: boolean;
-	constructor(prevState: OpacityState, increment: number, placed: boolean, skipFade?: boolean | null);
-	isHidden(): boolean;
-}
-declare class JointOpacityState {
-	text: OpacityState;
-	icon: OpacityState;
-	constructor(prevState: JointOpacityState, increment: number, placedText: boolean, placedIcon: boolean, skipFade?: boolean | null);
-	isHidden(): boolean;
-}
-declare class JointPlacement {
-	text: boolean;
-	icon: boolean;
-	skipFade: boolean;
-	constructor(text: boolean, icon: boolean, skipFade: boolean);
-}
-declare class CollisionCircleArray {
-	invProjMatrix: mat4;
-	viewportMatrix: mat4;
-	circles: Array<number>;
-	constructor();
-}
-declare class RetainedQueryData {
-	bucketInstanceId: number;
-	featureIndex: FeatureIndex;
-	sourceLayerIndex: number;
-	bucketIndex: number;
-	tileID: OverscaledTileID;
-	featureSortOrder: Array<number>;
-	constructor(bucketInstanceId: number, featureIndex: FeatureIndex, sourceLayerIndex: number, bucketIndex: number, tileID: OverscaledTileID);
-}
-export type CollisionGroup = {
-	ID: number;
-	predicate?: (key: FeatureKey) => boolean;
-};
-declare class CollisionGroups {
-	collisionGroups: {
-		[groupName: string]: CollisionGroup;
-	};
-	maxGroupID: number;
-	crossSourceCollisions: boolean;
-	constructor(crossSourceCollisions: boolean);
-	get(sourceID: string): CollisionGroup;
-}
-export type VariableOffset = {
-	textOffset: [
-		number,
-		number
-	];
-	width: number;
-	height: number;
-	anchor: TextAnchor;
-	textBoxScale: number;
-	prevAnchor?: TextAnchor;
-};
-export type TileLayerParameters = {
-	bucket: SymbolBucket;
-	layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
-	translationText: [
-		number,
-		number
-	];
-	translationIcon: [
-		number,
-		number
-	];
-	unwrappedTileID: UnwrappedTileID;
-	posMatrix: mat4;
-	textLabelPlaneMatrix: mat4;
-	labelToScreenMatrix: mat4;
-	scale: number;
-	textPixelRatio: number;
-	holdingForFade: boolean;
-	collisionBoxArray: CollisionBoxArray;
-	partiallyEvaluatedTextSize: {
-		uSize: number;
-		uSizeT: number;
-	};
-	collisionGroup: CollisionGroup;
-};
-export type BucketPart = {
-	sortKey?: number | void;
-	symbolInstanceStart: number;
-	symbolInstanceEnd: number;
-	parameters: TileLayerParameters;
-};
-export type CrossTileID = string | number;
-declare class Placement {
-	transform: Transform;
-	terrain: Terrain;
-	collisionIndex: CollisionIndex;
-	placements: {
-		[_ in CrossTileID]: JointPlacement;
-	};
-	opacities: {
-		[_ in CrossTileID]: JointOpacityState;
-	};
-	variableOffsets: {
-		[_ in CrossTileID]: VariableOffset;
-	};
-	placedOrientations: {
-		[_ in CrossTileID]: number;
-	};
-	commitTime: number;
-	prevZoomAdjustment: number;
-	lastPlacementChangeTime: number;
-	stale: boolean;
-	fadeDuration: number;
-	retainedQueryData: {
-		[_: number]: RetainedQueryData;
-	};
-	collisionGroups: CollisionGroups;
-	prevPlacement: Placement;
-	zoomAtLastRecencyCheck: number;
-	collisionCircleArrays: {
-		[k in any]: CollisionCircleArray;
-	};
-	collisionBoxArrays: Map<number, Map<number, {
-		text: number[];
-		icon: number[];
-	}>>;
-	constructor(transform: Transform, projection: Projection, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement);
-	private _getTerrainElevationFunc;
-	getBucketParts(results: Array<BucketPart>, styleLayer: StyleLayer, tile: Tile, sortAcrossTiles: boolean): void;
-	attemptAnchorPlacement(textAnchorOffset: TextAnchorOffset, textBox: SingleCollisionBox, width: number, height: number, textBoxScale: number, rotateWithMap: boolean, pitchWithMap: boolean, textPixelRatio: number, posMatrix: mat4, unwrappedTileID: any, collisionGroup: CollisionGroup, textOverlapMode: OverlapMode, symbolInstance: SymbolInstance, bucket: SymbolBucket, orientation: number, translationText: [
-		number,
-		number
-	], translationIcon: [
-		number,
-		number
-	], iconBox?: SingleCollisionBox | null, getElevation?: (x: number, y: number) => number): {
-		shift: Point;
-		placedGlyphBoxes: PlacedBox;
-	};
-	placeLayerBucketPart(bucketPart: BucketPart, seenCrossTileIDs: {
-		[k in string | number]: boolean;
-	}, showCollisionBoxes: boolean): void;
-	storeCollisionData(bucketInstanceId: number, symbolIndex: number, collisionArrays: CollisionArrays, placedGlyphBoxes: PlacedBox, placedIconBoxes: PlacedBox, placedGlyphCircles: PlacedCircles): void;
-	markUsedJustification(bucket: SymbolBucket, placedAnchor: TextAnchor, symbolInstance: SymbolInstance, orientation: number): void;
-	markUsedOrientation(bucket: SymbolBucket, orientation: number, symbolInstance: SymbolInstance): void;
-	commit(now: number): void;
-	updateLayerOpacities(styleLayer: StyleLayer, tiles: Array<Tile>): void;
-	updateBucketOpacities(bucket: SymbolBucket, tileID: OverscaledTileID, seenCrossTileIDs: {
-		[k in string | number]: boolean;
-	}, collisionBoxArray?: CollisionBoxArray | null): void;
-	symbolFadeChange(now: number): number;
-	zoomAdjustment(zoom: number): number;
-	hasTransitions(now: number): boolean;
-	stillRecent(now: number, zoom: number): boolean;
-	setStale(): void;
-}
-/**
- * Options to pass to query the map for the rendered features
- */
-export type QueryRenderedFeaturesOptions = {
-	/**
-	 * An array of [style layer IDs](https://maplibre.org/maplibre-style-spec/#layer-id) for the query to inspect.
-	 * Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
-	 */
-	layers?: Array<string>;
-	/**
-	 * A [filter](https://maplibre.org/maplibre-style-spec/layers/#filter) to limit query results.
-	 */
-	filter?: FilterSpecification;
-	/**
-	 * An array of string representing the available images
-	 */
-	availableImages?: Array<string>;
-	/**
-	 * Whether to check if the [options.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
-	 */
-	validate?: boolean;
-};
-/**
- * The options object related to the {@link Map#querySourceFeatures} method
- */
-export type QuerySourceFeatureOptions = {
-	/**
-	 * The name of the source layer to query. *For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.
-	 */
-	sourceLayer?: string;
-	/**
-	 * A [filter](https://maplibre.org/maplibre-style-spec/layers/#filter)
-	 * to limit query results.
-	 */
-	filter?: FilterSpecification;
-	/**
-	 * Whether to check if the [parameters.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
-	 * @defaultValue true
-	 */
-	validate?: boolean;
-};
 declare class LayerPlacement {
 	_sortAcrossTiles: boolean;
 	_currentTileIndex: number;
@@ -5638,7 +6647,7 @@ declare class PauseablePlacement {
 	_forceFullPlacement: boolean;
 	_showCollisionBoxes: boolean;
 	_inProgressLayer: LayerPlacement;
-	constructor(transform: Transform, terrain: Terrain, order: Array<string>, forceFullPlacement: boolean, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement);
+	constructor(transform: ITransform, terrain: Terrain, order: Array<string>, forceFullPlacement: boolean, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement);
 	isDone(): boolean;
 	continuePlacement(order: Array<string>, layers: {
 		[_: string]: StyleLayer;
@@ -5654,7 +6663,7 @@ export type CustomRenderMethodInput = {
 	/**
 	 * This value represents the distance from the camera to the far clipping plane.
 	 * It is used in the calculation of the projection matrix to determine which objects are visible.
-	 * farz should be larger than nearZ.
+	 * farZ should be larger than nearZ.
 	 */
 	farZ: number;
 	/**
@@ -5663,7 +6672,9 @@ export type CustomRenderMethodInput = {
 	 * nearZ should be smaller than farZ.
 	 */
 	nearZ: number;
-	/** field of view of camera **/
+	/**
+	 * Vertical field of view in radians.
+	 */
 	fov: number;
 	/**
 	* model view projection matrix
@@ -5677,18 +6688,81 @@ export type CustomRenderMethodInput = {
 	* https://learnopengl.com/Getting-started/Coordinate-Systems
 	*/
 	projectionMatrix: mat4;
+	/**
+	 * Data required for picking and compiling a custom shader for the current projection.
+	 */
+	shaderData: {
+		/**
+		 * Name of the shader variant that should be used.
+		 * Depends on current projection.
+		 * Whenever the other shader properties change, this string changes as well,
+		 * and can be used as a key with which to cache compiled shaders.
+		 */
+		variantName: string;
+		/**
+		 * The prelude code to add to the vertex shader to access MapLibre's `projectTile` projection function.
+		 * Depends on current projection.
+		 * @example
+		 * ```
+		 * const vertexSource = `#version 300 es
+		 * ${shaderData.vertexShaderPrelude}
+		 * ${shaderData.define}
+		 * in vec2 a_pos;
+		 * void main() {
+		 *     gl_Position = projectTile(a_pos);
+		 * }`;
+		 * ```
+		 */
+		vertexShaderPrelude: string;
+		/**
+		 * Defines to add to the shader code.
+		 * Depends on current projection.
+		 * @example
+		 * ```
+		 * const vertexSource = `#version 300 es
+		 * ${shaderData.vertexShaderPrelude}
+		 * ${shaderData.define}
+		 * in vec2 a_pos;
+		 * void main() {
+		 *     gl_Position = projectTile(a_pos);
+		 *     #ifdef GLOBE
+		 *     // Do globe-specific things
+		 *     #endif
+		 * }`;
+		 * ```
+		 */
+		define: string;
+	};
+	/**
+	 * Uniforms that should be passed to the vertex shader, if MapLibre's projection code is used.
+	 * For more details of this object's internals, see its doc comments in `src/geo/projection/projection_data.ts`.
+	 *
+	 * These uniforms are set so that `projectTile` in shader accepts a vec2 in range 0..1 in web mercator coordinates.
+	 * Use `map.transform.getProjectionData(tileID)` to get uniforms for a given tile and pass vec2 in tile-local range 0..EXTENT instead.
+	 *
+	 * For projection 3D features, use `projectTileFor3D` in the shader.
+	 *
+	 * If you just need a projection matrix, use `defaultProjectionData.projectionMatrix`.
+	 * A projection matrix is sufficient for simple custom layers that also only support mercator projection.
+	 *
+	 * Under mercator projection, when these uniforms are used, the shader's `projectTile` function projects spherical mercator
+	 * coordinates to gl clip space coordinates. The spherical mercator coordinate `[0, 0]` represents the
+	 * top left corner of the mercator world and `[1, 1]` represents the bottom right corner. When
+	 * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
+	 * lengths in mercator units would be rendered as a cube. {@link MercatorCoordinate.fromLngLat}
+	 * can be used to project a `LngLat` to a mercator coordinate.
+	 *
+	 * Under globe projection, when these uniforms are used, the `elevation` parameter
+	 * passed to `projectTileFor3D` in the shader is elevation in meters above "sea level",
+	 * or more accurately for globe, elevation above the surface of the perfect sphere used to render the planet.
+	 */
+	defaultProjectionData: ProjectionData;
 };
 /**
  * @param gl - The map's gl context.
- * @param matrix - The map's camera matrix. It projects spherical mercator
- * coordinates to gl clip space coordinates. The spherical mercator coordinate `[0, 0]` represents the
- * top left corner of the mercator world and `[1, 1]` represents the bottom right corner. When
- * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
- * lengths in mercator units would be rendered as a cube. {@link MercatorCoordinate.fromLngLat}
- * can be used to project a `LngLat` to a mercator coordinate.
- * @param options - Argument object with additional render inputs like camera properties.
+ * @param options - Argument object with render inputs like camera properties.
  */
-export type CustomRenderMethod = (gl: WebGLRenderingContext | WebGL2RenderingContext, matrix: mat4, options: CustomRenderMethodInput) => void;
+export type CustomRenderMethod = (gl: WebGLRenderingContext | WebGL2RenderingContext, options: CustomRenderMethodInput) => void;
 /**
  * Interface for custom style layers. This is a specification for
  * implementers to model: it is not an exported method or class.
@@ -5815,6 +6889,106 @@ export type ValidationError = {
 };
 export type Validator = (a: any) => ReadonlyArray<ValidationError>;
 /**
+ * Custom projections are handled both by a class which implements this `Projection` interface,
+ * and a class that is derived from the `Transform` base class. What is the difference?
+ *
+ * The transform-derived class:
+ * - should do all the heavy lifting for the projection - implement all the `project*` and `unproject*` functions, etc.
+ * - must store the map's state - center, pitch, etc. - this is handled in the `Transform` base class
+ * - must be cloneable - it should not create any heavy resources
+ *
+ * The projection-implementing class:
+ * - must provide basic information and data about the projection, which is *independent of the map's state* - name, shader functions, subdivision settings, etc.
+ * - must be a "singleton" - no matter how many copies of the matching Transform class exist, the Projection should always exist as a single instance (per Map)
+ * - may create heavy resources that should not exist in multiple copies (projection is never cloned) - for example, see the GPU inaccuracy mitigation for globe projection
+ * - must be explicitly disposed of after usage using the `destroy` function - this allows the implementing class to free any allocated resources
+ */
+/**
+ * @internal
+ */
+export type ProjectionGPUContext = {
+	context: Context;
+	useProgram: (name: string) => Program<any>;
+};
+/**
+ * @internal
+ * Specifies the usage for a square tile mesh:
+ * - 'stencil' for drawing stencil masks
+ * - 'raster' for drawing raster tiles, hillshade, etc.
+ */
+export type TileMeshUsage = "stencil" | "raster";
+/**
+ * An interface the implementations of which are used internally by MapLibre to handle different projections.
+ */
+export interface Projection {
+	/**
+	 * @internal
+	 * A short, descriptive name of this projection, such as 'mercator' or 'globe'.
+	 */
+	get name(): ProjectionSpecification["type"];
+	/**
+	 * @internal
+	 * True if this projection needs to render subdivided geometry.
+	 * Optimized rendering paths for non-subdivided geometry might be used throughout MapLibre.
+	 * The value of this property may change during runtime, for example in globe projection depending on zoom.
+	 */
+	get useSubdivision(): boolean;
+	/**
+	 * Name of the shader projection variant that should be used for this projection.
+	 * Note that this value may change dynamically, for example when globe projection internally transitions to mercator.
+	 * Then globe projection might start reporting the mercator shader variant name to make MapLibre use faster mercator shaders.
+	 */
+	get shaderVariantName(): string;
+	/**
+	 * A `#define` macro that is injected into every MapLibre shader that uses this projection.
+	 * @example
+	 * `const define = projection.shaderDefine; // '#define GLOBE'`
+	 */
+	get shaderDefine(): string;
+	/**
+	 * @internal
+	 * A preprocessed prelude code for both vertex and fragment shaders.
+	 */
+	get shaderPreludeCode(): PreparedShader;
+	/**
+	 * Vertex shader code that is injected into every MapLibre vertex shader that uses this projection.
+	 */
+	get vertexShaderPreludeCode(): string;
+	/**
+	 * @internal
+	 * An object describing how much subdivision should be applied to rendered geometry.
+	 * The subdivision settings should be a constant for a given projection.
+	 * Projections that do not require subdivision should return {@link SubdivisionGranularitySetting.noSubdivision}.
+	 */
+	get subdivisionGranularity(): SubdivisionGranularitySetting;
+	/**
+	 * @internal
+	 * Cleans up any resources the projection created, especially GPU buffers.
+	 */
+	destroy(): void;
+	/**
+	 * @internal
+	 * True when an animation handled by the projection is in progress,
+	 * requiring MapLibre to keep rendering new frames.
+	 */
+	isRenderingDirty(): boolean;
+	/**
+	 * @internal
+	 * Runs any GPU-side tasks this projection required. Called at the beginning of every frame.
+	 */
+	updateGPUdependent(renderContext: ProjectionGPUContext): void;
+	/**
+	 * @internal
+	 * Returns a subdivided mesh for a given tile ID, covering 0..EXTENT range.
+	 * @param context - WebGL context.
+	 * @param tileID - The tile coordinates for which to return a mesh. Meshes for tiles that border the top/bottom mercator edge might include extra geometry for the north/south pole.
+	 * @param hasBorder - When true, the mesh will also include a small border beyond the 0..EXTENT range.
+	 * @param allowPoles - When true, the mesh will also include geometry to cover the north (south) pole, if the given tileID borders the mercator range's top (bottom) edge.
+	 * @param usage - Specify the usage of the tile mesh, as different usages might use different levels of subdivision.
+	 */
+	getMeshFromTileID(context: Context, tileID: CanonicalTileID, hasBorder: boolean, allowPoles: boolean, usage: TileMeshUsage): Mesh;
+}
+/**
  * A feature identifier that is bound to a source
  */
 export type FeatureIdentifier = {
@@ -5935,6 +7109,7 @@ export declare class Style extends Evented {
 	glyphManager: GlyphManager;
 	lineAtlas: LineAtlas;
 	light: Light;
+	projection: Projection;
 	sky: Sky;
 	_frameRequest: AbortController;
 	_loadStyleRequest: AbortController;
@@ -6127,21 +7302,24 @@ export declare class Style extends Evented {
 			feature: MapGeoJSONFeature;
 		}>;
 	}>): any[];
-	queryRenderedFeatures(queryGeometry: any, params: QueryRenderedFeaturesOptions, transform: Transform): any[];
+	queryRenderedFeatures(queryGeometry: any, params: QueryRenderedFeaturesOptions, transform: IReadonlyTransform): any[];
 	querySourceFeatures(sourceID: string, params?: QuerySourceFeatureOptions): any[];
 	getLight(): LightSpecification;
 	setLight(lightOptions: LightSpecification, options?: StyleSetterOptions): void;
+	getProjection(): ProjectionSpecification;
+	setProjection(projection: ProjectionSpecification): void;
 	getSky(): SkySpecification;
 	setSky(skyOptions?: SkySpecification, options?: StyleSetterOptions): void;
+	_setProjectionInternal(name: ProjectionSpecification["type"]): void;
 	_validate(validate: Validator, key: string, value: any, props: any, options?: {
 		validate?: boolean;
 	}): boolean;
 	_remove(mapRemoved?: boolean): void;
 	_clearSource(id: string): void;
 	_reloadSource(id: string): void;
-	_updateSources(transform: Transform): void;
+	_updateSources(transform: ITransform): void;
 	_generateCollisionBoxes(): void;
-	_updatePlacement(transform: Transform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement?: boolean): boolean;
+	_updatePlacement(transform: ITransform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement?: boolean): boolean;
 	_releaseSymbolFadeTiles(): void;
 	getImages(mapId: string | number, params: GetImagesParameters): Promise<GetImagesResponse>;
 	getGlyphs(mapId: string | number, params: GetGlyphsParameters): Promise<GetGlyphsResponse>;
@@ -6197,6 +7375,7 @@ export type PopulateParameters = {
 	patternDependencies: {};
 	glyphDependencies: {};
 	availableImages: Array<string>;
+	subdivisionGranularity: SubdivisionGranularitySetting;
 };
 export type IndexedFeature = {
 	feature: VectorTileFeature;
@@ -6281,7 +7460,7 @@ declare abstract class StyleLayer extends Evented {
 	readonly onAdd: ((map: Map$1) => void);
 	readonly onRemove: ((map: Map$1) => void);
 	queryRadius?(bucket: Bucket): number;
-	queryIntersectsFeature?(queryGeometry: Array<Point>, feature: VectorTileFeature, featureState: FeatureState, geometry: Array<Array<Point>>, zoom: number, transform: Transform, pixelsToTileUnits: number, pixelPosMatrix: mat4): boolean | number;
+	queryIntersectsFeature?(queryGeometry: Array<Point>, feature: VectorTileFeature, featureState: FeatureState, geometry: Array<Array<Point>>, zoom: number, transform: IReadonlyTransform, pixelsToTileUnits: number, pixelPosMatrix: mat4): boolean | number;
 	constructor(layer: LayerSpecification | CustomLayerInterface, properties: Readonly<{
 		layout?: Properties<any>;
 		paint?: Properties<any>;
@@ -6740,26 +7919,10 @@ export declare class Hash {
 	 */
 	_updateHash: () => ReturnType<typeof setTimeout>;
 }
-export type TaskID = number;
-export type Task = {
-	callback: (timeStamp: number) => void;
-	id: TaskID;
-	cancelled: boolean;
-};
-declare class TaskQueue {
-	_queue: Array<Task>;
-	_id: TaskID;
-	_cleared: boolean;
-	_currentlyRunning: Array<Task> | false;
-	constructor();
-	add(callback: (timeStamp: number) => void): TaskID;
-	remove(id: TaskID): void;
-	run(timeStamp?: number): void;
-	clear(): void;
-}
 export interface DragMovementResult {
 	bearingDelta?: number;
 	pitchDelta?: number;
+	rollDelta?: number;
 	around?: Point;
 	panDelta?: Point;
 }
@@ -6772,6 +7935,9 @@ export interface DragRotateResult extends DragMovementResult {
 }
 export interface DragPitchResult extends DragMovementResult {
 	pitchDelta: number;
+}
+export interface DragRollResult extends DragMovementResult {
+	rollDelta: number;
 }
 export interface DragMoveHandler<T extends DragMovementResult, E extends Event> extends Handler {
 	dragStart: (e: E, point: Point) => void;
@@ -6793,6 +7959,11 @@ export interface MouseRotateHandler extends DragMoveHandler<DragRotateResult, Mo
  * `MousePitchHandler` allows the user to zoom the map by pitching
  */
 export interface MousePitchHandler extends DragMoveHandler<DragPitchResult, MouseEvent> {
+}
+/**
+ * `MouseRollHandler` allows the user to roll the camera by holding `Ctrl`, right-clicking and dragging
+ */
+export interface MouseRollHandler extends DragMoveHandler<DragRollResult, MouseEvent> {
 }
 declare class TouchPanHandler implements Handler {
 	_enabled: boolean;
@@ -6904,171 +8075,90 @@ export declare class DragPanHandler {
 	 */
 	isActive(): boolean;
 }
-declare class HandlerInertia {
-	_map: Map$1;
-	_inertiaBuffer: Array<{
-		time: number;
-		settings: any;
-	}>;
-	constructor(map: Map$1);
+export type TaskID = number;
+export type Task = {
+	callback: (timeStamp: number) => void;
+	id: TaskID;
+	cancelled: boolean;
+};
+declare class TaskQueue {
+	_queue: Array<Task>;
+	_id: TaskID;
+	_cleared: boolean;
+	_currentlyRunning: Array<Task> | false;
+	constructor();
+	add(callback: (timeStamp: number) => void): TaskID;
+	remove(id: TaskID): void;
+	run(timeStamp?: number): void;
 	clear(): void;
-	record(settings: any): void;
-	_drainInertiaBuffer(): void;
-	_onMoveEnd(panInertiaOptions?: DragPanOptions | boolean): any;
 }
+export type MapControlsDeltas = {
+	panDelta: Point;
+	zoomDelta: number;
+	bearingDelta: number;
+	pitchDelta: number;
+	rollDelta: number;
+	around: Point;
+};
+export type CameraForBoxAndBearingHandlerResult = {
+	center: LngLat;
+	zoom: number;
+	bearing: number;
+};
+export type EaseToHandlerOptions = {
+	bearing: number;
+	pitch: number;
+	roll: number;
+	padding: PaddingOptions;
+	offsetAsPoint: Point;
+	around?: LngLat;
+	aroundPoint?: Point;
+	center?: LngLatLike;
+	zoom?: number;
+	offset?: PointLike;
+};
+export type EaseToHandlerResult = {
+	easeFunc: (k: number) => void;
+	elevationCenter: LngLat;
+	isZooming: boolean;
+};
+export type FlyToHandlerOptions = {
+	bearing: number;
+	pitch: number;
+	roll: number;
+	padding: PaddingOptions;
+	offsetAsPoint: Point;
+	center?: LngLatLike;
+	locationAtOffset: LngLat;
+	zoom?: number;
+	minZoom?: number;
+};
+export type FlyToHandlerResult = {
+	easeFunc: (k: number, scale: number, centerFactor: number, pointAtOffset: Point) => void;
+	scaleOfZoom: number;
+	scaleOfMinZoom?: number;
+	targetCenter: LngLat;
+	pixelPathLength: number;
+};
 /**
- * Handlers interpret dom events and return camera changes that should be
- * applied to the map (`HandlerResult`s). The camera changes are all deltas.
- * The handler itself should have no knowledge of the map's current state.
- * This makes it easier to merge multiple results and keeps handlers simpler.
- * For example, if there is a mousedown and mousemove, the mousePan handler
- * would return a `panDelta` on the mousemove.
+ * @internal
+ * Contains projection-specific functions related to camera controls, easeTo, flyTo, inertia, etc.
  */
-export interface Handler {
-	enable(): void;
-	disable(): void;
-	isEnabled(): boolean;
-	/**
-	 * This is used to indicate if the handler is currently active or not.
-	 * In case a handler is active, it will block other handlers from getting the relevant events.
-	 * There is an allow list of handlers that can be active at the same time, which is configured when adding a handler.
-	 */
-	isActive(): boolean;
-	/**
-	 * `reset` can be called by the manager at any time and must reset everything to it's original state
-	 */
-	reset(): void;
-	readonly touchstart?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-	readonly touchmove?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-	readonly touchmoveWindow?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-	readonly touchend?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-	readonly touchcancel?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
-	readonly mousedown?: (e: MouseEvent, point: Point) => HandlerResult | void;
-	readonly mousemove?: (e: MouseEvent, point: Point) => HandlerResult | void;
-	readonly mousemoveWindow?: (e: MouseEvent, point: Point) => HandlerResult | void;
-	readonly mouseup?: (e: MouseEvent, point: Point) => HandlerResult | void;
-	readonly mouseupWindow?: (e: MouseEvent, point: Point) => HandlerResult | void;
-	readonly dblclick?: (e: MouseEvent, point: Point) => HandlerResult | void;
-	readonly contextmenu?: (e: MouseEvent) => HandlerResult | void;
-	readonly wheel?: (e: WheelEvent, point: Point) => HandlerResult | void;
-	readonly keydown?: (e: KeyboardEvent) => HandlerResult | void;
-	readonly keyup?: (e: KeyboardEvent) => HandlerResult | void;
-	/**
-	 * `renderFrame` is the only non-dom event. It is called during render
-	 * frames and can be used to smooth camera changes (see scroll handler).
-	 */
-	readonly renderFrame?: () => HandlerResult | void;
-}
-/**
- * All handler methods that are called with events can optionally return a `HandlerResult`.
- */
-export type HandlerResult = {
-	panDelta?: Point;
-	zoomDelta?: number;
-	bearingDelta?: number;
-	pitchDelta?: number;
-	/**
-	 * the point to not move when changing the camera
-	 */
-	around?: Point | null;
-	/**
-	 * same as above, except for pinch actions, which are given higher priority
-	 */
-	pinchAround?: Point | null;
-	/**
-	 * A method that can fire a one-off easing by directly changing the map's camera.
-	 */
-	cameraAnimation?: (map: Map$1) => any;
-	/**
-	 * The last three properties are needed by only one handler: scrollzoom.
-	 * The DOM event to be used as the `originalEvent` on any camera change events.
-	 */
-	originalEvent?: Event$1;
-	/**
-	 * Makes the manager trigger a frame, allowing the handler to return multiple results over time (see scrollzoom).
-	 */
-	needsRenderFrame?: boolean;
-	/**
-	 * The camera changes won't get recorded for inertial zooming.
-	 */
-	noInertia?: boolean;
-};
-export type EventInProgress = {
-	handlerName: string;
-	originalEvent: Event$1;
-};
-export type EventsInProgress = {
-	zoom?: EventInProgress;
-	pitch?: EventInProgress;
-	rotate?: EventInProgress;
-	drag?: EventInProgress;
-};
-declare class HandlerManager {
-	_map: Map$1;
-	_el: HTMLElement;
-	_handlers: Array<{
-		handlerName: string;
-		handler: Handler;
-		allowed: Array<string>;
-	}>;
-	_eventsInProgress: EventsInProgress;
-	_frameId: number;
-	_inertia: HandlerInertia;
-	_bearingSnap: number;
-	_handlersById: {
-		[x: string]: Handler;
+export interface ICameraHelper {
+	get useGlobeControls(): boolean;
+	handlePanInertia(pan: Point, transform: IReadonlyTransform): {
+		easingCenter: LngLat;
+		easingOffset: Point;
 	};
-	_updatingCamera: boolean;
-	_changes: Array<[
-		HandlerResult,
-		EventsInProgress,
-		{
-			[handlerName: string]: Event$1;
-		}
-	]>;
-	_terrainMovement: boolean;
-	_zoom: {
-		handlerName: string;
-	};
-	_previousActiveHandlers: {
-		[x: string]: Handler;
-	};
-	_listeners: Array<[
-		Window | Document | HTMLElement,
-		string,
-		{
-			passive?: boolean;
-			capture?: boolean;
-		} | undefined
-	]>;
-	constructor(map: Map$1, options: CompleteMapOptions);
-	destroy(): void;
-	_addDefaultHandlers(options: CompleteMapOptions): void;
-	_add(handlerName: string, handler: Handler, allowed?: Array<string>): void;
-	stop(allowEndAnimation: boolean): void;
-	isActive(): boolean;
-	isZooming(): boolean;
-	isRotating(): boolean;
-	isMoving(): boolean;
-	_blockedByActive(activeHandlers: {
-		[x: string]: Handler;
-	}, allowed: Array<string>, myName: string): boolean;
-	handleWindowEvent: (e: {
-		type: "mousemove" | "mouseup" | "touchmove";
-	}) => void;
-	_getMapTouches(touches: TouchList): TouchList;
-	handleEvent: (e: Event$1, eventName?: keyof Handler) => void;
-	mergeHandlerResult(mergedHandlerResult: HandlerResult, eventsInProgress: EventsInProgress, handlerResult: HandlerResult, name: string, e?: UIEvent): void;
-	_applyChanges(): void;
-	_updateMapTransform(combinedResult: HandlerResult, combinedEventsInProgress: EventsInProgress, deactivatedHandlers: {
-		[handlerName: string]: Event$1;
+	handleMapControlsRollPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void;
+	handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void;
+	cameraForBoxAndBearing(options: CameraForBoundsOptions, padding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult;
+	handleJumpToCenterZoom(tr: ITransform, options: {
+		zoom?: number;
+		center?: LngLatLike;
 	}): void;
-	_fireEvents(newEventsInProgress: EventsInProgress, deactivatedHandlers: {
-		[handlerName: string]: Event$1;
-	}, allowEndAnimation: boolean): void;
-	_fireEvent(type: string, e?: Event$1): void;
-	_requestFrame(): number;
-	_triggerRenderFrame(): void;
+	handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult;
+	handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandlerResult;
 }
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -7093,7 +8183,7 @@ export type RequireAtLeastOne<T> = {
 }[keyof T];
 /**
  * Options common to {@link Map#jumpTo}, {@link Map#easeTo}, and {@link Map#flyTo}, controlling the desired location,
- * zoom, bearing, and pitch of the camera. All properties are optional, and when a property is omitted, the current
+ * zoom, bearing, pitch, and roll of the camera. All properties are optional, and when a property is omitted, the current
  * camera value for that property will remain unchanged.
  *
  * @example
@@ -7122,9 +8212,9 @@ export type CameraOptions = CenterZoomBearing & {
 	 */
 	pitch?: number;
 	/**
-	 * If `zoom` is specified, `around` determines the point around which the zoom is centered.
+	 * The desired roll in degrees. The roll is the angle about the camera boresight.
 	 */
-	around?: LngLatLike;
+	roll?: number;
 };
 /**
  * Holds center, zoom and bearing properties
@@ -7135,7 +8225,7 @@ export type CenterZoomBearing = {
 	 */
 	center?: LngLatLike;
 	/**
-	 * The desired zoom level.
+	 * The desired mercator zoom level.
 	 */
 	zoom?: number;
 	/**
@@ -7217,6 +8307,10 @@ export type FlyToOptions = AnimationOptions & CameraOptions & {
 export type EaseToOptions = AnimationOptions & CameraOptions & {
 	delayEndEvents?: number;
 	padding?: number | RequireAtLeastOne<PaddingOptions>;
+	/**
+	 * If `zoom` is specified, `around` determines the point around which the zoom is centered.
+	 */
+	around?: LngLatLike;
 };
 /**
  * Options for {@link Map#fitBounds} method
@@ -7280,24 +8374,28 @@ export type AnimationOptions = {
 export type CameraUpdateTransformFunction = (next: {
 	center: LngLat;
 	zoom: number;
+	roll: number;
 	pitch: number;
 	bearing: number;
 	elevation: number;
 }) => {
 	center?: LngLat;
 	zoom?: number;
+	roll?: number;
 	pitch?: number;
 	bearing?: number;
 	elevation?: number;
 };
 declare abstract class Camera extends Evented {
-	transform: Transform;
+	transform: ITransform;
+	cameraHelper: ICameraHelper;
 	terrain: Terrain;
 	handlers: HandlerManager;
 	_moving: boolean;
 	_zooming: boolean;
 	_rotating: boolean;
 	_pitching: boolean;
+	_rolling: boolean;
 	_padding: boolean;
 	_bearingSnap: number;
 	_easeStart: number;
@@ -7336,7 +8434,7 @@ declare abstract class Camera extends Evented {
 	 * @internal
 	 * Used to track accumulated changes during continuous interaction
 	 */
-	_requestedCameraState?: Transform;
+	_requestedCameraState?: ITransform;
 	/**
 	 * A callback used to defer camera updates or apply arbitrary constraints.
 	 * If specified, this Camera instance can be used as a stateless component in React etc.
@@ -7344,9 +8442,16 @@ declare abstract class Camera extends Evented {
 	transformCameraUpdate: CameraUpdateTransformFunction | null;
 	abstract _requestRenderFrame(a: () => void): TaskID;
 	abstract _cancelRenderFrame(_: TaskID): void;
-	constructor(transform: Transform, options: {
+	constructor(transform: ITransform, cameraHelper: ICameraHelper, options: {
 		bearingSnap: number;
 	});
+	/**
+	 * @internal
+	 * Creates a new specialized transform instance from a projection instance and migrates
+	 * to this new transform, carrying over all the properties of the old transform (center, pitch, etc.).
+	 * When the style's projection is changed (or first set), this function should be called.
+	 */
+	migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void;
 	/**
 	 * Returns the map's geographical centerpoint.
 	 *
@@ -7541,9 +8646,9 @@ declare abstract class Camera extends Evented {
 	 */
 	resetNorth(options?: AnimationOptions, eventData?: any): this;
 	/**
-	 * Rotates and pitches the map so that north is up (0° bearing) and pitch is 0°, with an animated transition.
+	 * Rotates and pitches the map so that north is up (0° bearing) and pitch and roll are 0°, with an animated transition.
 	 *
-	 * Triggers the following events: `movestart`, `move`, `moveend`, `pitchstart`, `pitch`, `pitchend`, and `rotate`.
+	 * Triggers the following events: `movestart`, `move`, `moveend`, `pitchstart`, `pitch`, `pitchend`, `rollstart`, `roll`, `rollend`, and `rotate`.
 	 *
 	 * @param options - Options object
 	 * @param eventData - Additional properties to be added to event objects of events triggered by this method.
@@ -7575,6 +8680,21 @@ declare abstract class Camera extends Evented {
 	 */
 	setPitch(pitch: number, eventData?: any): this;
 	/**
+	 * Returns the map's current roll angle.
+	 *
+	 * @returns The map's current roll, measured in degrees about the camera boresight.
+	 */
+	getRoll(): number;
+	/**
+	 * Sets the map's roll angle. Equivalent to `jumpTo({roll: roll})`.
+	 *
+	 * Triggers the following events: `movestart`, `moveend`, `rollstart`, and `rollend`.
+	 *
+	 * @param roll - The roll to set, measured in degrees about the camera boresight
+	 * @param eventData - Additional properties to be added to event objects of events triggered by this method.
+	 */
+	setRoll(roll: number, eventData?: any): this;
+	/**
 	 * @param bounds - Calculate the center for these bounds in the viewport and use
 	 * the highest zoom level up to and including `Map#getMaxZoom()` that fits
 	 * in the viewport. LngLatBounds represent a box that is always axis-aligned with bearing 0.
@@ -7595,7 +8715,7 @@ declare abstract class Camera extends Evented {
 	 * @internal
 	 * Calculate the center of these two points in the viewport and use
 	 * the highest zoom level up to and including `Map#getMaxZoom()` that fits
-	 * the points in the viewport at the specified bearing.
+	 * the AABB defined by these points in the viewport at the specified bearing.
 	 * @param p0 - First point
 	 * @param p1 - Second point
 	 * @param bearing - Desired map bearing at end of animation, in degrees
@@ -7659,12 +8779,12 @@ declare abstract class Camera extends Evented {
 	fitScreenCoordinates(p0: PointLike, p1: PointLike, bearing: number, options?: FitBoundsOptions, eventData?: any): this;
 	_fitInternal(calculatedOptions?: CenterZoomBearing, options?: FitBoundsOptions, eventData?: any): this;
 	/**
-	 * Changes any combination of center, zoom, bearing, and pitch, without
+	 * Changes any combination of center, zoom, bearing, pitch, and roll, without
 	 * an animated transition. The map will retain its current values for any
 	 * details not specified in `options`.
 	 *
 	 * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend`, `pitchstart`,
-	 * `pitch`, `pitchend`, and `rotate`.
+	 * `pitch`, `pitchend`, `rollstart`, `roll`, `rollend` and `rotate`.
 	 *
 	 * @param options - Options object
 	 * @param eventData - Additional properties to be added to event objects of events triggered by this method.
@@ -7695,7 +8815,7 @@ declare abstract class Camera extends Evented {
 	 */
 	calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number): CameraOptions;
 	/**
-	 * Changes any combination of `center`, `zoom`, `bearing`, `pitch`, and `padding` with an animated transition
+	 * Changes any combination of `center`, `zoom`, `bearing`, `pitch`, `roll`, and `padding` with an animated transition
 	 * between old and new values. The map will retain its current values for any
 	 * details not specified in `options`.
 	 *
@@ -7704,7 +8824,7 @@ declare abstract class Camera extends Evented {
 	 * unless `options` includes `essential: true`.
 	 *
 	 * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend`, `pitchstart`,
-	 * `pitch`, `pitchend`, and `rotate`.
+	 * `pitch`, `pitchend`, `rollstart`, `roll`, `rollend`, and `rotate`.
 	 *
 	 * @param options - Options describing the destination and animation of the transition.
 	 * Accepts {@link CameraOptions} and {@link AnimationOptions}.
@@ -7728,7 +8848,7 @@ declare abstract class Camera extends Evented {
 	 * It may differ from the state used for rendering (`this.transform`).
 	 * @returns Transform to apply changes to
 	 */
-	_getTransformForUpdate(): Transform;
+	_getTransformForUpdate(): ITransform;
 	/**
 	 * @internal
 	 * Checks the given transform for the camera being below terrain surface and
@@ -7740,7 +8860,7 @@ declare abstract class Camera extends Evented {
 	 *
 	 * @param tr - The transform to check.
 	 */
-	_elevateCameraIfInsideTerrain(tr: Transform): {
+	_elevateCameraIfInsideTerrain(tr: ITransform): {
 		pitch?: number;
 		zoom?: number;
 	};
@@ -7751,11 +8871,11 @@ declare abstract class Camera extends Evented {
 	 * If the camera is inside terrain, it gets elevated.
 	 * Call `transformCameraUpdate` if present, and then apply the "approved" changes.
 	 */
-	_applyUpdatedTransform(tr: Transform): void;
+	_applyUpdatedTransform(tr: ITransform): void;
 	_fireMoveEvents(eventData?: any): void;
 	_afterEase(eventData?: any, easeId?: string): void;
 	/**
-	 * Changes any combination of center, zoom, bearing, and pitch, animating the transition along a curve that
+	 * Changes any combination of center, zoom, bearing, pitch, and roll, animating the transition along a curve that
 	 * evokes flight. The animation seamlessly incorporates zooming and panning to help
 	 * the user maintain her bearings even after traversing a great distance.
 	 *
@@ -7764,7 +8884,7 @@ declare abstract class Camera extends Evented {
 	 * unless 'options' includes `essential: true`.
 	 *
 	 * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend`, `pitchstart`,
-	 * `pitch`, `pitchend`, and `rotate`.
+	 * `pitch`, `pitchend`, `rollstart`, `roll`, `rollend`, and `rotate`.
 	 *
 	 * @param options - Options describing the destination and animation of the transition.
 	 * Accepts {@link CameraOptions}, {@link AnimationOptions},
@@ -7803,7 +8923,6 @@ declare abstract class Camera extends Evented {
 	}): void;
 	_renderFrameCallback: () => void;
 	_normalizeBearing(bearing: number, currentBearing: number): number;
-	_normalizeCenter(center: LngLat, tr: Transform): void;
 	/**
 	 * Get the elevation difference between a given point
 	 * and a point that is currently in the middle of the screen.
@@ -7814,6 +8933,174 @@ declare abstract class Camera extends Evented {
 	 * @returns elevation offset in meters
 	 */
 	queryTerrainElevation(lngLatLike: LngLatLike): number | null;
+}
+declare class HandlerInertia {
+	_map: Map$1;
+	_inertiaBuffer: Array<{
+		time: number;
+		settings: any;
+	}>;
+	constructor(map: Map$1);
+	clear(): void;
+	record(settings: any): void;
+	_drainInertiaBuffer(): void;
+	_onMoveEnd(panInertiaOptions?: DragPanOptions | boolean): EaseToOptions;
+}
+/**
+ * Handlers interpret dom events and return camera changes that should be
+ * applied to the map (`HandlerResult`s). The camera changes are all deltas.
+ * The handler itself should have no knowledge of the map's current state.
+ * This makes it easier to merge multiple results and keeps handlers simpler.
+ * For example, if there is a mousedown and mousemove, the mousePan handler
+ * would return a `panDelta` on the mousemove.
+ */
+export interface Handler {
+	enable(): void;
+	disable(): void;
+	isEnabled(): boolean;
+	/**
+	 * This is used to indicate if the handler is currently active or not.
+	 * In case a handler is active, it will block other handlers from getting the relevant events.
+	 * There is an allow list of handlers that can be active at the same time, which is configured when adding a handler.
+	 */
+	isActive(): boolean;
+	/**
+	 * `reset` can be called by the manager at any time and must reset everything to it's original state
+	 */
+	reset(): void;
+	readonly touchstart?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
+	readonly touchmove?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
+	readonly touchmoveWindow?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
+	readonly touchend?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
+	readonly touchcancel?: (e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) => HandlerResult | void;
+	readonly mousedown?: (e: MouseEvent, point: Point) => HandlerResult | void;
+	readonly mousemove?: (e: MouseEvent, point: Point) => HandlerResult | void;
+	readonly mousemoveWindow?: (e: MouseEvent, point: Point) => HandlerResult | void;
+	readonly mouseup?: (e: MouseEvent, point: Point) => HandlerResult | void;
+	readonly mouseupWindow?: (e: MouseEvent, point: Point) => HandlerResult | void;
+	readonly dblclick?: (e: MouseEvent, point: Point) => HandlerResult | void;
+	readonly contextmenu?: (e: MouseEvent) => HandlerResult | void;
+	readonly wheel?: (e: WheelEvent, point: Point) => HandlerResult | void;
+	readonly keydown?: (e: KeyboardEvent) => HandlerResult | void;
+	readonly keyup?: (e: KeyboardEvent) => HandlerResult | void;
+	/**
+	 * `renderFrame` is the only non-dom event. It is called during render
+	 * frames and can be used to smooth camera changes (see scroll handler).
+	 */
+	readonly renderFrame?: () => HandlerResult | void;
+}
+/**
+ * All handler methods that are called with events can optionally return a `HandlerResult`.
+ */
+export type HandlerResult = {
+	panDelta?: Point;
+	zoomDelta?: number;
+	bearingDelta?: number;
+	pitchDelta?: number;
+	rollDelta?: number;
+	/**
+	 * the point to not move when changing the camera
+	 */
+	around?: Point | null;
+	/**
+	 * same as above, except for pinch actions, which are given higher priority
+	 */
+	pinchAround?: Point | null;
+	/**
+	 * A method that can fire a one-off easing by directly changing the map's camera.
+	 */
+	cameraAnimation?: (map: Map$1) => any;
+	/**
+	 * The last three properties are needed by only one handler: scrollzoom.
+	 * The DOM event to be used as the `originalEvent` on any camera change events.
+	 */
+	originalEvent?: Event$1;
+	/**
+	 * Makes the manager trigger a frame, allowing the handler to return multiple results over time (see scrollzoom).
+	 */
+	needsRenderFrame?: boolean;
+	/**
+	 * The camera changes won't get recorded for inertial zooming.
+	 */
+	noInertia?: boolean;
+};
+export type EventInProgress = {
+	handlerName: string;
+	originalEvent: Event$1;
+};
+export type EventsInProgress = {
+	zoom?: EventInProgress;
+	roll?: EventInProgress;
+	pitch?: EventInProgress;
+	rotate?: EventInProgress;
+	drag?: EventInProgress;
+};
+declare class HandlerManager {
+	_map: Map$1;
+	_el: HTMLElement;
+	_handlers: Array<{
+		handlerName: string;
+		handler: Handler;
+		allowed: Array<string>;
+	}>;
+	_eventsInProgress: EventsInProgress;
+	_frameId: number;
+	_inertia: HandlerInertia;
+	_bearingSnap: number;
+	_handlersById: {
+		[x: string]: Handler;
+	};
+	_updatingCamera: boolean;
+	_changes: Array<[
+		HandlerResult,
+		EventsInProgress,
+		{
+			[handlerName: string]: Event$1;
+		}
+	]>;
+	_terrainMovement: boolean;
+	_zoom: {
+		handlerName: string;
+	};
+	_previousActiveHandlers: {
+		[x: string]: Handler;
+	};
+	_listeners: Array<[
+		Window | Document | HTMLElement,
+		string,
+		{
+			passive?: boolean;
+			capture?: boolean;
+		} | undefined
+	]>;
+	constructor(map: Map$1, options: CompleteMapOptions);
+	destroy(): void;
+	_addDefaultHandlers(options: CompleteMapOptions): void;
+	_add(handlerName: string, handler: Handler, allowed?: Array<string>): void;
+	stop(allowEndAnimation: boolean): void;
+	isActive(): boolean;
+	isZooming(): boolean;
+	isRotating(): boolean;
+	isMoving(): boolean;
+	_blockedByActive(activeHandlers: {
+		[x: string]: Handler;
+	}, allowed: Array<string>, myName: string): boolean;
+	handleWindowEvent: (e: {
+		type: "mousemove" | "mouseup" | "touchmove";
+	}) => void;
+	_getMapTouches(touches: TouchList): TouchList;
+	handleEvent: (e: Event$1, eventName?: keyof Handler) => void;
+	mergeHandlerResult(mergedHandlerResult: HandlerResult, eventsInProgress: EventsInProgress, handlerResult: HandlerResult, name: string, e?: UIEvent): void;
+	_applyChanges(): void;
+	_updateMapTransform(combinedResult: HandlerResult, combinedEventsInProgress: EventsInProgress, deactivatedHandlers: {
+		[handlerName: string]: Event$1;
+	}): void;
+	_fireEvents(newEventsInProgress: EventsInProgress, deactivatedHandlers: {
+		[handlerName: string]: Event$1;
+	}, allowEndAnimation: boolean): void;
+	_fireEvent(type: string, e?: Event$1): void;
+	_requestFrame(): number;
+	_triggerRenderFrame(): void;
 }
 /**
  * A position defintion for the control to be placed, can be in one of the corners of the map.
@@ -7879,688 +9166,6 @@ export interface IControl {
 	 */
 	readonly getDefaultPosition?: () => ControlPosition;
 }
-/**
- * An event from the mouse relevant to a specific layer.
- *
- * @group Event Related
- */
-export type MapLayerMouseEvent = MapMouseEvent & {
-	features?: MapGeoJSONFeature[];
-};
-/**
- * An event from a touch device relevant to a specific layer.
- *
- * @group Event Related
- */
-export type MapLayerTouchEvent = MapTouchEvent & {
-	features?: MapGeoJSONFeature[];
-};
-/**
- * The source event data type
- */
-export type MapSourceDataType = "content" | "metadata" | "visibility" | "idle";
-/**
- * `MapLayerEventType` - a mapping between the event name and the event.
- * **Note:** These events are compatible with the optional `layerId` parameter.
- * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
- * event action contains a visible portion of the specified layer.
- * The following example can be used for all the events.
- *
- * @group Event Related
- * @example
- * ```ts
- * // Initialize the map
- * let map = new Map({ // map options });
- * // Set an event listener for a specific layer
- * map.on('the-event-name', 'poi-label', (e) => {
- *   console.log('An event has occurred on a visible portion of the poi-label layer');
- * });
- * ```
- */
-export type MapLayerEventType = {
-	/**
-	 * Fired when a pointing device (usually a mouse) is pressed and released contains a visible portion of the specified layer.
-	 *
-	 * @see [Measure distances](https://maplibre.org/maplibre-gl-js/docs/examples/measure/)
-	 * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js/docs/examples/center-on-symbol/)
-	 */
-	click: MapLayerMouseEvent;
-	/**
-	 * Fired when a pointing device (usually a mouse) is pressed and released twice contains a visible portion of the specified layer.
-	 *
-	 * **Note:** Under normal conditions, this event will be preceded by two `click` events.
-	 */
-	dblclick: MapLayerMouseEvent;
-	/**
-	 * Fired when a pointing device (usually a mouse) is pressed while inside a visible portion of the specified layer.
-	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-	 */
-	mousedown: MapLayerMouseEvent;
-	/**
-	 * Fired when a pointing device (usually a mouse) is released while inside a visible portion of the specified layer.
-	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-	 */
-	mouseup: MapLayerMouseEvent;
-	/**
-	 * Fired when a pointing device (usually a mouse) is moved while the cursor is inside a visible portion of the specified layer.
-	 * As you move the cursor across the layer, the event will fire every time the cursor changes position within that layer.
-	 *
-	 * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/mouse-position/)
-	 * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
-	 * @see [Display a popup on over](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
-	 */
-	mousemove: MapLayerMouseEvent;
-	/**
-	 * Fired when a pointing device (usually a mouse) enters a visible portion of a specified layer from
-	 * outside that layer or outside the map canvas.
-	 *
-	 * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js/docs/examples/center-on-symbol/)
-	 * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-click/)
-	 */
-	mouseenter: MapLayerMouseEvent;
-	/**
-	 * Fired when a pointing device (usually a mouse) leaves a visible portion of a specified layer, or leaves
-	 * the map canvas.
-	 *
-	 * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
-	 * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-click/)
-	 */
-	mouseleave: MapLayerMouseEvent;
-	/**
-	 * Fired when a pointing device (usually a mouse) is moved inside a visible portion of the specified layer.
-	 *
-	 * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/mouse-position/)
-	 * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
-	 * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
-	 */
-	mouseover: MapLayerMouseEvent;
-	/**
-	 * Fired when a point device (usually a mouse) leaves the visible portion of the specified layer.
-	 */
-	mouseout: MapLayerMouseEvent;
-	/**
-	 * Fired when the right button of the mouse is clicked or the context menu key is pressed within visible portion of the specified layer.
-	 */
-	contextmenu: MapLayerMouseEvent;
-	/**
-	 * Fired when a [`touchstart`](https://developer.mozilla.org/en-US/docs/Web/Events/touchstart) event occurs within the visible portion of the specified layer.
-	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-	 */
-	touchstart: MapLayerTouchEvent;
-	/**
-	 * Fired when a [`touchend`](https://developer.mozilla.org/en-US/docs/Web/Events/touchend) event occurs within the visible portion of the specified layer.
-	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-	 */
-	touchend: MapLayerTouchEvent;
-	/**
-	 * Fired when a [`touchstart`](https://developer.mozilla.org/en-US/docs/Web/Events/touchstart) event occurs within the visible portion of the specified layer.
-	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-	 */
-	touchcancel: MapLayerTouchEvent;
-};
-/**
- * `MapEventType` - a mapping between the event name and the event value.
- * These events are used with the {@link Map#on} method.
- * When using a `layerId` with {@link Map#on} method, please refer to {@link MapLayerEventType}.
- * The following example can be used for all the events.
- *
- * @group Event Related
- * @example
- * ```ts
- * // Initialize the map
- * let map = new Map({ // map options });
- * // Set an event listener
- * map.on('the-event-name', () => {
- *   console.log('An event has occurred!');
- * });
- * ```
- */
-export type MapEventType = {
-	/**
-	 * Fired when an error occurs. This is GL JS's primary error reporting
-	 * mechanism. We use an event instead of `throw` to better accommodate
-	 * asynchronous operations. If no listeners are bound to the `error` event, the
-	 * error will be printed to the console.
-	 */
-	error: ErrorEvent;
-	/**
-	 * Fired immediately after all necessary resources have been downloaded
-	 * and the first visually complete rendering of the map has occurred.
-	 *
-	 * @see [Draw GeoJSON points](https://maplibre.org/maplibre-gl-js/docs/examples/geojson-markers/)
-	 * @see [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
-	 * @see [Animate a point](https://maplibre.org/maplibre-gl-js/docs/examples/animate-point-along-line/)
-	 */
-	load: MapLibreEvent;
-	/**
-	 * Fired after the last frame rendered before the map enters an
-	 * "idle" state:
-	 *
-	 * - No camera transitions are in progress
-	 * - All currently requested tiles have loaded
-	 * - All fade/transition animations have completed
-	 */
-	idle: MapLibreEvent;
-	/**
-	 * Fired immediately after the map has been removed with {@link Map#remove}.
-	 */
-	remove: MapLibreEvent;
-	/**
-	 * Fired whenever the map is drawn to the screen, as the result of
-	 *
-	 * - a change to the map's position, zoom, pitch, or bearing
-	 * - a change to the map's style
-	 * - a change to a GeoJSON source
-	 * - the loading of a vector tile, GeoJSON file, glyph, or sprite
-	 */
-	render: MapLibreEvent;
-	/**
-	 * Fired immediately after the map has been resized.
-	 */
-	resize: MapLibreEvent;
-	/**
-	 * Fired when the WebGL context is lost.
-	 */
-	webglcontextlost: MapContextEvent;
-	/**
-	 * Fired when the WebGL context is restored.
-	 */
-	webglcontextrestored: MapContextEvent;
-	/**
-	 * Fired when any map data (style, source, tile, etc) begins loading or
-	 * changing asynchronously. All `dataloading` events are followed by a `data`,
-	 * `dataabort` or `error` event.
-	 */
-	dataloading: MapDataEvent;
-	/**
-	 * Fired when any map data loads or changes. See {@link MapDataEvent} for more information.
-	 * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js/docs/examples/cluster-html/)
-	 */
-	data: MapDataEvent;
-	tiledataloading: MapDataEvent;
-	/**
-	 * Fired when one of the map's sources begins loading or changing asynchronously.
-	 * All `sourcedataloading` events are followed by a `sourcedata`, `sourcedataabort` or `error` event.
-	 */
-	sourcedataloading: MapSourceDataEvent;
-	/**
-	 * Fired when the map's style begins loading or changing asynchronously.
-	 * All `styledataloading` events are followed by a `styledata`
-	 * or `error` event.
-	 */
-	styledataloading: MapStyleDataEvent;
-	/**
-	 * Fired when one of the map's sources loads or changes, including if a tile belonging
-	 * to a source loads or changes.
-	 */
-	sourcedata: MapSourceDataEvent;
-	/**
-	 * Fired when the map's style loads or changes.
-	 */
-	styledata: MapStyleDataEvent;
-	/**
-	 * Fired when an icon or pattern needed by the style is missing. The missing image can
-	 * be added with {@link Map#addImage} within this event listener callback to prevent the image from
-	 * being skipped. This event can be used to dynamically generate icons and patterns.
-	 * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-missing-generated/)
-	 */
-	styleimagemissing: MapStyleImageMissingEvent;
-	/**
-	 * Fired when a request for one of the map's sources' tiles or data is aborted.
-	 */
-	dataabort: MapDataEvent;
-	/**
-	 * Fired when a request for one of the map's sources' data is aborted.
-	 */
-	sourcedataabort: MapSourceDataEvent;
-	/**
-	 * Fired when the user cancels a "box zoom" interaction, or when the bounding box does not meet the minimum size threshold.
-	 * See {@link BoxZoomHandler}.
-	 */
-	boxzoomcancel: MapLibreZoomEvent;
-	/**
-	 * Fired when a "box zoom" interaction starts. See {@link BoxZoomHandler}.
-	 */
-	boxzoomstart: MapLibreZoomEvent;
-	/**
-	 * Fired when a "box zoom" interaction ends.  See {@link BoxZoomHandler}.
-	 */
-	boxzoomend: MapLibreZoomEvent;
-	/**
-	 * Fired when a [`touchcancel`](https://developer.mozilla.org/en-US/docs/Web/Events/touchcancel) event occurs within the map.
-	 */
-	touchcancel: MapTouchEvent;
-	/**
-	 * Fired when a [`touchmove`](https://developer.mozilla.org/en-US/docs/Web/Events/touchmove) event occurs within the map.
-	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-	 */
-	touchmove: MapTouchEvent;
-	/**
-	 * Fired when a [`touchend`](https://developer.mozilla.org/en-US/docs/Web/Events/touchend) event occurs within the map.
-	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-	 */
-	touchend: MapTouchEvent;
-	/**
-	 * Fired when a [`touchstart`](https://developer.mozilla.org/en-US/docs/Web/Events/touchstart) event occurs within the map.
-	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-	 */
-	touchstart: MapTouchEvent;
-	/**
-	 * Fired when a pointing device (usually a mouse) is pressed and released at the same point on the map.
-	 *
-	 * @see [Measure distances](https://maplibre.org/maplibre-gl-js/docs/examples/measure/)
-	 * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js/docs/examples/center-on-symbol/)
-	 */
-	click: MapMouseEvent;
-	/**
-	 * Fired when the right button of the mouse is clicked or the context menu key is pressed within the map.
-	 */
-	contextmenu: MapMouseEvent;
-	/**
-	 * Fired when a pointing device (usually a mouse) is pressed and released twice at the same point on the map in rapid succession.
-	 *
-	 * **Note:** Under normal conditions, this event will be preceded by two `click` events.
-	 */
-	dblclick: MapMouseEvent;
-	/**
-	 * Fired when a pointing device (usually a mouse) is moved while the cursor is inside the map.
-	 * As you move the cursor across the map, the event will fire every time the cursor changes position within the map.
-	 *
-	 * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/mouse-position/)
-	 * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
-	 * @see [Display a popup on over](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
-	 */
-	mousemove: MapMouseEvent;
-	/**
-	 * Fired when a pointing device (usually a mouse) is released within the map.
-	 *
-	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-	 */
-	mouseup: MapMouseEvent;
-	/**
-	 * Fired when a pointing device (usually a mouse) is pressed within the map.
-	 *
-	 * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
-	 */
-	mousedown: MapMouseEvent;
-	/**
-	 * Fired when a point device (usually a mouse) leaves the map's canvas.
-	 */
-	mouseout: MapMouseEvent;
-	/**
-	 * Fired when a pointing device (usually a mouse) is moved within the map.
-	 * As you move the cursor across a web page containing a map,
-	 * the event will fire each time it enters the map or any child elements.
-	 *
-	 * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/mouse-position/)
-	 * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
-	 * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
-	 */
-	mouseover: MapMouseEvent;
-	/**
-	 * Fired just before the map begins a transition from one
-	 * view to another, as the result of either user interaction or methods such as {@link Map#jumpTo}.
-	 *
-	 */
-	movestart: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
-	/**
-	 * Fired repeatedly during an animated transition from one view to
-	 * another, as the result of either user interaction or methods such as {@link Map#flyTo}.
-	 *
-	 * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js/docs/examples/cluster-html/)
-	 */
-	move: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
-	/**
-	 * Fired just after the map completes a transition from one
-	 * view to another, as the result of either user interaction or methods such as {@link Map#jumpTo}.
-	 *
-	 * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js/docs/examples/cluster-html/)
-	 */
-	moveend: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
-	/**
-	 * Fired just before the map begins a transition from one zoom level to another,
-	 * as the result of either user interaction or methods such as {@link Map#flyTo}.
-	 */
-	zoomstart: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
-	/**
-	 * Fired repeatedly during an animated transition from one zoom level to another,
-	 * as the result of either user interaction or methods such as {@link Map#flyTo}.
-	 */
-	zoom: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
-	/**
-	 * Fired just after the map completes a transition from one zoom level to another,
-	 * as the result of either user interaction or methods such as {@link Map#flyTo}.
-	 */
-	zoomend: MapLibreEvent<MouseEvent | TouchEvent | WheelEvent | undefined>;
-	/**
-	 * Fired when a "drag to rotate" interaction starts. See {@link DragRotateHandler}.
-	 */
-	rotatestart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
-	/**
-	 * Fired repeatedly during a "drag to rotate" interaction. See {@link DragRotateHandler}.
-	 */
-	rotate: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
-	/**
-	 * Fired when a "drag to rotate" interaction ends. See {@link DragRotateHandler}.
-	 */
-	rotateend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
-	/**
-	 * Fired when a "drag to pan" interaction starts. See {@link DragPanHandler}.
-	 */
-	dragstart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
-	/**
-	 * Fired repeatedly during a "drag to pan" interaction. See {@link DragPanHandler}.
-	 */
-	drag: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
-	/**
-	 * Fired when a "drag to pan" interaction ends. See {@link DragPanHandler}.
-	 * @see [Create a draggable marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/)
-	 */
-	dragend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
-	/**
-	 * Fired whenever the map's pitch (tilt) begins a change as
-	 * the result of either user interaction or methods such as {@link Map#flyTo} .
-	 */
-	pitchstart: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
-	/**
-	 * Fired repeatedly during the map's pitch (tilt) animation between
-	 * one state and another as the result of either user interaction
-	 * or methods such as {@link Map#flyTo}.
-	 */
-	pitch: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
-	/**
-	 * Fired immediately after the map's pitch (tilt) finishes changing as
-	 * the result of either user interaction or methods such as {@link Map#flyTo}.
-	 */
-	pitchend: MapLibreEvent<MouseEvent | TouchEvent | undefined>;
-	/**
-	 * Fired when a [`wheel`](https://developer.mozilla.org/en-US/docs/Web/Events/wheel) event occurs within the map.
-	 */
-	wheel: MapWheelEvent;
-	/**
-	 * Fired when terrain is changed
-	 */
-	terrain: MapTerrainEvent;
-	/**
-	 * Fired whenever the cooperativeGestures option prevents a gesture from being handled by the map.
-	 * This is useful for showing your own UI when this happens.
-	 */
-	cooperativegestureprevented: MapLibreEvent<WheelEvent | TouchEvent> & {
-		gestureType: "wheel_zoom" | "touch_pan";
-	};
-};
-/**
- * The base event for MapLibre
- *
- * @group Event Related
- */
-export type MapLibreEvent<TOrig = unknown> = {
-	type: keyof MapEventType | keyof MapLayerEventType;
-	target: Map$1;
-	originalEvent: TOrig;
-};
-/**
- * The style data event
- *
- * @group Event Related
- */
-export type MapStyleDataEvent = MapLibreEvent & {
-	dataType: "style";
-};
-/**
- * The source data event interface
- *
- * @group Event Related
- */
-export type MapSourceDataEvent = MapLibreEvent & {
-	dataType: "source";
-	/**
-	 * True if the event has a `dataType` of `source` and the source has no outstanding network requests.
-	 */
-	isSourceLoaded: boolean;
-	/**
-	 * The [style spec representation of the source](https://maplibre.org/maplibre-style-spec/#sources) if the event has a `dataType` of `source`.
-	 */
-	source: SourceSpecification;
-	sourceId: string;
-	sourceDataType: MapSourceDataType;
-	/**
-	 * The tile being loaded or changed, if the event has a `dataType` of `source` and
-	 * the event is related to loading of a tile.
-	 */
-	tile: any;
-};
-/**
- * `MapMouseEvent` is the event type for mouse-related map events.
- *
- * @group Event Related
- *
- * @example
- * ```ts
- * // The `click` event is an example of a `MapMouseEvent`.
- * // Set up an event listener on the map.
- * map.on('click', (e) => {
- *   // The event object (e) contains information like the
- *   // coordinates of the point on the map that was clicked.
- *   console.log('A click event has occurred at ' + e.lngLat);
- * });
- * ```
- */
-export declare class MapMouseEvent extends Event$1 implements MapLibreEvent<MouseEvent> {
-	/**
-	 * The event type
-	 */
-	type: "mousedown" | "mouseup" | "click" | "dblclick" | "mousemove" | "mouseover" | "mouseenter" | "mouseleave" | "mouseout" | "contextmenu";
-	/**
-	 * The `Map` object that fired the event.
-	 */
-	target: Map$1;
-	/**
-	 * The DOM event which caused the map event.
-	 */
-	originalEvent: MouseEvent;
-	/**
-	 * The pixel coordinates of the mouse cursor, relative to the map and measured from the top left corner.
-	 */
-	point: Point;
-	/**
-	 * The geographic location on the map of the mouse cursor.
-	 */
-	lngLat: LngLat;
-	/**
-	 * Prevents subsequent default processing of the event by the map.
-	 *
-	 * Calling this method will prevent the following default map behaviors:
-	 *
-	 *   * On `mousedown` events, the behavior of {@link DragPanHandler}
-	 *   * On `mousedown` events, the behavior of {@link DragRotateHandler}
-	 *   * On `mousedown` events, the behavior of {@link BoxZoomHandler}
-	 *   * On `dblclick` events, the behavior of {@link DoubleClickZoomHandler}
-	 *
-	 */
-	preventDefault(): void;
-	/**
-	 * `true` if `preventDefault` has been called.
-	 */
-	get defaultPrevented(): boolean;
-	_defaultPrevented: boolean;
-	constructor(type: string, map: Map$1, originalEvent: MouseEvent, data?: any);
-}
-/**
- * `MapTouchEvent` is the event type for touch-related map events.
- *
- * @group Event Related
- */
-export declare class MapTouchEvent extends Event$1 implements MapLibreEvent<TouchEvent> {
-	/**
-	 * The event type.
-	 */
-	type: "touchstart" | "touchmove" | "touchend" | "touchcancel";
-	/**
-	 * The `Map` object that fired the event.
-	 */
-	target: Map$1;
-	/**
-	 * The DOM event which caused the map event.
-	 */
-	originalEvent: TouchEvent;
-	/**
-	 * The geographic location on the map of the center of the touch event points.
-	 */
-	lngLat: LngLat;
-	/**
-	 * The pixel coordinates of the center of the touch event points, relative to the map and measured from the top left
-	 * corner.
-	 */
-	point: Point;
-	/**
-	 * The array of pixel coordinates corresponding to a
-	 * [touch event's `touches`](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/touches) property.
-	 */
-	points: Array<Point>;
-	/**
-	 * The geographical locations on the map corresponding to a
-	 * [touch event's `touches`](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/touches) property.
-	 */
-	lngLats: Array<LngLat>;
-	/**
-	 * Prevents subsequent default processing of the event by the map.
-	 *
-	 * Calling this method will prevent the following default map behaviors:
-	 *
-	 *   * On `touchstart` events, the behavior of {@link DragPanHandler}
-	 *   * On `touchstart` events, the behavior of {@link TwoFingersTouchZoomRotateHandler}
-	 *
-	 */
-	preventDefault(): void;
-	/**
-	 * `true` if `preventDefault` has been called.
-	 */
-	get defaultPrevented(): boolean;
-	_defaultPrevented: boolean;
-	constructor(type: string, map: Map$1, originalEvent: TouchEvent);
-}
-/**
- * `MapWheelEvent` is the event type for the `wheel` map event.
- *
- * @group Event Related
- */
-export declare class MapWheelEvent extends Event$1 {
-	/**
-	 * The event type.
-	 */
-	type: "wheel";
-	/**
-	 * The `Map` object that fired the event.
-	 */
-	target: Map$1;
-	/**
-	 * The DOM event which caused the map event.
-	 */
-	originalEvent: WheelEvent;
-	/**
-	 * Prevents subsequent default processing of the event by the map.
-	 *
-	 * Calling this method will prevent the behavior of {@link ScrollZoomHandler}.
-	 */
-	preventDefault(): void;
-	/**
-	 * `true` if `preventDefault` has been called.
-	 */
-	get defaultPrevented(): boolean;
-	_defaultPrevented: boolean;
-	/** */
-	constructor(type: string, map: Map$1, originalEvent: WheelEvent);
-}
-/**
- * A `MapLibreZoomEvent` is the event type for the boxzoom-related map events emitted by the {@link BoxZoomHandler}.
- *
- * @group Event Related
- */
-export type MapLibreZoomEvent = {
-	/**
-	 * The type of boxzoom event. One of `boxzoomstart`, `boxzoomend` or `boxzoomcancel`
-	 */
-	type: "boxzoomstart" | "boxzoomend" | "boxzoomcancel";
-	/**
-	 * The `Map` instance that triggered the event
-	 */
-	target: Map$1;
-	/**
-	 * The DOM event that triggered the boxzoom event. Can be a `MouseEvent` or `KeyboardEvent`
-	 */
-	originalEvent: MouseEvent;
-};
-/**
- * A `MapDataEvent` object is emitted with the `data`
- * and `dataloading` events. Possible values for
- * `dataType`s are:
- *
- * - `'source'`: The non-tile data associated with any source
- * - `'style'`: The [style](https://maplibre.org/maplibre-style-spec/) used by the map
- *
- * Possible values for `sourceDataType`s are:
- *
- * - `'metadata'`: indicates that any necessary source metadata has been loaded (such as TileJSON) and it is ok to start loading tiles
- * - `'content'`: indicates the source data has changed (such as when source.setData() has been called on GeoJSONSource)
- * - `'visibility'`: send when the source becomes used when at least one of its layers becomes visible in style sense (inside the layer's zoom range and with layout.visibility set to 'visible')
- * - `'idle'`: indicates that no new source data has been fetched (but the source has done loading)
- *
- * @group Event Related
- *
- * @example
- * ```ts
- * // The sourcedata event is an example of MapDataEvent.
- * // Set up an event listener on the map.
- * map.on('sourcedata', (e) => {
- *    if (e.isSourceLoaded) {
- *        // Do something when the source has finished loading
- *    }
- * });
- * ```
- */
-export type MapDataEvent = {
-	/**
-	 * The event type.
-	 */
-	type: string;
-	/**
-	 * The type of data that has changed. One of `'source'`, `'style'`.
-	 */
-	dataType: string;
-	/**
-	 *  Included if the event has a `dataType` of `source` and the event signals that internal data has been received or changed. Possible values are `metadata`, `content`, `visibility` and `idle`.
-	 */
-	sourceDataType: MapSourceDataType;
-};
-/**
- * The terrain event
- *
- * @group Event Related
- */
-export type MapTerrainEvent = {
-	type: "terrain";
-};
-/**
- * An event related to the web gl context
- *
- * @group Event Related
- */
-export type MapContextEvent = {
-	type: "webglcontextlost" | "webglcontextrestored";
-	originalEvent: WebGLContextEvent;
-};
-/**
- * The style image missing event
- *
- * @group Event Related
- *
- * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-missing-generated/)
- */
-export type MapStyleImageMissingEvent = MapLibreEvent & {
-	type: "styleimagemissing";
-	id: string;
-};
 /**
  * The {@link AttributionControl} options object
  */
@@ -8642,7 +9247,7 @@ declare const defaultLocale: {
 declare class TransformProvider {
 	_map: Map$1;
 	constructor(map: Map$1);
-	get transform(): Transform;
+	get transform(): IReadonlyTransform;
 	get center(): {
 		lng: number;
 		lat: number;
@@ -8792,7 +9397,6 @@ export declare class ScrollZoomHandler implements Handler {
 	_active: boolean;
 	_zooming: boolean;
 	_aroundCenter: boolean;
-	_around: LngLat;
 	_aroundPoint: Point;
 	_type: "wheel" | "trackpad" | null;
 	_lastValue: number;
@@ -8800,6 +9404,7 @@ export declare class ScrollZoomHandler implements Handler {
 	_finishTimeout: ReturnType<typeof setTimeout>;
 	_lastWheelEvent: any;
 	_lastWheelEventTime: number;
+	_lastExpectedZoom: number;
 	_startZoom: number;
 	_targetZoom: number;
 	_delta: number;
@@ -8948,6 +9553,11 @@ export type DragRotateHandlerOptions = {
 	 * @defaultValue true
 	 */
 	pitchWithRotate: boolean;
+	/**
+	 * Control the map roll in addition to the bearing
+	 * @defaultValue false
+	 */
+	rollEnabled: boolean;
 };
 /**
  * The `DragRotateHandler` allows the user to rotate the map by clicking and
@@ -8958,9 +9568,11 @@ export type DragRotateHandlerOptions = {
 export declare class DragRotateHandler {
 	_mouseRotate: MouseRotateHandler;
 	_mousePitch: MousePitchHandler;
+	_mouseRoll: MouseRollHandler;
 	_pitchWithRotate: boolean;
+	_rollEnabled: boolean;
 	/** @internal */
-	constructor(options: DragRotateHandlerOptions, mouseRotate: MouseRotateHandler, mousePitch: MousePitchHandler);
+	constructor(options: DragRotateHandlerOptions, mouseRotate: MouseRotateHandler, mousePitch: MousePitchHandler, mouseRoll: MouseRollHandler);
 	/**
 	 * Enables the "drag to rotate" interaction.
 	 *
@@ -9477,6 +10089,11 @@ export type MapOptions = {
 	 */
 	pitch?: number;
 	/**
+	 * The initial roll angle of the map, measured in degrees counter-clockwise about the camera boresight. If `roll` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
+	 * @defaultValue 0
+	 */
+	roll?: number;
+	/**
 	 * If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
 	 *
 	 * - When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
@@ -9563,6 +10180,11 @@ export type MapOptions = {
 	 */
 	pitchWithRotate?: boolean;
 	/**
+	 * If `false`, the map's roll control with "drag to rotate" interaction will be disabled.
+	 * @defaultValue false
+	 */
+	rollEnabled?: boolean;
+	/**
 	 * The pixel ratio.
 	 * The canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its `height` attribute will be `container.clientHeight * pixelRatio`. Defaults to `devicePixelRatio` if not specified.
 	 */
@@ -9632,6 +10254,7 @@ export type Delegate<E extends Event$1 = Event$1> = (e: E) => void;
 declare class Map$1 extends Camera {
 	style: Style;
 	painter: Painter;
+	handlers: HandlerManager;
 	_container: HTMLElement;
 	_canvasContainer: HTMLElement;
 	_controlContainer: HTMLElement;
@@ -9749,7 +10372,7 @@ declare class Map$1 extends Camera {
 	/**
 	 * Adds an {@link IControl} to the map, calling `control.onAdd(this)`.
 	 *
-	 * An {@link ErrorEvent} will be fired if the image parameter is invald.
+	 * An {@link ErrorEvent} will be fired if the image parameter is invalid.
 	 *
 	 * @param control - The {@link IControl} to add.
 	 * @param position - position on the map to which the control will be added.
@@ -9765,7 +10388,7 @@ declare class Map$1 extends Camera {
 	/**
 	 * Removes the control from the map.
 	 *
-	 * An {@link ErrorEvent} will be fired if the image parameter is invald.
+	 * An {@link ErrorEvent} will be fired if the image parameter is invalid.
 	 *
 	 * @param control - The {@link IControl} to remove.
 	 * @example
@@ -10624,7 +11247,7 @@ declare class Map$1 extends Camera {
 	 * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/layers/#paint-fill-fill-pattern),
 	 * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pattern).
 	 *
-	 * An {@link ErrorEvent} will be fired if the image parameter is invald.
+	 * An {@link ErrorEvent} will be fired if the image parameter is invalid.
 	 *
 	 * @param id - The ID of the image.
 	 * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
@@ -10660,7 +11283,7 @@ declare class Map$1 extends Camera {
 	 * in the style's original sprite and any images
 	 * that have been added at runtime using {@link Map#addImage}.
 	 *
-	 * An {@link ErrorEvent} will be fired if the image parameter is invald.
+	 * An {@link ErrorEvent} will be fired if the image parameter is invalid.
 	 *
 	 * @param id - The ID of the image.
 	 *
@@ -10813,7 +11436,7 @@ declare class Map$1 extends Camera {
 	/**
 	 * Removes the layer with the given ID from the map's style.
 	 *
-	 * An {@link ErrorEvent} will be fired if the image parameter is invald.
+	 * An {@link ErrorEvent} will be fired if the image parameter is invalid.
 	 *
 	 * @param id - The ID of the layer to remove
 	 *
@@ -11037,18 +11660,19 @@ declare class Map$1 extends Camera {
 	 */
 	getLight(): LightSpecification;
 	/**
-	 * Loads sky and fog defined by {@link SkySpecification} onto the map.
-	 * Note: The fog only shows when using the terrain 3D feature.
+	 * Sets the value of style's sky properties.
+	 *
 	 * @param sky - Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/sky/).
-	 * @returns `this`
+	 * @param options - Options object.
+	 *
 	 * @example
 	 * ```ts
-	 * map.setSky({ 'sky-color': '#00f' });
+	 * map.setSky({'atmosphere-blend': 1.0});
 	 * ```
 	 */
-	setSky(sky: SkySpecification): this;
+	setSky(sky: SkySpecification, options?: StyleSetterOptions): this;
 	/**
-	 * Returns the value of the sky object.
+	 * Returns the value of the style's sky.
 	 *
 	 * @returns the sky properties of the style.
 	 * @example
@@ -11200,6 +11824,7 @@ declare class Map$1 extends Camera {
 	_setupContainer(): void;
 	_resizeCanvas(width: number, height: number, pixelRatio: number): void;
 	_setupPainter(): void;
+	migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void;
 	_contextLost: (event: any) => void;
 	_contextRestored: (event: any) => void;
 	_onMapScroll: (event: any) => boolean;
@@ -11331,6 +11956,21 @@ declare class Map$1 extends Camera {
 	 * @returns The elevation.
 	 */
 	getCameraTargetElevation(): number;
+	/**
+	 * Gets the {@link ProjectionSpecification}.
+	 * @returns the projection specification.
+	 * @example
+	 * ```ts
+	 * let projection = map.getProjection();
+	 * ```
+	 */
+	getProjection(): ProjectionSpecification;
+	/**
+	 * Sets the {@link ProjectionSpecification}.
+	 * @param projection - the projection specification to set
+	 * @returns
+	 */
+	setProjection(projection: ProjectionSpecification): this;
 }
 export interface OneFingerTouchRotateHandler extends DragMoveHandler<DragRotateResult, TouchEvent> {
 }
@@ -11352,6 +11992,10 @@ export type NavigationControlOptions = {
 	 * If `true` the pitch is visualized by rotating X-axis of compass.
 	 */
 	visualizePitch?: boolean;
+	/**
+	 * If `true` the roll is visualized by rotating the compass.
+	 */
+	visualizeRoll?: boolean;
 };
 /**
  * A `NavigationControl` control contains zoom buttons and a compass.
@@ -11420,9 +12064,9 @@ export type PositionAnchor = "center" | "top" | "bottom" | "left" | "right" | "t
 /**
  * A pixel offset specified as:
  *
- * - a single number specifying a distance from the location
- * - a {@link PointLike} specifying a constant offset
- * - an object of {@link Point}s specifying an offset for each anchor position
+ * - A single number specifying a distance from the location
+ * - A {@link PointLike} specifying a constant offset
+ * - An object of {@link PointLike}s specifying an offset for each anchor position
  *
  * Negative offsets indicate left and up.
  */
@@ -13142,6 +13786,76 @@ export declare function addProtocol(customProtocol: string, loadFn: AddProtocolA
  */
 export declare function removeProtocol(customProtocol: string): void;
 /**
+ * Options for generating a tile mesh.
+ * Can optionally configure any of the following:
+ * - mesh subdivision granularity
+ * - border presence
+ * - special geometry for the north and/or south pole
+ */
+export type CreateTileMeshOptions = {
+	/**
+	 * Specifies how much should the tile mesh be subdivided.
+	 * A value of 1 leads to a simple quad, a value of 4 will result in a grid of 4x4 quads.
+	 */
+	granularity?: number;
+	/**
+	 * When true, an additional ring of quads is generated along the border, always extending `EXTENT_STENCIL_BORDER` units away from the main mesh.
+	 */
+	generateBorders?: boolean;
+	/**
+	 * When true, additional geometry is generated along the north edge of the mesh, connecting it to the pole special vertex position.
+	 * This geometry replaces the mesh border along this edge, if one is present.
+	 */
+	extendToNorthPole?: boolean;
+	/**
+	 * When true, additional geometry is generated along the south edge of the mesh, connecting it to the pole special vertex position.
+	 * This geometry replaces the mesh border along this edge, if one is present.
+	 */
+	extendToSouthPole?: boolean;
+};
+/**
+ * Stores the prepared vertex and index buffer bytes for a mesh.
+ */
+export type TileMesh<T extends Uint16Array | Uint32Array> = {
+	/**
+	 * The vertex data. Each vertex is two 16 bit signed integers, one for X, one for Y.
+	 */
+	vertices: Int16Array;
+	/**
+	 * The index data. Each triangle is defined by three indices. The indices may either be 16 bit or 32 bit unsigned integers,
+	 * depending on the mesh creation arguments and on whether the mesh can fit into 16 bit indices.
+	 */
+	indices: T;
+	/**
+	 * A helper boolean indicating whether the indices are 32 bit.
+	 */
+	uses32bitIndices: T extends Uint32Array ? true : false;
+};
+/**
+ * Describes desired type of vertex indices, either 16 bit uint, 32 bit uint, or, if undefined, any of the two options.
+ */
+export type IndicesType = "32bit" | "16bit" | undefined;
+/**
+ * Creates a mesh of a quad that covers the entire tile (covering positions in range 0..EXTENT),
+ * is optionally subdivided into finer quads, optionally includes a border
+ * and optionally extends to the north and/or special pole vertices.
+ * Additionally the resulting mesh indices type can be specified using `forceIndicesSize`.
+ * @example
+ * ```
+ * // Creating a mesh for a tile that can be used for raster layers, hillshade, etc.
+ * const meshBuffers = createTileMesh({
+ *     granularity: map.style.projection.subdivisionGranularity.tile.getGranularityForZoomLevel(tileID.z),
+ *     generateBorders: true,
+ *     extendToNorthPole: tileID.y === 0,
+ *     extendToSouthPole: tileID.y === (1 << tileID.z) - 1,
+ * }, '16bit');
+ * ```
+ * @param options - Specify options for tile mesh creation such as granularity or border.
+ * @param forceIndicesSize - Specifies what indices type to use. The values '32bit' and '16bit' force their respective indices size. If undefined, the mesh may use either size, and will pick 16 bit indices if possible. If '16bit' is specified and the mesh exceeds 65536 vertices, an exception is thrown.
+ * @returns Typed arrays of the mesh vertices and indices.
+ */
+export declare function createTileMesh<T extends IndicesType>(options: CreateTileMeshOptions, forceIndicesSize?: T): T extends "32bit" ? TileMesh<Uint32Array> : (T extends "16bit" ? TileMesh<Uint16Array> : TileMesh<Uint16Array | Uint32Array>);
+/**
  * Sets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text).
  * Necessary for supporting the Arabic and Hebrew languages, which are written right-to-left.
  *
@@ -13150,7 +13864,7 @@ export declare function removeProtocol(customProtocol: string): void;
  * rtl text will then be rendered only after the plugin finishes loading.
  * @example
  * ```ts
- * setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js', false);
+ * setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js', false);
  * ```
  * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js/docs/examples/mapbox-gl-rtl-text/)
  */
@@ -13263,6 +13977,7 @@ export {
 	CompositeExpression,
 	DiffCommand,
 	DiffOperations,
+	ErrorEvent$1 as ErrorEvent,
 	Feature,
 	FeatureFilter,
 	FeatureState,
@@ -13280,6 +13995,7 @@ export {
 	Map$1 as Map,
 	Padding,
 	Point,
+	ProjectionSpecification,
 	PromoteIdSpecification,
 	PropertyValueSpecification,
 	RasterDEMSourceSpecification,

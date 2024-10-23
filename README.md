@@ -1,12 +1,12 @@
-# rpi-edgemap
+# Edgemap for RPi4
 
 Edgemap is small project built on embedded ARM targets like RaspberryPi4 and Raspberry Pi Zero 2W. It can be cross compiled to various other platforms and integrated to work with AMD64 based PC architectures. 
-
-![meshtastic](https://github.com/resiliencetheatre/rpi4edgemapdisplay/blob/secureptt/doc/kit.png?raw=true)
 
 System delivers small browser usable user interface where full world map can be accessed with any End User Device (EUD). Implementation is based on various open source projects like [Protomaps](https://protomaps.com/), [Meshtastic](https://meshtastic.org/) and [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js).
 
 Please note that Edgemap is not complete product as such but offers great integration point to your own developments. 
+
+![meshtastic](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/edgemap-with-batterypack.png?raw=true)
 
 ## Features
 
@@ -21,13 +21,13 @@ CoT implementation to battle space with TLS certificates is painful and dangerou
 
 ### Video conference
 
-![videoconference](https://github.com/resiliencetheatre/rpi4edgemapdisplay/blob/secureptt/doc/videoconference.png?raw=true)
+![videoconference](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/videoconference.png?raw=true)
 
 Image contains TLS encryption for Web UI connection and offers experimental video conference for 6 team members directly from map user interface. Video conference is based on WebRTC and is implemented with [Janus](https://github.com/meetecho/janus-gateway) by Meetecho. Please note that TLS is really bad for your OPSEC and I generally would like to use other means to secure connectivity. But with consumer grade EUD's and browsers we are forced to use TLS to make WebRTC working. 
 
 ### Local display support & QT
 
-![localdisplay](https://github.com/resiliencetheatre/rpi4edgemapdisplay/blob/secureptt/doc/hyperpixel.png?raw=true)
+![localdisplay](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/hyperpixel.png?raw=true)
 
 QT 5.11.5 is enabled for build and it allows us to do small and simple local [user interface](https://github.com/resiliencetheatre/qrencode-ui) to [Hyperpixel 4](https://shop.pimoroni.com/products/hyperpixel-4?variant=12569485443155) touch screen. This feature is currently proof of concept placeholder and contains no usable functionality. You could take this further with ease by using QT Creator and configuring it to use toolchain from buildroot environment. 
 
@@ -39,11 +39,11 @@ Setup is tested with [LILYGO LoRa32 V2.1_1.6 radios](https://www.lilygo.cc/produ
 
 Meshtastic implementation is still highly experimental and contains only message delivery over meshtastic radios. Following picture gives overview how FIFO pipes are used to deliver payload to/from radios.
 
-![meshtastic](https://github.com/resiliencetheatre/rpi4edgemapdisplay/blob/secureptt/doc/meshtastic.png?raw=true)
+![meshtastic](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/meshtastic.png?raw=true)
 
 You can deliver MIL symbols as sensor markers between Edgemap nodes with 'sensorMarker' message. 
 
-![meshtastic](https://github.com/resiliencetheatre/rpi4edgemapdisplay/blob/secureptt/doc/map.png?raw=true)
+![meshtastic](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/map.png?raw=true)
 
 Copy paste following messages to message dialog on Edgemap UI and expect them to appear to other nodes map after delivery is done via Meshtastic radios.
 
@@ -65,7 +65,7 @@ To save bandwidth on Meshtastic communication, some of messaging channel functio
 
 ### Meshtastic detection sensor
 
-![meshtastic](https://github.com/resiliencetheatre/rpi4edgemapdisplay/blob/secureptt/doc/sensor-alarm.png?raw=true)
+![meshtastic](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/sensor-alarm.png?raw=true)
 
 Edgemap contains simple example which shows you how to use Meshtastic node as detection sensor. Example is done with RAK wireless 
 [Wisblock Meshtastic Starter Kit](https://store.rakwireless.com/products/wisblock-meshtastic-starter-kit?variant=43683420438726)
@@ -83,7 +83,7 @@ meshtastic --port /dev/ttyACM0 --set detection_sensor.detection_triggered_high t
 meshtastic --port /dev/ttyACM0 --set detection_sensor.enabled true
 ```
 
-![meshtastic](https://github.com/resiliencetheatre/rpi4edgemapdisplay/blob/secureptt/doc/sensor-alarm-create.png?raw=true)
+![meshtastic](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/sensor-alarm-create.png?raw=true)
 
 Configuring sensor to Edgemap is simple. You send one alarm event and Edgemap will show 'unknown sensor' indication, 
 where you can pick location on map and give description. All further alarms are then shown on map.
@@ -92,7 +92,7 @@ Note that this implementation is still work in progress.
 
 ### Highrate
 
-![highrate](https://github.com/resiliencetheatre/rpi4edgemapdisplay/blob/main/doc/highrate.png?raw=true)
+![highrate](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/highrate.png?raw=true)
 
 You can also update highrate target information to map via websocket connection. See readme in highrate/ directory.
 
@@ -100,8 +100,14 @@ You can also update highrate target information to map via websocket connection.
 
 Experimental support for reticulum network is included on build. Currently we have to disable meshtastic when reticulum is 
 activated into use, but this might change in future. For reticulum there is "Reticulum MeshChat" included, which is
-independent browser usable chat and nomad network access tool. Edgemap includes also messaging over lxmf/reticulum, which is highly
-experimental at the moment. 
+independent browser usable chat and nomad network access tool. 
+
+For reticulum message delivery image contains [LXMF](https://github.com/markqvist/LXMF) based messaging and reticulum links based
+option. Both of these are currently under development and field testing. 
+
+![edgemap-phone](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/edgmap-with-phone.png?raw=true)
+
+
 
 ### SecurePTT
 
@@ -113,21 +119,21 @@ SecurePTT branch contains possbility to use small scale demo of full duplex Push
 
 SecurePTT offers flexibility to cipher your PTT streams and by default we use three layers to transport UDP packets between nodes. 
 
-![tunnel](https://github.com/resiliencetheatre/rpi4edgemapdisplay/blob/secureptt/doc/secureptt-tunnel.png?raw=true)
+![tunnel](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/secureptt-tunnel.png?raw=true)
 
 Outermost level (A) can be selected to hide meta-data of layer (B) which encapsulates (C), One-Time-Pad encrypted stream between nodes. 
 
-![streams](https://github.com/resiliencetheatre/rpi4edgemapdisplay/blob/secureptt/doc/SecurePTT-Keyed-Streams-3-peers.png?raw=true)
+![streams](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/SecurePTT-Keyed-Streams-3-peers.png?raw=true)
 
 ### PTT button wiring
 
 Depending what audio hardware you choose to use, wiring of PTT button varies. You could use USB attached headset and utilize GPIO pin to act like a PTT button:
 
-![gpioptt](https://github.com/resiliencetheatre/rpi4edgemapdisplay/blob/secureptt/doc/secureptt-GPIO-PTT-button.png?raw=true)
+![gpioptt](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/secureptt-GPIO-PTT-button.png?raw=true)
 
 For [Codec Zero](https://www.raspberrypi.com/products/codec-zero/) with [Kenwood SMC-34](https://www.kenwood.eu/comm/accessories/audio/SMC-34/) wiring looks like this:
 
-![codecptt](https://github.com/resiliencetheatre/rpi4edgemapdisplay/blob/secureptt/doc/rpi4ptt-codec-zero-wiring.png?raw=true)
+![codecptt](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/rpi4ptt-codec-zero-wiring.png?raw=true)
 
 ### SecurePTT options
 
@@ -157,60 +163,55 @@ If you choose to use browser based geolocation, configure installation to use TL
 To build edgemap firmware, you need to install Buildroot environment and clone this repository 
 as 'external tree' to buildroot. Make sure you check buildroot manual for required packages for your host, before building.
 
+Clone repositories 
+
 ```
-mkdir build-directory
-cd build-directory/
-git clone https://github.com/resiliencetheatre/rpi4edgemapdisplay.git
+mkdir ~/build-directory
+cd ~/build-directory/
+git clone https://github.com/resiliencetheatre/rpi4edgemap.git
 git clone https://git.buildroot.net/buildroot
 cd buildroot/
-nano package/rpi-firmware/rpi-firmware.mk 
-rm package/rpi-firmware/rpi-firmware.hash 
-export BR2_EXTERNAL=~/build-directory/rpi4edgemapdisplay
-cd ~/build-directory
-make rpi4_secureptt_6.6_defconfig
-make
 ```
 
-Current build tested with master branch of buildroot `06397d26a0cef5ddce0b04919acac8f4d63dacbf`.
-
-Modify `rpi-firmware` package file and change firmware version tag to
-match kernel version (6.6.51) we're using. 
+Modify buildroot standard `rpi-firmware` package file and change 
+firmware version tag to match kernel version (6.11.4) we're using. 
 
 ```
 # package/rpi-firmware/rpi-firmware.mk
-RPI_FIRMWARE_VERSION = 6c7d1719966f459ab0349c8af32f0c774c696234
+RPI_FIRMWARE_VERSION = 5476720d52cf579dc1627715262b30ba1242525e
 ```
 
-Disable hash check by deleting hash file:
+Disable hash check by deleting `rpi-firmware.hash` file:
 
 ```
 cd ~/build-directory/buildroot
 rm package/rpi-firmware/rpi-firmware.hash
 ```
 
-After you're stable with kernel and firmware versions, re-create hash file.
-
-Define _external tree_ location to **BR2_EXTERNAL** variable:
-
-```
-export BR2_EXTERNAL=~/build-directory/rpiedgemap
-```
-
-Make defconfig and start building:
+We need to update `python-cython` and `python-yarl` versions, so discard buildroot provided
+hash files and copy .mk files from `~/build-directory/rpi4edgemap/buildroot-extras/` to
+package directories:
 
 ```
-cd ~/build-directory/buildroot
-make rpi4_secureptt_6.6_defconfig
+# python-cython
+rm  ~/build-directory/buildroot/package/python-cython/python-cython.hash
+cp ~/build-directory/rpi4edgemap/buildroot-extras/python-cython.mk ~/build-directory/buildroot/package/python-cython
+
+# python-yarl
+rm ~/build-directory/buildroot/package/python-yarl/python-yarl.hash
+cp ~/build-directory/rpi4edgemap/buildroot-extras/python-yarl.mk ~/build-directory/buildroot/package/python-yarl
+```
+
+Export BR2_EXTERNAL variable, make defconfig and start build with make:
+
+```
+export BR2_EXTERNAL=~/build-directory/rpi4edgemap
+cd ~/build-directory
+make rpi4_edgemap_6.11_defconfig
 make
 ```
 
-Note that there are few different configurations available:
-
-|Config|Target|
-|------|------|
-|rpi4_secureptt_defconfig|Standard defconfig with USB headset support|
-|rpi4_secureptt_6.1_defconfig|Codec Zero defconfig with SMC-34 monofone support|
-|rpi4_secureptt_6.8_defconfig|Development config with Linux kernel 6.8|
+Current build tested with master branch of buildroot `71d2c23b11d4b21644a6597338aa39368b01fdf7`.
 
 After build is completed, you find image file for MicroSD card at:
 
@@ -227,17 +228,17 @@ delay on audio opening. Download [this patch](https://gist.github.com/resilience
 
 ## codec2 binaries
 
-If you wish to have codec2 binaries on your edgemap device, use provided buildroot-extras/libcodec2.mk file
-to have them copied to target on build. Replace original libcodec2.mk file in ~/build-directory/buildroot/package/libcodec2/ 
-with provided ~/build-directory/rpi4edgemapdisplay/buildroot-extras/libcodec2.mk file.
+If you wish to have codec2 binaries on your edgemap device, use provided `buildroot-extras/libcodec2.mk` file
+to have them copied to target on build. Replace original `libcodec2.mk` file in `~/build-directory/buildroot/package/libcodec2/` 
+with provided `~/build-directory/rpi4edgemap/buildroot-extras/libcodec2.mk` file.
 
 # Configuration
 
-By default meshtastic branch works without FIDO2 enabled encryption, use `create-partition-noenc.sh` script 
-to partition remaining space on your MicroSD card.
+On first boot on your RPi 4, you must create `maps` partition and create CA + certificates.
 
-Place pmtiles to your MicroSD second partition and link them under /opt/edgemap/edgeui/ 
-on running instance. Modify also styles/style.json to match amount of sources available.
+To create `maps` partition, run `create-partition-noenc.sh` script on RPi4. Then you need to
+place pmtiles to your MicroSD second partition and link them under /opt/edgemap/edgeui/ 
+on running instance.
 
 ## Map data
 

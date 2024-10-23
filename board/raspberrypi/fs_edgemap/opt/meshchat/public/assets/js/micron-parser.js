@@ -74,9 +74,30 @@ class MicronParser {
 
             // parse micron links
             // `[ ◈  The Future of RNode: A New Model`:/page/posts/2022_06_27.mu]
-            line = line.replaceAll(/`\[(.*?)`(.*?)\]/g, function(match, linkText, linkUrl) {
-                const url = MicronParser.formatNomadnetworkUrl(linkUrl);
-                return `<a href="${url}" onclick="event.preventDefault(); onNodePageUrlClick('${linkUrl}')">${linkText}</a>`
+            // `[Home`:/page/index.mu`page=Home]
+            // `[Games`:/page/index.mu`page=Games]
+            // `[Hangman`:/page/Games/Hangman.mu]`
+            // `[lxmf@7b746057a7294469799cd8d7d429676a]
+            // `[Liam`lxmf@7b746057a7294469799cd8d7d429676a]
+            line = line.replaceAll(/`\[(.*?)\]/g, function(match, linkContent) {
+                const linkParts = linkContent.split("`");
+                if(linkParts.length === 1){
+                    const url = linkParts[0];
+                    const formattedUrl = MicronParser.formatNomadnetworkUrl(url);
+                    return `<a href="${formattedUrl}" onclick="event.preventDefault(); onNodePageUrlClick('${url}')">${url}</a>`
+                } else if(linkParts.length === 2){
+                    const text = linkParts[0];
+                    const url = linkParts[1];
+                    const formattedUrl = MicronParser.formatNomadnetworkUrl(url);
+                    return `<a href="${formattedUrl}" onclick="event.preventDefault(); onNodePageUrlClick('${url}')">${text}</a>`
+                } else if(linkParts.length === 3){
+                    const text = linkParts[0];
+                    const url = linkParts[1] + "`" + linkParts[2]; // includes data
+                    const formattedUrl = MicronParser.formatNomadnetworkUrl(url);
+                    return `<a href="${formattedUrl}" onclick="event.preventDefault(); onNodePageUrlClick('${url}')">${text}</a>`
+                } else {
+                    return "";
+                }
             });
 
             // parse markdown links
@@ -87,8 +108,9 @@ class MicronParser {
             });
 
             // parse bold
+            // `!Bold Text
             // `!Bold Text`!
-            line = line.replaceAll(/`!(.*?)`!/g, function(match, text) {
+            line = line.replaceAll(/`!(.*?)(?:`!)?/g, function(match, text) {
                 return `<span style="font-weight:bold;">${text}</span>`
             });
 
@@ -150,7 +172,7 @@ class MicronParser {
 
             // align right
             if(line.startsWith("`r")){
-                line = line.replace("`l", "");
+                line = line.replace("`r", "");
                 line = `<span style="text-align:right;">${line}</span>`;
             }
 

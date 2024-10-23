@@ -1,7 +1,7 @@
 <template>
 
     <!-- peer selected -->
-    <div v-if="selectedPeer" class="m-2 flex flex-col h-full border rounded-xl bg-white shadow overflow-hidden">
+    <div v-if="selectedPeer" class="flex flex-col h-full bg-white overflow-hidden sm:m-2 sm:border sm:rounded-xl sm:shadow">
 
         <!-- header -->
         <div class="flex p-2 border-b border-gray-300">
@@ -17,7 +17,11 @@
                     </div>
                     <div class="my-auto font-semibold" :title="selectedPeer.display_name">{{ selectedPeer.custom_display_name ?? selectedPeer.display_name }}</div>
                 </div>
-                <div class="text-sm"><{{ selectedPeer.destination_hash }}> <span v-if="selectedPeerPath" @click="onDestinationPathClick(selectedPeerPath)" class="cursor-pointer">{{ selectedPeerPath.hops }} {{ selectedPeerPath.hops === 1 ? 'hop' : 'hops' }} away</span></div>
+                <div class="text-sm">
+                    <{{ selectedPeer.destination_hash }}>
+                    <span v-if="selectedPeerPath" @click="onDestinationPathClick(selectedPeerPath)" class="cursor-pointer">{{ selectedPeerPath.hops }} {{ selectedPeerPath.hops === 1 ? 'hop' : 'hops' }} away</span>
+                    <span v-if="selectedPeerLxmfStampInfo && selectedPeerLxmfStampInfo.stamp_cost"> • <span @click="onStampInfoClick(selectedPeerLxmfStampInfo)" class="cursor-pointer">Stamp Cost {{ selectedPeerLxmfStampInfo.stamp_cost }}</span></span>
+                </div>
             </div>
 
             <!-- call button -->
@@ -66,7 +70,7 @@
 
             <div v-if="selectedPeerChatItems.length > 0" class="flex flex-col flex-col-reverse p-3">
 
-                <div v-for="chatItem of selectedPeerChatItemsReversed" class="flex flex-col max-w-xl mt-3" :class="{ 'ml-auto pl-4 md:pl-16 items-end': chatItem.is_outbound, 'mr-auto pr-4 md:pr-16 items-start': !chatItem.is_outbound }">
+                <div v-for="chatItem of selectedPeerChatItemsReversed" :key="chatItem.lxmf_message.hash" class="flex flex-col max-w-xl mt-3" :class="{ 'ml-auto pl-4 md:pl-16 items-end': chatItem.is_outbound, 'mr-auto pr-4 md:pr-16 items-start': !chatItem.is_outbound }">
 
                     <!-- message content -->
                     <div @click="onChatItemClick(chatItem)" class="border border-gray-300 rounded-xl shadow overflow-hidden" :class="[ chatItem.lxmf_message.state === 'failed' ? 'bg-red-500 text-white' : chatItem.is_outbound ? 'bg-[#3b82f6] text-white' : 'bg-[#efefef]' ]">
@@ -216,7 +220,7 @@
                         <div class="w-32 h-32 rounded shadow border relative overflow-hidden">
 
                             <!-- image preview -->
-                            <img v-if="newMessageImageUrl" :src="newMessageImageUrl" class="w-full h-full"/>
+                            <img v-if="newMessageImageUrl" :src="newMessageImageUrl" class="w-full h-full object-cover"/>
 
                             <!-- remove button (top right) -->
                             <div class="absolute top-0 right-0 p-1">
@@ -247,7 +251,7 @@
                                     <!-- audio preview -->
                                     <div>
                                         <audio controls class="h-10">
-                                            <source :src="newMessageAudio.audio_wav_url" type="audio/wav"/>
+                                            <source :src="newMessageAudio.audio_preview_url" type="audio/wav"/>
                                         </audio>
                                     </div>
 
@@ -362,9 +366,11 @@
 <script>
 import Utils from "../../js/Utils";
 import DialogUtils from "../../js/DialogUtils";
+import MicrophoneRecorder from "../../js/MicrophoneRecorder";
 import NotificationUtils from "../../js/NotificationUtils";
 import WebSocketConnection from "../../js/WebSocketConnection";
 import AddAudioButton from "./AddAudioButton.vue";
+import moment from "moment";
 
 export default {
     name: 'ConversationViewer',
@@ -380,6 +386,7 @@ export default {
         return {
 
             selectedPeerPath: null,
+            selectedPeerLxmfStampInfo: null,
 
             lxmfMessagesRequestSequence: 0,
             chatItems: [],
@@ -397,6 +404,7 @@ export default {
 
             isRecordingAudioAttachment: false,
             audioAttachmentMicrophoneRecorder: null,
+            audioAttachmentMicrophoneRecorderCodec: null,
             audioAttachmentRecordingStartedAt: null,
             audioAttachmentRecordingDuration: null,
             audioAttachmentRecordingTimer: null,
@@ -455,6 +463,7 @@ export default {
             }
 
             this.getPeerPath();
+            this.getPeerLxmfStampInfo();
 
             // load 1 page of previous messages
             await this.loadPrevious();
@@ -523,6 +532,13 @@ export default {
         async onWebsocketMessage(message) {
             const json = JSON.parse(message.data);
             switch(json.type){
+                case 'announce': {
+                    // update stamp info if an announce is received from the selected peer
+                    if(json.announce.destination_hash === this.selectedPeer?.destination_hash){
+                        await this.getPeerLxmfStampInfo();
+                    }
+                    break;
+                }
                 case 'lxmf.delivery': {
                     this.onLxmfMessageReceived(json.lxmf_message);
                     await this.getPeerPath();
@@ -628,8 +644,63 @@ export default {
             }
 
         },
+        async getPeerLxmfStampInfo() {
+
+            // clear previous stamp info
+            this.selectedPeerLxmfStampInfo = null;
+
+            if(this.selectedPeer){
+                try {
+
+                    // get lxmf stamp info
+                    const response = await window.axios.get(`/api/v1/destination/${this.selectedPeer.destination_hash}/lxmf-stamp-info`);
+
+                    // update ui
+                    this.selectedPeerLxmfStampInfo = response.data.lxmf_stamp_info;
+
+                } catch(e) {
+                    console.log(e);
+                }
+            }
+
+        },
         onDestinationPathClick(path) {
             DialogUtils.alert(`${path.hops} ${ path.hops === 1 ? 'hop' : 'hops' } away via ${path.next_hop_interface}`);
+        },
+        onStampInfoClick(stampInfo) {
+
+            const stampCost = stampInfo.stamp_cost;
+            const outboundTicketExpiry = stampInfo.outbound_ticket_expiry;
+
+            // determine estimated time to generate a stamp
+            var estimatedTimeForStamp = "";
+            if(stampCost >= 24){
+                estimatedTimeForStamp = "several hours";
+            } else if(stampCost >= 20){
+                estimatedTimeForStamp = "more than an hour";
+            } else if(stampCost >= 18) {
+                estimatedTimeForStamp = "~5 minutes";
+            } else if(stampCost >= 17) {
+                estimatedTimeForStamp = "a few minutes";
+            } else if(stampCost >= 16) {
+                estimatedTimeForStamp = "~1 minute";
+            } else if(stampCost >= 13) {
+                estimatedTimeForStamp = "~30 seconds";
+            } else if(stampCost >= 9) {
+                estimatedTimeForStamp = "~10 seconds";
+            } else if(stampCost >= 1) {
+                estimatedTimeForStamp = "a few seconds";
+            } else {
+                estimatedTimeForStamp = "0 seconds";
+            }
+
+            // check if we have an outbound ticket available
+            if(outboundTicketExpiry != null){
+                estimatedTimeForStamp = `instant (ticket expires ${moment(outboundTicketExpiry * 1000).fromNow()})`;
+            }
+
+            DialogUtils.alert(`This peer has enabled stamp security.\n\nYour device must have a ticket, or solve an automated proof of work task each time you send them a message.\n\nTime per message: ${estimatedTimeForStamp}`);
+
         },
         scrollMessagesToBottom: function() {
             // next tick waits for the ui to have the new elements added
@@ -1087,8 +1158,33 @@ export default {
                 case "codec2": {
 
                     // start recording microphone
+                    this.audioAttachmentMicrophoneRecorderCodec = "codec2";
                     this.audioAttachmentMicrophoneRecorder = new Codec2MicrophoneRecorder();
                     this.audioAttachmentMicrophoneRecorder.codec2Mode = args.mode;
+                    this.audioAttachmentRecordingStartedAt = Date.now();
+                    this.isRecordingAudioAttachment = await this.audioAttachmentMicrophoneRecorder.start();
+
+                    // update recording time in ui every second
+                    this.audioAttachmentRecordingDuration = Utils.formatMinutesSeconds(0);
+                    this.audioAttachmentRecordingTimer = setInterval(() => {
+                        const recordingDurationMillis = Date.now() - this.audioAttachmentRecordingStartedAt;
+                        const recordingDurationSeconds = recordingDurationMillis / 1000;
+                        this.audioAttachmentRecordingDuration = Utils.formatMinutesSeconds(recordingDurationSeconds);
+                    }, 1000);
+
+                    // alert if failed to start recording
+                    if(!this.isRecordingAudioAttachment){
+                        DialogUtils.alert("failed to start recording");
+                    }
+
+                    break;
+
+                }
+                case "opus": {
+
+                    // start recording microphone
+                    this.audioAttachmentMicrophoneRecorderCodec = "opus";
+                    this.audioAttachmentMicrophoneRecorder = new MicrophoneRecorder();
                     this.audioAttachmentRecordingStartedAt = Date.now();
                     this.isRecordingAudioAttachment = await this.audioAttachmentMicrophoneRecorder.start();
 
@@ -1129,44 +1225,70 @@ export default {
             this.isRecordingAudioAttachment = false;
             const audio = await this.audioAttachmentMicrophoneRecorder.stop();
 
-            // do nothing if no audio was provided
-            if(audio.length === 0){
-                return;
-            }
+            // handle audio based on codec
+            switch(this.audioAttachmentMicrophoneRecorderCodec){
+                case "codec2": {
 
-            // decode codec2 audio back to wav so we can show a preview audio player before user sends it
-            const codec2Mode = this.audioAttachmentMicrophoneRecorder.codec2Mode;
-            const decoded = await Codec2Lib.runDecode(codec2Mode, new Uint8Array(audio));
+                    // do nothing if no audio was provided
+                    if(audio.length === 0){
+                        return;
+                    }
 
-            // convert decoded codec2 to wav audio and create a blob
-            const wavAudio = await Codec2Lib.rawToWav(decoded);
-            const wavBlob = new Blob([wavAudio], {
-                type: "audio/wav",
-            });
+                    // decode codec2 audio back to wav so we can show a preview audio player before user sends it
+                    const codec2Mode = this.audioAttachmentMicrophoneRecorder.codec2Mode;
+                    const decoded = await Codec2Lib.runDecode(codec2Mode, new Uint8Array(audio));
 
-            // determine audio mode
-            var audioMode = null;
-            switch(codec2Mode){
-                case "1200": {
-                    audioMode = 0x04; // LXMF.AM_CODEC2_1200
+                    // convert decoded codec2 to wav audio and create a blob
+                    const wavAudio = await Codec2Lib.rawToWav(decoded);
+                    const wavBlob = new Blob([wavAudio], {
+                        type: "audio/wav",
+                    });
+
+                    // determine audio mode
+                    var audioMode = null;
+                    switch(codec2Mode){
+                        case "1200": {
+                            audioMode = 0x04; // LXMF.AM_CODEC2_1200
+                            break;
+                        }
+                        case "3200": {
+                            audioMode = 0x09; // LXMF.AM_CODEC2_3200
+                            break;
+                        }
+                        default: {
+                            DialogUtils.alert(`Unhandled microphone recorder codec2Mode: ${codec2Mode}`);
+                            return;
+                        }
+                    }
+
+                    // update message audio attachment
+                    this.newMessageAudio = {
+                        audio_mode: audioMode,
+                        audio_blob: new Blob([audio]),
+                        audio_preview_url: URL.createObjectURL(wavBlob),
+                    };
+
                     break;
+
                 }
-                case "3200": {
-                    audioMode = 0x09; // LXMF.AM_CODEC2_3200
+                case "opus": {
+
+                    // do nothing if no audio was provided
+                    if(audio.size === 0){
+                        return;
+                    }
+
+                    // update message audio attachment
+                    this.newMessageAudio = {
+                        audio_mode: 0x10, // LXMF.AM_OPUS_OGG
+                        audio_blob: audio, // opus microphone recorder returns a blob
+                        audio_preview_url: URL.createObjectURL(audio),
+                    };
+
                     break;
-                }
-                default: {
-                    DialogUtils.alert(`Unhandled microphone recorder codec2Mode: ${codec2Mode}`);
-                    return;
+
                 }
             }
-
-            // update message audio attachment
-            this.newMessageAudio = {
-                audio_mode: audioMode,
-                audio_blob: new Blob([audio]),
-                audio_wav_url: URL.createObjectURL(wavBlob),
-            };
 
         },
         removeAudioAttachment: function() {
@@ -1232,10 +1354,38 @@ export default {
 
         },
         showSentMessageInfo: function(lxmfMessage) {
-            DialogUtils.alert([
+
+            // basic info
+            const info = [
                 `Created: ${Utils.convertUnixMillisToLocalDateTimeString(lxmfMessage.timestamp * 1000)}`,
                 `Method: ${lxmfMessage.method ?? "unknown"}`,
-            ].join("\n"));
+            ];
+
+            // add audio attachment size
+            if(lxmfMessage.fields?.audio?.audio_bytes){
+                const audioBytesLength = atob(lxmfMessage.fields?.audio?.audio_bytes).length;
+                info.push(`Audio Attachment: ${this.formatBytes(audioBytesLength)}`);
+            }
+
+            // add image attachment size
+            if(lxmfMessage.fields?.image?.image_bytes){
+                const imageBytesLength = atob(lxmfMessage.fields?.image?.image_bytes).length;
+                info.push(`Image Attachment: ${this.formatBytes(imageBytesLength)}`);
+            }
+
+            // add file attachments size
+            if(lxmfMessage.fields?.file_attachments){
+                var filesLength = 0;
+                for(const fileAttachment of lxmfMessage.fields?.file_attachments){
+                    const fileBytesLength = atob(fileAttachment.file_bytes).length;
+                    filesLength += fileBytesLength;
+                }
+                info.push(`File Attachments: ${this.formatBytes(filesLength)}`);
+            }
+
+            // show message info
+            DialogUtils.alert(info.join("\n"));
+
         },
         showReceivedMessageInfo: function(lxmfMessage) {
 
@@ -1245,6 +1395,28 @@ export default {
                 `Received: ${Utils.convertDateTimeToLocalDateTimeString(new Date(lxmfMessage.created_at))}`,
                 `Method: ${lxmfMessage.method ?? "unknown"}`,
             ];
+
+            // add audio attachment size
+            if(lxmfMessage.fields?.audio?.audio_bytes){
+                const audioBytesLength = atob(lxmfMessage.fields?.audio?.audio_bytes).length;
+                info.push(`Audio Attachment: ${this.formatBytes(audioBytesLength)}`);
+            }
+
+            // add image attachment size
+            if(lxmfMessage.fields?.image?.image_bytes){
+                const imageBytesLength = atob(lxmfMessage.fields?.image?.image_bytes).length;
+                info.push(`Image Attachment: ${this.formatBytes(imageBytesLength)}`);
+            }
+
+            // add file attachments size
+            if(lxmfMessage.fields?.file_attachments){
+                var filesLength = 0;
+                for(const fileAttachment of lxmfMessage.fields?.file_attachments){
+                    const fileBytesLength = atob(fileAttachment.file_bytes).length;
+                    filesLength += fileBytesLength;
+                }
+                info.push(`File Attachments: ${this.formatBytes(filesLength)}`);
+            }
 
             // add signal quality if available
             if(lxmfMessage.quality != null){

@@ -315,39 +315,41 @@ export default {
 
                 if(announce.aspect === "lxmf.delivery"){
 
-                    const name = announce.display_name;
+                    const name = announce.custom_display_name ?? announce.display_name;
 
                     node.shape = "circularImage";
                     node.image = entry.hops === 1 ? "/assets/images/network-visualiser/user_1hop.png" : "/assets/images/network-visualiser/user.png";
 
                     node.label = name;
                     node.title = [
-                        `Name: ${name}`,
+                        `Name: ${announce.display_name}`,
+                        announce.custom_display_name != null ? `Custom Name: ${announce.custom_display_name}` : null,
                         `Aspect: ${announce.aspect}`,
                         `Identity: ${announce.identity_hash}`,
                         `Destination: ${announce.destination_hash}`,
                         `Path: ${entry.hops} ${entry.hops === 1 ? 'Hop' : 'Hops'} via ${entry.interface}`,
                         `Announced At: ${announce.updated_at}`,
-                    ].join("\n");
+                    ].filter((line) => line != null).join("\n");
 
                 }
 
                 if(announce.aspect === "nomadnetwork.node"){
 
-                    const name = announce.display_name;
+                    const name = announce.custom_display_name ?? announce.display_name;
 
                     node.shape = "circularImage";
                     node.image = entry.hops === 1 ? "/assets/images/network-visualiser/server_1hop.png" : "/assets/images/network-visualiser/server.png";
 
                     node.label = name;
                     node.title = [
-                        `Name: ${name}`,
+                        `Name: ${announce.display_name}`,
+                        announce.custom_display_name != null ? `Custom Name: ${announce.custom_display_name}` : null,
                         `Aspect: ${announce.aspect}`,
                         `Identity: ${announce.identity_hash}`,
                         `Destination: ${announce.destination_hash}`,
                         `Path: ${entry.hops} ${entry.hops === 1 ? 'Hop' : 'Hops'} via ${entry.interface}`,
                         `Announced At: ${announce.updated_at}`,
-                    ].join("\n");
+                    ].filter((line) => line != null).join("\n");
 
                 }
 

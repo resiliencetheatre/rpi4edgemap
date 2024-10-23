@@ -1,0 +1,15 @@
+[Unit]
+Description=rnslink server
+Before=rnslink-client.service
+After=multi-user.target rnsd.service
+
+[Service]
+WorkingDirectory=/opt/rnslink
+KillMode=process
+ExecStart=/usr/bin/python3 rnslink.py -s
+Restart=always
+RestartSec=10
+TimeoutStartSec=10
+
+# [Install]
+# WantedBy=multi-user.target

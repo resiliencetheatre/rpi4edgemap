@@ -1082,6 +1082,32 @@ class ReticulumMeshChat:
                     "message": "Custom display name has been removed",
                 })
 
+        # get lxmf stamp cost for the provided lxmf.delivery destination hash
+        @routes.get("/api/v1/destination/{destination_hash}/lxmf-stamp-info")
+        async def index(request):
+
+            # get path params
+            destination_hash = request.match_info.get("destination_hash", "")
+
+            # convert destination hash to bytes
+            destination_hash = bytes.fromhex(destination_hash)
+
+            # get lxmf stamp cost from announce in database
+            lxmf_stamp_cost = None
+            announce = database.Announce.get_or_none(database.Announce.destination_hash == destination_hash.hex())
+            if announce is not None:
+                lxmf_stamp_cost = self.parse_lxmf_stamp_cost(announce.app_data)
+
+            # get outbound ticket expiry for this lxmf destination
+            lxmf_outbound_ticket_expiry = self.message_router.get_outbound_ticket_expiry(destination_hash)
+
+            return web.json_response({
+                "lxmf_stamp_info": {
+                    "stamp_cost": lxmf_stamp_cost,
+                    "outbound_ticket_expiry": lxmf_outbound_ticket_expiry,
+                },
+            })
+
         # get interface stats
         @routes.get("/api/v1/interface-stats")
         async def index(request):
@@ -1093,21 +1119,24 @@ class ReticulumMeshChat:
             if "transport_id" in interface_stats:
                 interface_stats["transport_id"] = interface_stats["transport_id"].hex()
 
+            # ensure probe_responder is hex as json_response can't serialize bytes
+            if "probe_responder" in interface_stats and interface_stats["probe_responder"] is not None:
+                interface_stats["probe_responder"] = interface_stats["probe_responder"].hex()
+            
             # ensure ifac_signature is hex as json_response can't serialize bytes
             for interface in interface_stats["interfaces"]:
 
-                # add interface hashes
-                interface_instance = self.find_interface_by_name(interface["name"])
-                if interface_instance is not None:
-                    interface["type"] = type(interface_instance).__name__
-                    interface["hash"] = interface_instance.get_hash().hex()
-                    interface["interface_name"] = interface_instance.name
-                    if hasattr(interface_instance, "parent_interface") and interface_instance.parent_interface is not None:
-                        interface["parent_interface_name"] = str(interface_instance.parent_interface)
-                        interface["parent_interface_hash"] = interface_instance.parent_interface.get_hash().hex()
+                if "short_name" in interface:
+                    interface["interface_name"] = interface["short_name"]
+
+                if "parent_interface_name" in interface and interface["parent_interface_name"] is not None:
+                    interface["parent_interface_hash"] = interface["parent_interface_hash"].hex()
 
                 if "ifac_signature" in interface and interface["ifac_signature"]:
                     interface["ifac_signature"] = interface["ifac_signature"].hex()
+
+                if "hash" in interface and interface["hash"]:
+                    interface["hash"] = interface["hash"].hex()
 
             return web.json_response({
                 "interface_stats": interface_stats,
@@ -1448,6 +1477,22 @@ class ReticulumMeshChat:
         # send config to websocket clients
         await self.send_config_to_websocket_clients()
 
+    # converts nomadnetwork page variables from a string to a map
+    # converts: "field1=123|field2=456"
+    # to the following map:
+    # - var_field1: 123
+    # - var_field2: 456
+    def convert_nomadnet_string_data_to_map(self, path_data: str | None):
+        data = {}
+        if path_data is not None:
+            for field in path_data.split("|"):
+                if "=" in field:
+                    variable_name, variable_value = field.split("=")
+                    data[f'var_{variable_name}'] = variable_value
+                else:
+                    print(f"unhandled field: {field}")
+        return data
+
     # handle data received from websocket client
     async def on_websocket_data_received(self, client, data):
 
@@ -1523,6 +1568,15 @@ class ReticulumMeshChat:
             destination_hash = data["nomadnet_page_download"]["destination_hash"]
             page_path = data["nomadnet_page_download"]["page_path"]
 
+            # parse data from page path
+            # example: hash:/page/index.mu`field1=123|field2=456
+            page_data = None
+            page_path_to_download = page_path
+            if "`" in page_path:
+                page_path_parts = page_path.split("`")
+                page_path_to_download = page_path_parts[0]
+                page_data = self.convert_nomadnet_string_data_to_map(page_path_parts[1])
+
             # convert destination hash to bytes
             destination_hash = bytes.fromhex(destination_hash)
 
@@ -1565,7 +1619,7 @@ class ReticulumMeshChat:
             # todo: handle page download progress
 
             # download the page
-            downloader = NomadnetPageDownloader(destination_hash, page_path, on_page_download_success, on_page_download_failure, on_page_download_progress)
+            downloader = NomadnetPageDownloader(destination_hash, page_path_to_download, page_data, on_page_download_success, on_page_download_failure, on_page_download_progress)
             await downloader.download()
 
         # unhandled type
@@ -2301,11 +2355,24 @@ class ReticulumMeshChat:
 
     # reads the lxmf display name from the provided base64 app data
     def parse_lxmf_display_name(self, app_data_base64: str, default_value: str | None = "Anonymous Peer"):
+
         try:
             app_data_bytes = base64.b64decode(app_data_base64)
-            return LXMF.display_name_from_app_data(app_data_bytes)
+            display_name = LXMF.display_name_from_app_data(app_data_bytes)
+            if display_name is not None:
+                return display_name
         except:
-            return default_value
+            pass
+
+        return default_value
+
+    # reads the lxmf stamp cost from the provided base64 app data
+    def parse_lxmf_stamp_cost(self, app_data_base64: str):
+        try:
+            app_data_bytes = base64.b64decode(app_data_base64)
+            return LXMF.stamp_cost_from_app_data(app_data_bytes)
+        except:
+            return None
 
     # reads the nomadnetwork node display name from the provided base64 app data
     def parse_nomadnetwork_node_display_name(self, app_data_base64: str, default_value: str | None = "Anonymous Node"):
@@ -2485,11 +2552,12 @@ class Config:
 
 class NomadnetDownloader:
 
-    def __init__(self, destination_hash: bytes, path: str, on_download_success: Callable[[bytes], None], on_download_failure: Callable[[str], None], on_progress_update: Callable[[float], None], timeout: int|None = None):
+    def __init__(self, destination_hash: bytes, path: str, data: str|None, on_download_success: Callable[[bytes], None], on_download_failure: Callable[[str], None], on_progress_update: Callable[[float], None], timeout: int|None = None):
         self.app_name = "nomadnetwork"
         self.aspects = "node"
         self.destination_hash = destination_hash
         self.path = path
+        self.data = data
         self.timeout = timeout
         self.on_download_success = on_download_success
         self.on_download_failure = on_download_failure
@@ -2546,7 +2614,7 @@ class NomadnetDownloader:
         # request download over link
         link.request(
             self.path,
-            data=None,
+            data=self.data,
             response_callback=self.on_response,
             failed_callback=self.on_failed,
             progress_callback=self.on_progress,
@@ -2568,10 +2636,10 @@ class NomadnetDownloader:
 
 class NomadnetPageDownloader(NomadnetDownloader):
 
-    def __init__(self, destination_hash: bytes, page_path: str, on_page_download_success: Callable[[str], None], on_page_download_failure: Callable[[str], None], on_progress_update: Callable[[float], None], timeout: int|None = None):
+    def __init__(self, destination_hash: bytes, page_path: str, data: str | None, on_page_download_success: Callable[[str], None], on_page_download_failure: Callable[[str], None], on_progress_update: Callable[[float], None], timeout: int|None = None):
         self.on_page_download_success = on_page_download_success
         self.on_page_download_failure = on_page_download_failure
-        super().__init__(destination_hash, page_path, self.on_download_success, self.on_download_failure, on_progress_update, timeout)
+        super().__init__(destination_hash, page_path, data, self.on_download_success, self.on_download_failure, on_progress_update, timeout)
 
     # page download was successful, decode the response and send to provided callback
     def on_download_success(self, response_bytes):
@@ -2588,7 +2656,7 @@ class NomadnetFileDownloader(NomadnetDownloader):
     def __init__(self, destination_hash: bytes, page_path: str, on_file_download_success: Callable[[str, bytes], None], on_file_download_failure: Callable[[str], None], on_progress_update: Callable[[float], None], timeout: int|None = None):
         self.on_file_download_success = on_file_download_success
         self.on_file_download_failure = on_file_download_failure
-        super().__init__(destination_hash, page_path, self.on_download_success, self.on_download_failure, on_progress_update, timeout)
+        super().__init__(destination_hash, page_path, None, self.on_download_success, self.on_download_failure, on_progress_update, timeout)
 
     # file download was successful, decode the response and send to provided callback
     def on_download_success(self, response):

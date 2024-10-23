@@ -29,31 +29,38 @@ type V3OrV4Protocol = <T extends AbortController | ResponseCallbackV3, R = T ext
  * MapLibre GL JS protocol. Must be added once globally.
  */
 export declare class Protocol {
+    /** @hidden */
     tiles: Map<string, PMTiles>;
-    constructor();
+    metadata: boolean;
+    /**
+     * Initialize the MapLibre PMTiles protocol.
+     *
+     * * metadata: also load the metadata section of the PMTiles. required for some "inspect" functionality
+     * and to automatically populate the map attribution. Requires an extra HTTP request.
+     */
+    constructor(options?: {
+        metadata: boolean;
+    });
+    /**
+     * Add a {@link PMTiles} instance to the global protocol instance.
+     *
+     * For remote fetch sources, references in MapLibre styles like pmtiles://http://...
+     * will resolve to the same instance if the URLs match.
+     */
     add(p: PMTiles): void;
+    /**
+     * Fetch a {@link PMTiles} instance by URL, for remote PMTiles instances.
+     */
     get(url: string): PMTiles | undefined;
+    /** @hidden */
     tilev4: (params: RequestParameters, abortController: AbortController) => Promise<{
-        data: {
-            tiles: string[];
-            minzoom: number;
-            maxzoom: number;
-            bounds: number[];
-        };
+        data: unknown;
         cacheControl?: undefined;
         expires?: undefined;
     } | {
         data: Uint8Array;
         cacheControl: string | undefined;
         expires: string | undefined;
-    } | {
-        data: Uint8Array;
-        cacheControl?: undefined;
-        expires?: undefined;
-    } | {
-        data: null;
-        cacheControl?: undefined;
-        expires?: undefined;
     }>;
     tile: V3OrV4Protocol;
 }

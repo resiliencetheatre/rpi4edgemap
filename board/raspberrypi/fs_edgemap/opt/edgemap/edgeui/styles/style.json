@@ -437,17 +437,7 @@
                 "type": "raster",
                 "source": "satellite_4"
         }, 
-        {
-            "id": "hills",
-            "type": "hillshade",
-            "source": "hillshadow",
-            "layout": {
-                "visibility": "none"
-            },
-            "paint": {
-                "hillshade-shadow-color": "#B1ACA2"
-            }
-        },
+        
         
         
         {
@@ -3356,6 +3346,17 @@
             },
             "paint": {
                 "text-color": "#a3a3a3"
+            }
+        },
+        {
+            "id": "hills",
+            "type": "hillshade",
+            "source": "hillshadow",
+            "layout": {
+                "visibility": "none"
+            },
+            "paint": {
+                "hillshade-shadow-color": "#473B24"
             }
         }
     ],

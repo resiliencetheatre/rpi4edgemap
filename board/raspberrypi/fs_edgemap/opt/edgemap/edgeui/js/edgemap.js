@@ -217,7 +217,7 @@ function updateReticulumBlock() {
     var reticulumListContent = "";
     reticulumListContent = "<table width=90%><tr ><td style='border-bottom: 1px solid #0F0;' >Callsign</td><td style='border-bottom: 1px solid #0F0;' >Age</td><td style='border-bottom: 1px solid #0F0;'>Hash</td></tr>";
     for ( reticulumLoop = 0; reticulumLoop < reticulumNodesOnSystem.getSize(); reticulumLoop++) { 
-        if ( reticulumNodesOnSystem.age[reticulumLoop] < 5 ) {
+        if ( reticulumNodesOnSystem.age[reticulumLoop] < 30 ) {
             reticulumListContent += "<tr><td>" + reticulumNodesOnSystem.members[reticulumLoop] + "</td><td>" + reticulumNodesOnSystem.age[reticulumLoop] + "</td><td>" + reticulumNodesOnSystem.hash[reticulumLoop] + "</td></tr>";
         }
     }
@@ -336,6 +336,14 @@ function sendRetiCulumAndMeshtasticMessage(messagepayload) {
     }
 }
 
+function sendReticulumControlMessage(messagepayload) {
+    console.log("Sending reticulum control message:" + messagepayload)
+    if ( reticulumStatusSocketConnected ) {
+        reticulumStatusSocket.send( messagepayload + '\n' );
+        // notifyMessage("Announce sent", 5000);
+    }
+}
+
 /*
 function updatePeerListBlock() {
     document.getElementById("peerlist").innerHTML = "";
@@ -378,7 +386,7 @@ function checkReticulumRadioExpiry() {
     let currentTime = Math.round(+new Date()/1000);
     for ( nodeLoop = 0; nodeLoop < reticulumNodesOnSystem.getSize(); nodeLoop++) {
         // var radioAge = parseInt ( currentTime ) - parseInt( reticulumNodesOnSystem.timestamps[nodeLoop] );
-        if ( reticulumNodesOnSystem.age[nodeLoop] > 5 ) {
+        if ( reticulumNodesOnSystem.age[nodeLoop] > 30 ) {
             reticulumNodesOnSystem.remove( reticulumNodesOnSystem.members[nodeLoop] );
             updateReticulumBlock(); 
         }
@@ -1499,8 +1507,14 @@ function toggleHillShadow() {
         );
         if (visibility === 'visible') {
             map.setLayoutProperty("hills", 'visibility', 'none');
+            map.setTerrain(null);
         } else {
             map.setLayoutProperty("hills", 'visibility', 'visible');
+            
+            map.setTerrain({
+              source: 'terrain', // the source containing your raster-dem data
+              exaggeration: 1         // optional exaggeration of terrain
+            });
         }   
     }
 }
