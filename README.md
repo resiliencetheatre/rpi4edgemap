@@ -211,7 +211,7 @@ make rpi4_edgemap_6.11_defconfig
 make
 ```
 
-Current build tested with master branch of buildroot `71d2c23b11d4b21644a6597338aa39368b01fdf7`.
+Current build tested with master branch of buildroot: `4a9a4c3cd5f416b44b8ab6c3c7cdfc3cc991a5de`.
 
 After build is completed, you find image file for MicroSD card at:
 
