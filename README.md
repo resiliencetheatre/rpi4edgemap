@@ -6,7 +6,7 @@ System delivers small browser usable user interface where full world map can be 
 
 Please note that Edgemap is not complete product as such but offers great integration point to your own developments. 
 
-![meshtastic](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/edgemap-with-batterypack.png?raw=true)
+![meshtastic](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/edgemap-with-batterypack.png?raw=true)
 
 ## Features
 
@@ -21,13 +21,13 @@ CoT implementation to battle space with TLS certificates is painful and dangerou
 
 ### Video conference
 
-![videoconference](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/videoconference.png?raw=true)
+![videoconference](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/videoconference.png?raw=true)
 
 Image contains TLS encryption for Web UI connection and offers experimental video conference for 6 team members directly from map user interface. Video conference is based on WebRTC and is implemented with [Janus](https://github.com/meetecho/janus-gateway) by Meetecho. Please note that TLS is really bad for your OPSEC and I generally would like to use other means to secure connectivity. But with consumer grade EUD's and browsers we are forced to use TLS to make WebRTC working. 
 
 ### Local display support & QT
 
-![localdisplay](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/hyperpixel.png?raw=true)
+![localdisplay](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/hyperpixel.png?raw=true)
 
 QT 5.11.5 is enabled for build and it allows us to do small and simple local [user interface](https://github.com/resiliencetheatre/qrencode-ui) to [Hyperpixel 4](https://shop.pimoroni.com/products/hyperpixel-4?variant=12569485443155) touch screen. This feature is currently proof of concept placeholder and contains no usable functionality. You could take this further with ease by using QT Creator and configuring it to use toolchain from buildroot environment. 
 
@@ -39,11 +39,11 @@ Setup is tested with [LILYGO LoRa32 V2.1_1.6 radios](https://www.lilygo.cc/produ
 
 Meshtastic implementation is still highly experimental and contains only message delivery over meshtastic radios. Following picture gives overview how FIFO pipes are used to deliver payload to/from radios.
 
-![meshtastic](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/meshtastic.png?raw=true)
+![meshtastic](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/meshtastic.png?raw=true)
 
 You can deliver MIL symbols as sensor markers between Edgemap nodes with 'sensorMarker' message. 
 
-![meshtastic](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/map.png?raw=true)
+![meshtastic](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/map.png?raw=true)
 
 Copy paste following messages to message dialog on Edgemap UI and expect them to appear to other nodes map after delivery is done via Meshtastic radios.
 
@@ -65,7 +65,7 @@ To save bandwidth on Meshtastic communication, some of messaging channel functio
 
 ### Meshtastic detection sensor
 
-![meshtastic](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/sensor-alarm.png?raw=true)
+![meshtastic](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/sensor-alarm.png?raw=true)
 
 Edgemap contains simple example which shows you how to use Meshtastic node as detection sensor. Example is done with RAK wireless 
 [Wisblock Meshtastic Starter Kit](https://store.rakwireless.com/products/wisblock-meshtastic-starter-kit?variant=43683420438726)
@@ -83,7 +83,7 @@ meshtastic --port /dev/ttyACM0 --set detection_sensor.detection_triggered_high t
 meshtastic --port /dev/ttyACM0 --set detection_sensor.enabled true
 ```
 
-![meshtastic](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/sensor-alarm-create.png?raw=true)
+![meshtastic](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/sensor-alarm-create.png?raw=true)
 
 Configuring sensor to Edgemap is simple. You send one alarm event and Edgemap will show 'unknown sensor' indication, 
 where you can pick location on map and give description. All further alarms are then shown on map.
@@ -119,21 +119,21 @@ SecurePTT branch contains possbility to use small scale demo of full duplex Push
 
 SecurePTT offers flexibility to cipher your PTT streams and by default we use three layers to transport UDP packets between nodes. 
 
-![tunnel](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/secureptt-tunnel.png?raw=true)
+![tunnel](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/secureptt-tunnel.png?raw=true)
 
 Outermost level (A) can be selected to hide meta-data of layer (B) which encapsulates (C), One-Time-Pad encrypted stream between nodes. 
 
-![streams](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/SecurePTT-Keyed-Streams-3-peers.png?raw=true)
+![streams](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/SecurePTT-Keyed-Streams-3-peers.png?raw=true)
 
 ### PTT button wiring
 
 Depending what audio hardware you choose to use, wiring of PTT button varies. You could use USB attached headset and utilize GPIO pin to act like a PTT button:
 
-![gpioptt](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/secureptt-GPIO-PTT-button.png?raw=true)
+![gpioptt](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/secureptt-GPIO-PTT-button.png?raw=true)
 
 For [Codec Zero](https://www.raspberrypi.com/products/codec-zero/) with [Kenwood SMC-34](https://www.kenwood.eu/comm/accessories/audio/SMC-34/) wiring looks like this:
 
-![codecptt](https://github.com/resiliencetheatre/rpi4edgemap/blob/secureptt/doc/rpi4ptt-codec-zero-wiring.png?raw=true)
+![codecptt](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/rpi4ptt-codec-zero-wiring.png?raw=true)
 
 ### SecurePTT options
 
@@ -149,7 +149,7 @@ For [operations security](https://en.wikipedia.org/wiki/Operations_security) we 
 Since we aim to use RPi4 in headless configuration we use [systemd-cryptsetup](https://www.freedesktop.org/software/systemd/man/latest/systemd-cryptsetup@.service.html)
 with [FIDO2](https://shop.nitrokey.com/shop/product/nkfi2-nitrokey-fido2-55) key. With this approach we can start unit to fully operational state with FIDO2 key plugged in to USB port and after unit is booted (and LUKS partitions are opened) - we can remove FIDO2 key. 
 
-Note that this secureptt branch is configured to use third partition for maps, elevation model and imagery without encryption. 
+Note that this branch is configured to use third partition for maps, elevation model and imagery without encryption. 
 
 ### Additional notes
 
