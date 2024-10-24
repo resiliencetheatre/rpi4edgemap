@@ -67,7 +67,9 @@
     <svg id="svg-icon-gnss-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 100 100"><path fill="#0F0" d="M41.979 0C29.724.005 19.283 4.451 17.322 10.5h49.356C64.716 4.447 54.263 0 42 0ZM17.322 14.5c1.752 5.405 10.335 9.61 21.178 10.377V100h7v-2.828c5.832-.264 9.863-.495 11.822-2.14c1.96-1.647 5.939-2.275 8.998-2.198v5.486c0 .928.752 1.68 1.68 1.68h7.71v-1.68h14.9V100h7.71a1.68 1.68 0 0 0 1.68-1.68v-6.693h-1.68v-30.04H100V53.68A1.68 1.68 0 0 0 98.32 52H68a1.68 1.68 0 0 0-1.68 1.68v7.908H68v27.238c-7.951.135-10.084.933-12.951 2.914s-4.684 1.31-9.549 1.469V24.877c10.843-.767 19.426-4.972 21.178-10.377ZM72.4 58.08h21.52v35.84H72.4Zm2.628 3.473v13.56h16.32v-13.56Zm8.16 16.67a5.4 5.4 0 1 0 0 10.801a5.4 5.4 0 0 0 0-10.801" color="currentColor"/></svg>
     <svg id="svg-icon-ptt-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24"><path fill="#0F0" d="M9 2a1 1 0 0 0-1 1v17c0 1.11.89 2 2 2h5c1.11 0 2-.89 2-2V9c0-1.11-.89-2-2-2h-5V3a1 1 0 0 0-1-1m1 7h5v4h-5z"/></svg>
     <svg id="svg-icon-meshtasticMsgsocket-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9h8m-8 4h6m-1 5l-5 3v-3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v5.5M19 16l-2 3h4l-2 3"/></svg>
+    
     <svg id="svg-icon-reticulumMsgsocket-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24"><path fill="none" stroke="#0F0" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9h8m-8 4h6m-2.988 6.193L8 21v-3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v6m-1 8l2-2l-2-2m-3 0l-2 2l2 2"/></svg>    
+    
     <svg id="svg-icon-highrate-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="2em" viewBox="0 0 20 25"><path fill="#0F0" d="M22 11h-1l-1-2h-6.25L16 12.5h-2L10.75 9H4c-.55 0-2-.45-2-1s1.5-2.5 3.5-2.5S7.67 6.5 9 7h12a1 1 0 0 1 1 1zM10.75 6.5L14 3h2l-2.25 3.5zM18 11V9.5h1.75L19 11zM3 19a1 1 0 0 1-1-1a1 1 0 0 1 1-1a4 4 0 0 1 4 4a1 1 0 0 1-1 1a1 1 0 0 1-1-1a2 2 0 0 0-2-2m8 2a1 1 0 0 1-1 1a1 1 0 0 1-1-1a6 6 0 0 0-6-6a1 1 0 0 1-1-1a1 1 0 0 1 1-1a8 8 0 0 1 8 8"/></svg>
     <svg id="svg-icon-tracking-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="2em" viewBox="0 0 20 25"><path fill="#0F0" d="m20 6l-1-1l-1.5 1.5L16 5l-1 1l1.5 1.5L15 9l1 1l1.5-1.5L19 10l1-1l-1.5-1.5z"/><circle cx="7.5" cy="14.5" r="3.5" fill="currentColor"/><circle cx="7" cy="3" r="2" fill="currentColor"/><circle cx="13" cy="7" r="1" fill="currentColor"/><circle cx="10" cy="6" r="1" fill="currentColor"/><circle cx="3" cy="3" r="1" fill="currentColor"/><circle cx="1" cy="6" r="1" fill="currentColor"/><circle cx="1" cy="9" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/></svg>    
     <svg id="svg-icon-msgsocket-red-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24"><path fill="#F00" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2m0 14H5.2L4 17.2V4h16zm-9.53-2L7 10.5l1.4-1.41l2.07 2.08L15.6 6L17 7.41z"/></svg>
@@ -107,50 +109,78 @@
     </div>
     
     <div class="map-top-status-icon-overlay">
-    <center>
-        <div class="icon-container">
-                <svg id="reticulumMsgSocketStatus">
-                  <use href="#svg-icon-reticulumMsgsocket-topbar"></use>
+    <center >
+        <div class="icon-container" >
+                
+                
+                <svg id="reticulumMsgSocketStatus" class="has-tooltip">
+                    <use href="#svg-icon-reticulumMsgsocket-topbar" ></use>
                 </svg>
+                <div class="tooltip" id="reticulumTooltip">Reticulum message socket connected</div>
+                
+                
                 <svg id="reticulumMsgSocketStatusRed">
                   <use href="#svg-icon-reticulumMsgsocket-red-topbar"></use>
                 </svg>
-                <svg id="meshtasticMsgSocketStatus">
+                
+                <svg id="meshtasticMsgSocketStatus" class="has-tooltip">
                   <use href="#svg-icon-meshtasticMsgsocket-topbar"></use>
                 </svg>
+                <div class="tooltip" id="meshtasticTooltip">Meshtastic message socket connected</div>
+                
                 <svg id="meshtasticMsgSocketStatusRed">
                   <use href="#svg-icon-meshtasticMsgsocket-red-topbar"></use>
                 </svg>
-                <svg id="securePttStatus"   >
+                
+                <svg id="securePttStatus" class="has-tooltip"  >
                   <use href="#svg-icon-ptt-topbar"></use>
                 </svg>
+                <div class="tooltip" id="meshtasticTooltip">SecurePTT status socket connected</div>
+                
+                
                 <svg id="securePttStatusRed"   >
                   <use href="#svg-icon-ptt-red-topbar"></use>
                 </svg>
-                <svg id="gpsSocketStatus"  >
+                
+                <svg id="gpsSocketStatus" class="has-tooltip" >
                   <use href="#svg-icon-gnss-topbar"></use>
                 </svg>
+                <div class="tooltip" id="meshtasticTooltip">Local GNSS socket connected</div>
+                
                 <svg id="gpsSocketStatusRed"  >
                   <use href="#svg-icon-gnss-red-topbar"></use>
                 </svg>
-                <svg id="meshtasticStatus"   >
+                
+                <svg id="meshtasticStatus" class="has-tooltip"  >
                   <use href="#svg-icon-meshtastic-topbar"></use>
                 </svg>
+                <div class="tooltip" id="meshtasticTooltip">Meshtastic status socket connected</div>
+                
                 <svg id="meshtasticStatusRed"   >
                   <use href="#svg-icon-meshtastic-red-topbar"></use>
                 </svg>
-                <svg id="reticulumStatus" onClick="sendReticulumControlMessage('announce');" >
+                
+                
+                <svg id="reticulumStatus" onClick="sendReticulumControlMessage('announce');" class="has-tooltip">
                   <use href="#svg-icon-reticulum-topbar"></use>
                 </svg>
+                <div class="tooltip" id="meshtasticTooltip">Reticulum status socket connected. Click to announce.</div>
+                
                 <svg id="reticulumStatusRed"  >
                   <use href="#svg-icon-reticulum-red-topbar"></use>
                 </svg>
-                <svg id="highRateSocketStatus"  >
+                
+                <svg id="highRateSocketStatus" class="has-tooltip"  >
                   <use href="#svg-icon-highrate-topbar"></use>
                 </svg>
-                <svg id="highRateSocketStatusRed"  >
+                <div class="tooltip" id="meshtasticTooltip">Highrate socket connected.</div>
+                
+                <svg id="highRateSocketStatusRed"  class="has-tooltip">
                   <use href="#svg-icon-highrate-red-topbar"></use>
                 </svg>
+                <div class="tooltip" id="meshtasticTooltip">Highrate socket disconnected.</div>
+                
+                
                 <svg id="trackingIndicator"  >
                   <use href="#svg-icon-tracking-topbar"></use>
                 </svg>  
@@ -178,6 +208,8 @@
             <span id="gpsDisplay"  onClick="sendMyGpsLocation();"></span>
         </center>
     </div>
+    
+    
     
     <div id="mapClickLatlonSection" class="map-top-latlon-overlay" style="display: none;" >
         <center>
@@ -452,7 +484,7 @@
     
     var map = new maplibregl.Map({
       container: 'map',
-      zoom: 1,
+      zoom: 11,
       minZoom: 1,
       maxPitch: 85,
       hash: true,

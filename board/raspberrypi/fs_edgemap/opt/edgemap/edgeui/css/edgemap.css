@@ -764,16 +764,15 @@ input:focus {
 
 
 
-
-/* Tooltip container */
+/* Tooltip container 
 .tooltip {
   top: 2px;
   position: relative;
   display: inline-block;
-  border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+  border-bottom: 1px dotted black;
 }
-
-/* Tooltip text */
+*/
+/* Tooltip text 
 .tooltip .tooltiptext {
   visibility: hidden;
   width: 160px;
@@ -783,17 +782,19 @@ input:focus {
   padding: 5px 0;
   border-radius: 6px;
   display: inline-block;
-  /* Position the tooltip text - see examples below! */
   position: absolute;
   z-index: 10;
   top: 30px;
   left: -10px;
-}
+}*/
 
-/* Show the tooltip text when you mouse over the tooltip container */
+/* Show the tooltip text when you mouse over the tooltip container
 .tooltip:hover .tooltiptext {
   visibility: visible;
 }
+ */
+
+
 
 /* Tooltip container right side*/
 .tooltipright {
@@ -1461,11 +1462,34 @@ body {
 	font-size: 13px;
 }
 
+/* SVG icon tooltip tryout */
 
+  .has-tooltip {
+    position: relative;
+  }
+  
+  /* Hidden by default */
+  .tooltip {
+    display: none;
+    position: absolute;
+    background-color: #333;
+    color: #0F0;
+    padding: 5px;
+    border-radius: 3px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 10;
+    top: 240%; /* Position below the icon */
+    left: 0%;
+    transform: translateX(-0%);
+  }
 
+  /* Show the tooltip on hover */
+  .has-tooltip:hover + .tooltip {
+    display: block;
+  }
 
-        
-
+/* Top bar SVG icons */
 .map-top-status-icon-overlay {
     font: 14px 'Helvetica Neue', Arial, Helvetica, sans-serif;
 	background-color: #333;
@@ -1486,6 +1510,7 @@ body {
     display: flex; /* Makes child elements (SVGs) align in a row */
     gap: 5px; /* Adds space between SVGs */
     width: 60%;
+    height: 30px;
 }
 
 
@@ -1505,7 +1530,7 @@ body {
     /*margin-top: 15px;*/
 	opacity: 0.9;
     height: 20px;
-    z-index: 10;
+    z-index: 5;
 }
 
 .map-top-gpslocation-overlay {
@@ -1523,7 +1548,7 @@ body {
     /*margin-top: 15px;*/
 	opacity: 0.9;
     height: 20px;
-    z-index: 10;
+    z-index: 5;
 }
 
 .map-top-latlon-overlay {
