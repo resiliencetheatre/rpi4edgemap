@@ -1,9 +1,163 @@
-<html>
-  <head>
-    <title>edgemap</title>
-	<meta http-equiv="refresh" content="0; url=edgeui/" />
-  </head>
-  <body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edgemap</title>
+    <style>
+        body {
+            background-color: #333;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Align elements to the top */
+            align-items: center;
+            color: white;
+            font-family: Arial, sans-serif;
+            padding-top: 50px; /* Add padding to move content down */
+        }
 
-  </body>
+        h1 {
+            margin-bottom: 30px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1 img {
+            width: 272px; /* Size of title logo */
+            height: 93px;
+            margin-right: 15px; /* Space between logo and title */
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px; /* Space between buttons */
+            margin-bottom: 50px; /* Space between buttons and free text */
+        }
+
+        a {
+            text-decoration: none; /* Remove underline from links */
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Space between logo and text */
+        }
+
+        button img {
+            width: 90px; /* Size of button logo */
+            height: 90px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .free-text {
+            text-align: justify; /* Justify text */
+            max-width: 800px;
+            margin: 0 auto;
+            font-size: 18px;
+            color: white;
+        }
+
+        /* Media query for mobile devices */
+        @media (max-width: 768px) {
+            .button-container {
+                flex-direction: column; /* Stack buttons vertically on smaller screens */
+            }
+
+            button {
+                width: 100%; /* Make buttons fill the width of the container */
+                justify-content: center; /* Center the text inside the button */
+            }
+
+            button img {
+                width: 50px; /* Reduce size of logos on mobile */
+                height: 50px;
+            }
+        }
+        /* Normal link color */
+        a {
+            color: green; /* Change to your desired color */
+            text-decoration: none; /* Optional: removes the underline */
+        }
+
+        /* Hover link color */
+        a:hover {
+            color: white; /* Change to your desired hover color */
+        }
+
+        /* Visited link color */
+        a:visited {
+            color: grey; /* Change to your desired visited color */
+        }
+        
+    </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Get current location (protocol + hostname)
+            var baseUrl = window.location.protocol + "//" + window.location.hostname;
+
+            // Set URLs dynamically
+            document.getElementById("button1").href = baseUrl + "/myCA.crt";
+            document.getElementById("button2").href = "https://" + window.location.hostname + "/edgeui"; // Force HTTPS
+            document.getElementById("button3").href = baseUrl + ":8000";
+        });
+    </script>
+</head>
+<body>
+    <h1>
+        <img src="img/edgemap-title-logo.png" alt="Logo"> <!-- Placeholder for the logo in the title bar -->
+        RPi4
+    </h1>
+    <div class="button-container">
+        <a id="button1" target="_blank">
+            <button>
+                <img src="img/edgemap-certificate.png" alt="Button Logo"> <!-- Placeholder for logo on Button 1 -->
+                Download CA certificate <br> [HTTP]
+            </button>
+        </a>
+        <a id="button2" target="_blank">
+            <button>
+                <img src="img/edgemap-globe.png" alt="Button Logo"> <!-- Placeholder for logo on Button 2 -->
+                Edgemap Web UI <br> [HTTPS]
+            </button>
+        </a>
+        <a id="button3" target="_blank">
+            <button>
+                <img src="img/meshchat-logo.png" alt="Button Logo"> <!-- Placeholder for logo on Button 3 -->
+                Meshchat <br> [HTTP]
+            </button>
+        </a>
+    </div>
+
+    <div class="free-text">
+        <!-- Add your free text here -->
+        Welcome to Edgemap!
+        <p>
+        This Edgemap hosts full world OSM map, various communication methods and is usable with most 
+        web browsers without any additional application installs. This entity contains also Meshchat 
+        which is Reticulum based chat program. 
+        </p>
+        To access Edgemap Web UI - download CA certificate and install it to your system.
+        <p>
+        For more information, checkout <a href="https://resilience-theatre.com/wiki/">Resilience Theatre Wiki page</a> and 
+        <a href="https://github.com/resiliencetheatre/rpi4edgemap">project Github.</a>
+    </div>
+</body>
 </html>

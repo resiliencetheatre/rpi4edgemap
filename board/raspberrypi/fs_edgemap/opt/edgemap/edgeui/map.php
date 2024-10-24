@@ -484,7 +484,7 @@
     
     var map = new maplibregl.Map({
       container: 'map',
-      zoom: 11,
+      zoom: 1,
       minZoom: 1,
       maxPitch: 85,
       hash: true,
