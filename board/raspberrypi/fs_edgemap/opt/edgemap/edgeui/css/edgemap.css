@@ -1506,11 +1506,36 @@ body {
     /*width: 60%;*/
 }
 
+/* original*/
 .icon-container {
-    display: flex; /* Makes child elements (SVGs) align in a row */
-    gap: 5px; /* Adds space between SVGs */
-    width: 60%;
-    height: 30px;
+    display: flex;
+    gap: 2px;
+    width: 90%;
+    
+    /*border-style: solid;*/
+}
+
+.icon-container-new {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 90%;
+    max-width: 700px; /* Adjust the container size as needed */
+    margin: 0 auto;
+    /*border-style: solid;*/
+}
+
+.icon {
+    flex-grow: 1; /* Each icon will equally expand to fit */
+    display: flex;
+    justify-content: center;
+    padding: 1px;
+    border-style: solid;
+}
+
+.svg-icon {
+    width: 48px;
+    height: 48px;
 }
 
 

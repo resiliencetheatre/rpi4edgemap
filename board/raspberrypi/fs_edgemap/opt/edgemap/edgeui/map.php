@@ -62,23 +62,26 @@
     <svg id="svg-icon-language-fr" xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 36 36"><path fill="#ed2939" d="M36 27a4 4 0 0 1-4 4h-8V5h8a4 4 0 0 1 4 4z"/><path fill="#002495" d="M4 5a4 4 0 0 0-4 4v18a4 4 0 0 0 4 4h8V5z"/><path fill="#eee" d="M12 5h12v26H12z"/></svg>
     <svg id="svg-icon-language-ru"  xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 36 36"><path fill="#ce2028" d="M36 27a4 4 0 0 1-4 4H4a4 4 0 0 1-4-4v-4h36z"/><path fill="#22408c" d="M0 13h36v10H0z"/><path fill="#eee" d="M32 5H4a4 4 0 0 0-4 4v4h36V9a4 4 0 0 0-4-4"/></svg>
     <svg id="svg-icon-language-he"  xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M7 6c2.333 5.143 6.611 6.857 9.333 12"/><path d="M13.667 14c2.505-1.5 2.666-4.141 2.666-5.333C16.333 6.889 15.89 6 15.89 6M7.485 18S7 17.095 7 15.286c0-1.172.164-3.722 2.641-5.27"/></g></svg>
-    <svg id="svg-icon-meshtastic-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 48 48"><path fill="none" stroke="#0F0" stroke-width=".4em" stroke-linecap="round" stroke-linejoin="round" d="m5.5 32.667l13-17.334m26 17.334l-13-17.334l-13 17.334"/></svg>
-    <svg id="svg-icon-reticulum-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 512 512"><path fill="#0F0" d="M363.6 36.48c-22.2 0-40 17.8-40 40c0 22.23 17.8 40.02 40 40.02s40-17.79 40-40.02c0-22.2-17.8-40-40-40m-56.7 51.97c-53.2 18.95-108.7 34.95-169 45.25c1.8 4.6 2.8 9.6 2.8 14.8c0 4.8-.8 9.4-2.4 13.6c96.2 12.9 182.8 36 257.8 71.9c1.6-5.9 4.5-11.3 8.3-15.9c-71.2-34.3-152.4-57.2-241.5-70.7c53.2-10.6 102.8-25.4 150.4-42.2c-3-5.2-5.2-10.79-6.4-16.75m97.8 28.85c-4.3 4.3-9.2 8-14.6 10.8c15.3 24.8 26 50.6 31.8 77.8c4.3-1.5 9-2.4 13.8-2.4c1.4 0 2.8.1 4.1.2c-6.3-30.3-18.2-59.1-35.1-86.4m-305 8.2c-12.81 0-23 10.2-23 23s10.19 23 23 23c12.8 0 23-10.2 23-23s-10.2-23-23-23m34.7 44.6c-3.2 5.2-7.5 9.6-12.6 12.9c32.1 32.6 66.1 65.9 120.6 80.4c0-.9-.1-1.9-.1-2.8c0-5.3 1.3-10.3 3.5-14.8c-49.5-13.5-80-43.8-111.4-75.7m-57 12.7c-21.76 67.8-27.12 137.2-32.29 206c2.13-.5 4.34-.7 6.6-.7c3.99 0 7.81.7 11.35 2.1c5.19-68.4 10.57-136 31.29-201.1c-6.18-.8-11.94-3-16.95-6.3m358.3 38.7c-12.8 0-23 10.2-23 23s10.2 23 23 23s23-10.2 23-23s-10.2-23-23-23m-41 22.2c-28.4 5.8-56.6 10.8-86 10.5c.4 2.1.6 4.2.6 6.4c0 4-.7 7.9-2.1 11.5c32 .6 62-4.7 91.2-10.8c-2.4-5.1-3.7-10.8-3.7-16.8zm-118.9 1.4c-8.7 0-15.5 6.8-15.5 15.5s6.8 15.5 15.5 15.5s15.5-6.8 15.5-15.5s-6.8-15.5-15.5-15.5M399 262.7c-55.6 45.9-106.6 94.4-143.1 150.7c5.9 1.8 11.2 5 15.6 9.1c34.9-53.5 84.2-100.8 138.8-145.9c-4.7-3.7-8.6-8.5-11.3-13.9m-152 15c-47.9 46.4-109.6 83.2-172.85 119.5c4.36 4.2 7.56 9.6 9.05 15.6C146.8 376.4 210 338.9 260 290.1c-5.4-2.9-9.9-7.2-13-12.4m179.4 6.7c1.3 28.8 6 57.3 14.3 85.2c4.8-3.4 10.7-5.6 17-6c-7.6-26-11.9-52.3-13.2-79.1c-2.9.7-5.8 1-8.8 1c-3.2 0-6.3-.4-9.3-1.1m33.3 97.1c-8.4 0-15 6.6-15 15s6.6 15 15 15s15-6.6 15-15s-6.6-15-15-15M51.71 406.1c-8.07 0-14.42 6.4-14.42 14.4c0 8.1 6.35 14.5 14.42 14.5s14.42-6.4 14.42-14.5c0-8-6.35-14.4-14.42-14.4m376.49.3c-44.7 24.5-93.8 32.6-144.9 35.6c.9 3.4 1.4 6.9 1.4 10.5c0 2.6-.3 5.1-.7 7.5c53.1-3.1 105.8-11.6 154.3-38.5c-4.7-4-8.2-9.2-10.1-15.1M83.91 416.8c.14 1.2.22 2.4.22 3.7c0 5-1.15 9.7-3.19 14l121.86 20.3c-.1-.8-.1-1.5-.1-2.3c0-5.4 1.1-10.6 3-15.4zm159.79 12.7c-12.8 0-23 10.2-23 23s10.2 23 23 23s23-10.2 23-23s-10.2-23-23-23"/></svg>
-    <svg id="svg-icon-gnss-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 100 100"><path fill="#0F0" d="M41.979 0C29.724.005 19.283 4.451 17.322 10.5h49.356C64.716 4.447 54.263 0 42 0ZM17.322 14.5c1.752 5.405 10.335 9.61 21.178 10.377V100h7v-2.828c5.832-.264 9.863-.495 11.822-2.14c1.96-1.647 5.939-2.275 8.998-2.198v5.486c0 .928.752 1.68 1.68 1.68h7.71v-1.68h14.9V100h7.71a1.68 1.68 0 0 0 1.68-1.68v-6.693h-1.68v-30.04H100V53.68A1.68 1.68 0 0 0 98.32 52H68a1.68 1.68 0 0 0-1.68 1.68v7.908H68v27.238c-7.951.135-10.084.933-12.951 2.914s-4.684 1.31-9.549 1.469V24.877c10.843-.767 19.426-4.972 21.178-10.377ZM72.4 58.08h21.52v35.84H72.4Zm2.628 3.473v13.56h16.32v-13.56Zm8.16 16.67a5.4 5.4 0 1 0 0 10.801a5.4 5.4 0 0 0 0-10.801" color="currentColor"/></svg>
-    <svg id="svg-icon-ptt-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24"><path fill="#0F0" d="M9 2a1 1 0 0 0-1 1v17c0 1.11.89 2 2 2h5c1.11 0 2-.89 2-2V9c0-1.11-.89-2-2-2h-5V3a1 1 0 0 0-1-1m1 7h5v4h-5z"/></svg>
-    <svg id="svg-icon-meshtasticMsgsocket-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9h8m-8 4h6m-1 5l-5 3v-3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v5.5M19 16l-2 3h4l-2 3"/></svg>
     
-    <svg id="svg-icon-reticulumMsgsocket-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24"><path fill="none" stroke="#0F0" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9h8m-8 4h6m-2.988 6.193L8 21v-3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v6m-1 8l2-2l-2-2m-3 0l-2 2l2 2"/></svg>    
+
+    <svg id="svg-icon-meshtasticMsgsocket-topbar" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#0F0" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9h8m-8 4h6m-1 7l-1 1l-3-3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v5.5M19 16l-2 3h4l-2 3"/></svg>
+    <svg id="svg-icon-reticulumMsgsocket-topbar" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#0F0" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9h8m-8 4h6m-2 8l-1-1l-2-2H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v6m-1 8l2-2l-2-2m-3 0l-2 2l2 2"/></svg>
+    <svg id="svg-icon-ptt-topbar" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="#0F0" d="M9 2a1 1 0 0 0-1 1v17c0 1.11.89 2 2 2h5c1.11 0 2-.89 2-2V9c0-1.11-.89-2-2-2h-5V3a1 1 0 0 0-1-1m1 7h5v4h-5z"/></svg>
+    <svg id="svg-icon-gnss-topbar" xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 100 100"><path fill="#0F0" d="M41.979 0C29.724.005 19.283 4.451 17.322 10.5h49.356C64.716 4.447 54.263 0 42 0ZM17.322 14.5c1.752 5.405 10.335 9.61 21.178 10.377V100h7v-2.828c5.832-.264 9.863-.495 11.822-2.14c1.96-1.647 5.939-2.275 8.998-2.198v5.486c0 .928.752 1.68 1.68 1.68h7.71v-1.68h14.9V100h7.71a1.68 1.68 0 0 0 1.68-1.68v-6.693h-1.68v-30.04H100V53.68A1.68 1.68 0 0 0 98.32 52H68a1.68 1.68 0 0 0-1.68 1.68v7.908H68v27.238c-7.951.135-10.084.933-12.951 2.914s-4.684 1.31-9.549 1.469V24.877c10.843-.767 19.426-4.972 21.178-10.377ZM72.4 58.08h21.52v35.84H72.4Zm2.628 3.473v13.56h16.32v-13.56Zm8.16 16.67a5.4 5.4 0 1 0 0 10.801a5.4 5.4 0 0 0 0-10.801" color="currentColor"/></svg>
+    <svg id="svg-icon-meshtastic-topbar"xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 48 48"><path fill="none" stroke="#0F0" stroke-width=".4em" stroke-linecap="round" stroke-linejoin="round" d="m4.5 32.667l13-17.334m26 17.334l-13-17.334l-13 17.334"/></svg>
+    <svg id="svg-icon-reticulum-topbar" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 48 48"><circle cx="22.04" cy="21.35" r="6.67" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.49" cy="12.19" r="3.54" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><circle cx="29.01" cy="9.04" r="3.54" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><circle cx="38.51" cy="25.38" r="3.54" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><circle cx="35.77" cy="38.96" r="3.54" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12.51" cy="34.94" r="3.54" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="m14.55 32.04l3.68-5.22M9.95 15.7l2.09 15.73m20.24 6.93l-16.29-2.82m21.82-6.69l-1.34 6.64M30.79 12.1l5.95 10.22m-23.72-10.7l12.5-2.02m-13.15 4.64l4.35 3.08m10.56-5.2l-1.92 3.43m9.73 8.95l-6.54-1.67m5.07 13.33l-7.37-9.64"/></svg>
+    <svg id="svg-icon-highrate-topbar" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="#0F0" d="M22 11h-1l-1-2h-6.25L16 12.5h-2L10.75 9H4c-.55 0-2-.45-2-1s1.5-2.5 3.5-2.5S7.67 6.5 9 7h12a1 1 0 0 1 1 1zM10.75 6.5L14 3h2l-2.25 3.5zM18 11V9.5h1.75L19 11zM3 19a1 1 0 0 1-1-1a1 1 0 0 1 1-1a4 4 0 0 1 4 4a1 1 0 0 1-1 1a1 1 0 0 1-1-1a2 2 0 0 0-2-2m8 2a1 1 0 0 1-1 1a1 1 0 0 1-1-1a6 6 0 0 0-6-6a1 1 0 0 1-1-1a1 1 0 0 1 1-1a8 8 0 0 1 8 8"/></svg>
+    <svg  id="svg-icon-tracking-topbar" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 1024 1024"><path fill="#0F0" d="m249.6 417.088l319.744 43.072l39.168 310.272L845.12 178.88zm-129.024 47.168a32 32 0 0 1-7.68-61.44l777.792-311.04a32 32 0 0 1 41.6 41.6l-310.336 775.68a32 32 0 0 1-61.44-7.808L512 516.992z"/></svg>    
+    <svg id="svg-icon-meshtasticMsgsocket-red-topbar" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#F00" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9h8m-8 4h6m-1 7l-1 1l-3-3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v5.5M19 16l-2 3h4l-2 3"/></svg>
+    <svg id="svg-icon-reticulumMsgsocket-red-topbar" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#F00" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9h8m-8 4h6m-2 8l-1-1l-2-2H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v6m-1 8l2-2l-2-2m-3 0l-2 2l2 2"/></svg>
+    <svg id="svg-icon-ptt-red-topbar" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="#F00" d="M9 2a1 1 0 0 0-1 1v17c0 1.11.89 2 2 2h5c1.11 0 2-.89 2-2V9c0-1.11-.89-2-2-2h-5V3a1 1 0 0 0-1-1m1 7h5v4h-5z"/></svg>
+    <svg id="svg-icon-gnss-red-topbar" xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 100 100"><path fill="#F00" d="M41.979 0C29.724.005 19.283 4.451 17.322 10.5h49.356C64.716 4.447 54.263 0 42 0ZM17.322 14.5c1.752 5.405 10.335 9.61 21.178 10.377V100h7v-2.828c5.832-.264 9.863-.495 11.822-2.14c1.96-1.647 5.939-2.275 8.998-2.198v5.486c0 .928.752 1.68 1.68 1.68h7.71v-1.68h14.9V100h7.71a1.68 1.68 0 0 0 1.68-1.68v-6.693h-1.68v-30.04H100V53.68A1.68 1.68 0 0 0 98.32 52H68a1.68 1.68 0 0 0-1.68 1.68v7.908H68v27.238c-7.951.135-10.084.933-12.951 2.914s-4.684 1.31-9.549 1.469V24.877c10.843-.767 19.426-4.972 21.178-10.377ZM72.4 58.08h21.52v35.84H72.4Zm2.628 3.473v13.56h16.32v-13.56Zm8.16 16.67a5.4 5.4 0 1 0 0 10.801a5.4 5.4 0 0 0 0-10.801" color="currentColor"/></svg>
+    <svg id="svg-icon-meshtastic-red-topbar"xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 48 48"><path fill="none" stroke="#F00" stroke-width=".4em" stroke-linecap="round" stroke-linejoin="round" d="m4.5 32.667l13-17.334m26 17.334l-13-17.334l-13 17.334"/></svg>
+    <svg id="svg-icon-reticulum-red-topbar" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 48 48"><circle cx="22.04" cy="21.35" r="6.67" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.49" cy="12.19" r="3.54" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><circle cx="29.01" cy="9.04" r="3.54" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><circle cx="38.51" cy="25.38" r="3.54" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><circle cx="35.77" cy="38.96" r="3.54" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12.51" cy="34.94" r="3.54" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="m14.55 32.04l3.68-5.22M9.95 15.7l2.09 15.73m20.24 6.93l-16.29-2.82m21.82-6.69l-1.34 6.64M30.79 12.1l5.95 10.22m-23.72-10.7l12.5-2.02m-13.15 4.64l4.35 3.08m10.56-5.2l-1.92 3.43m9.73 8.95l-6.54-1.67m5.07 13.33l-7.37-9.64"/></svg>
+    <svg id="svg-icon-highrate-red-topbar" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="#F00" d="M22 11h-1l-1-2h-6.25L16 12.5h-2L10.75 9H4c-.55 0-2-.45-2-1s1.5-2.5 3.5-2.5S7.67 6.5 9 7h12a1 1 0 0 1 1 1zM10.75 6.5L14 3h2l-2.25 3.5zM18 11V9.5h1.75L19 11zM3 19a1 1 0 0 1-1-1a1 1 0 0 1 1-1a4 4 0 0 1 4 4a1 1 0 0 1-1 1a1 1 0 0 1-1-1a2 2 0 0 0-2-2m8 2a1 1 0 0 1-1 1a1 1 0 0 1-1-1a6 6 0 0 0-6-6a1 1 0 0 1-1-1a1 1 0 0 1 1-1a8 8 0 0 1 8 8"/></svg>
+    <svg  id="svg-icon-tracking-red-topbar" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 1024 1024"><path fill="#F00" d="m249.6 417.088l319.744 43.072l39.168 310.272L845.12 178.88zm-129.024 47.168a32 32 0 0 1-7.68-61.44l777.792-311.04a32 32 0 0 1 41.6 41.6l-310.336 775.68a32 32 0 0 1-61.44-7.808L512 516.992z"/></svg>
     
-    <svg id="svg-icon-highrate-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="2em" viewBox="0 0 20 25"><path fill="#0F0" d="M22 11h-1l-1-2h-6.25L16 12.5h-2L10.75 9H4c-.55 0-2-.45-2-1s1.5-2.5 3.5-2.5S7.67 6.5 9 7h12a1 1 0 0 1 1 1zM10.75 6.5L14 3h2l-2.25 3.5zM18 11V9.5h1.75L19 11zM3 19a1 1 0 0 1-1-1a1 1 0 0 1 1-1a4 4 0 0 1 4 4a1 1 0 0 1-1 1a1 1 0 0 1-1-1a2 2 0 0 0-2-2m8 2a1 1 0 0 1-1 1a1 1 0 0 1-1-1a6 6 0 0 0-6-6a1 1 0 0 1-1-1a1 1 0 0 1 1-1a8 8 0 0 1 8 8"/></svg>
-    <svg id="svg-icon-tracking-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="2em" viewBox="0 0 20 25"><path fill="#0F0" d="m20 6l-1-1l-1.5 1.5L16 5l-1 1l1.5 1.5L15 9l1 1l1.5-1.5L19 10l1-1l-1.5-1.5z"/><circle cx="7.5" cy="14.5" r="3.5" fill="currentColor"/><circle cx="7" cy="3" r="2" fill="currentColor"/><circle cx="13" cy="7" r="1" fill="currentColor"/><circle cx="10" cy="6" r="1" fill="currentColor"/><circle cx="3" cy="3" r="1" fill="currentColor"/><circle cx="1" cy="6" r="1" fill="currentColor"/><circle cx="1" cy="9" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/></svg>    
-    <svg id="svg-icon-msgsocket-red-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24"><path fill="#F00" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2m0 14H5.2L4 17.2V4h16zm-9.53-2L7 10.5l1.4-1.41l2.07 2.08L15.6 6L17 7.41z"/></svg>
-    <svg id="svg-icon-meshtastic-red-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 48 48"><path fill="none" stroke="#F00" stroke-width=".4em" stroke-linecap="round" stroke-linejoin="round" d="m5.5 32.667l13-17.334m26 17.334l-13-17.334l-13 17.334"/></svg>
-    <svg id="svg-icon-reticulum-red-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 512 512"><path fill="#F00" d="M363.6 36.48c-22.2 0-40 17.8-40 40c0 22.23 17.8 40.02 40 40.02s40-17.79 40-40.02c0-22.2-17.8-40-40-40m-56.7 51.97c-53.2 18.95-108.7 34.95-169 45.25c1.8 4.6 2.8 9.6 2.8 14.8c0 4.8-.8 9.4-2.4 13.6c96.2 12.9 182.8 36 257.8 71.9c1.6-5.9 4.5-11.3 8.3-15.9c-71.2-34.3-152.4-57.2-241.5-70.7c53.2-10.6 102.8-25.4 150.4-42.2c-3-5.2-5.2-10.79-6.4-16.75m97.8 28.85c-4.3 4.3-9.2 8-14.6 10.8c15.3 24.8 26 50.6 31.8 77.8c4.3-1.5 9-2.4 13.8-2.4c1.4 0 2.8.1 4.1.2c-6.3-30.3-18.2-59.1-35.1-86.4m-305 8.2c-12.81 0-23 10.2-23 23s10.19 23 23 23c12.8 0 23-10.2 23-23s-10.2-23-23-23m34.7 44.6c-3.2 5.2-7.5 9.6-12.6 12.9c32.1 32.6 66.1 65.9 120.6 80.4c0-.9-.1-1.9-.1-2.8c0-5.3 1.3-10.3 3.5-14.8c-49.5-13.5-80-43.8-111.4-75.7m-57 12.7c-21.76 67.8-27.12 137.2-32.29 206c2.13-.5 4.34-.7 6.6-.7c3.99 0 7.81.7 11.35 2.1c5.19-68.4 10.57-136 31.29-201.1c-6.18-.8-11.94-3-16.95-6.3m358.3 38.7c-12.8 0-23 10.2-23 23s10.2 23 23 23s23-10.2 23-23s-10.2-23-23-23m-41 22.2c-28.4 5.8-56.6 10.8-86 10.5c.4 2.1.6 4.2.6 6.4c0 4-.7 7.9-2.1 11.5c32 .6 62-4.7 91.2-10.8c-2.4-5.1-3.7-10.8-3.7-16.8zm-118.9 1.4c-8.7 0-15.5 6.8-15.5 15.5s6.8 15.5 15.5 15.5s15.5-6.8 15.5-15.5s-6.8-15.5-15.5-15.5M399 262.7c-55.6 45.9-106.6 94.4-143.1 150.7c5.9 1.8 11.2 5 15.6 9.1c34.9-53.5 84.2-100.8 138.8-145.9c-4.7-3.7-8.6-8.5-11.3-13.9m-152 15c-47.9 46.4-109.6 83.2-172.85 119.5c4.36 4.2 7.56 9.6 9.05 15.6C146.8 376.4 210 338.9 260 290.1c-5.4-2.9-9.9-7.2-13-12.4m179.4 6.7c1.3 28.8 6 57.3 14.3 85.2c4.8-3.4 10.7-5.6 17-6c-7.6-26-11.9-52.3-13.2-79.1c-2.9.7-5.8 1-8.8 1c-3.2 0-6.3-.4-9.3-1.1m33.3 97.1c-8.4 0-15 6.6-15 15s6.6 15 15 15s15-6.6 15-15s-6.6-15-15-15M51.71 406.1c-8.07 0-14.42 6.4-14.42 14.4c0 8.1 6.35 14.5 14.42 14.5s14.42-6.4 14.42-14.5c0-8-6.35-14.4-14.42-14.4m376.49.3c-44.7 24.5-93.8 32.6-144.9 35.6c.9 3.4 1.4 6.9 1.4 10.5c0 2.6-.3 5.1-.7 7.5c53.1-3.1 105.8-11.6 154.3-38.5c-4.7-4-8.2-9.2-10.1-15.1M83.91 416.8c.14 1.2.22 2.4.22 3.7c0 5-1.15 9.7-3.19 14l121.86 20.3c-.1-.8-.1-1.5-.1-2.3c0-5.4 1.1-10.6 3-15.4zm159.79 12.7c-12.8 0-23 10.2-23 23s10.2 23 23 23s23-10.2 23-23s-10.2-23-23-23"/></svg>
-    <svg id="svg-icon-gnss-red-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 100 100"><path fill="#F00" d="M41.979 0C29.724.005 19.283 4.451 17.322 10.5h49.356C64.716 4.447 54.263 0 42 0ZM17.322 14.5c1.752 5.405 10.335 9.61 21.178 10.377V100h7v-2.828c5.832-.264 9.863-.495 11.822-2.14c1.96-1.647 5.939-2.275 8.998-2.198v5.486c0 .928.752 1.68 1.68 1.68h7.71v-1.68h14.9V100h7.71a1.68 1.68 0 0 0 1.68-1.68v-6.693h-1.68v-30.04H100V53.68A1.68 1.68 0 0 0 98.32 52H68a1.68 1.68 0 0 0-1.68 1.68v7.908H68v27.238c-7.951.135-10.084.933-12.951 2.914s-4.684 1.31-9.549 1.469V24.877c10.843-.767 19.426-4.972 21.178-10.377ZM72.4 58.08h21.52v35.84H72.4Zm2.628 3.473v13.56h16.32v-13.56Zm8.16 16.67a5.4 5.4 0 1 0 0 10.801a5.4 5.4 0 0 0 0-10.801" color="currentColor"/></svg>
-    <svg id="svg-icon-ptt-red-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24"><path fill="#F00" d="M9 2a1 1 0 0 0-1 1v17c0 1.11.89 2 2 2h5c1.11 0 2-.89 2-2V9c0-1.11-.89-2-2-2h-5V3a1 1 0 0 0-1-1m1 7h5v4h-5z"/></svg>
-    <svg id="svg-icon-highrate-red-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="2em" viewBox="0 0 20 25"><path fill="#F00" d="M22 11h-1l-1-2h-6.25L16 12.5h-2L10.75 9H4c-.55 0-2-.45-2-1s1.5-2.5 3.5-2.5S7.67 6.5 9 7h12a1 1 0 0 1 1 1zM10.75 6.5L14 3h2l-2.25 3.5zM18 11V9.5h1.75L19 11zM3 19a1 1 0 0 1-1-1a1 1 0 0 1 1-1a4 4 0 0 1 4 4a1 1 0 0 1-1 1a1 1 0 0 1-1-1a2 2 0 0 0-2-2m8 2a1 1 0 0 1-1 1a1 1 0 0 1-1-1a6 6 0 0 0-6-6a1 1 0 0 1-1-1a1 1 0 0 1 1-1a8 8 0 0 1 8 8"/></svg>
-    <svg id="svg-icon-tracking-red-topbar" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="2em" viewBox="0 0 20 25"><path fill="#F00" d="m20 6l-1-1l-1.5 1.5L16 5l-1 1l1.5 1.5L15 9l1 1l1.5-1.5L19 10l1-1l-1.5-1.5z"/><circle cx="7.5" cy="14.5" r="3.5" fill="#F00"/><circle cx="7" cy="3" r="2" fill="#F00"/><circle cx="13" cy="7" r="1" fill="#F00"/><circle cx="10" cy="6" r="1" fill="#F00"/><circle cx="3" cy="3" r="1" fill="#F00"/><circle cx="1" cy="6" r="1" fill="#F00"/><circle cx="1" cy="9" r="1" fill="#F00"/><circle cx="3" cy="12" r="1" fill="#F00"/></svg>    
+    
     <svg id="svg-icon-search" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" ><path fill="#0F0" d="M10 18a7.95 7.95 0 0 0 4.897-1.688l4.396 4.396l1.414-1.414l-4.396-4.396A7.95 7.95 0 0 0 18 10c0-4.411-3.589-8-8-8s-8 3.589-8 8s3.589 8 8 8m0-14c3.309 0 6 2.691 6 6s-2.691 6-6 6s-6-2.691-6-6s2.691-6 6-6"/></svg>
     <svg id="svg-icon-close" xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" ><path fill="#F00" d="M2.93 17.07A10 10 0 1 1 17.07 2.93A10 10 0 0 1 2.93 17.07m1.41-1.41A8 8 0 1 0 15.66 4.34A8 8 0 0 0 4.34 15.66m9.9-8.49L11.41 10l2.83 2.83l-1.41 1.41L10 11.41l-2.83 2.83l-1.41-1.41L8.59 10L5.76 7.17l1.41-1.41L10 8.59l2.83-2.83z"/></svg>
     <svg id="svg-icon-copypaste" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><g fill="none" stroke="#0F0" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M16 4h2a2 2 0 0 1 2 2v4m1 4H11"/><path d="m15 10l-4 4l4 4"/></g></svg>
@@ -110,83 +113,33 @@
     
     <div class="map-top-status-icon-overlay">
     <center >
-        <div class="icon-container" >
+        <div class="icon-container-new" >
                 
-                
-                <svg id="reticulumMsgSocketStatus" class="has-tooltip">
-                    <use href="#svg-icon-reticulumMsgsocket-topbar" ></use>
-                </svg>
-                <div class="tooltip" id="reticulumTooltip">Reticulum message socket connected</div>
-                
-                
-                <svg id="reticulumMsgSocketStatusRed">
-                  <use href="#svg-icon-reticulumMsgsocket-red-topbar"></use>
-                </svg>
-                
-                <svg id="meshtasticMsgSocketStatus" class="has-tooltip">
-                  <use href="#svg-icon-meshtasticMsgsocket-topbar"></use>
-                </svg>
-                <div class="tooltip" id="meshtasticTooltip">Meshtastic message socket connected</div>
-                
-                <svg id="meshtasticMsgSocketStatusRed">
-                  <use href="#svg-icon-meshtasticMsgsocket-red-topbar"></use>
-                </svg>
-                
-                <svg id="securePttStatus" class="has-tooltip"  >
-                  <use href="#svg-icon-ptt-topbar"></use>
-                </svg>
-                <div class="tooltip" id="meshtasticTooltip">SecurePTT status socket connected</div>
-                
-                
-                <svg id="securePttStatusRed"   >
-                  <use href="#svg-icon-ptt-red-topbar"></use>
-                </svg>
-                
-                <svg id="gpsSocketStatus" class="has-tooltip" >
-                  <use href="#svg-icon-gnss-topbar"></use>
-                </svg>
-                <div class="tooltip" id="meshtasticTooltip">Local GNSS socket connected</div>
-                
-                <svg id="gpsSocketStatusRed"  >
-                  <use href="#svg-icon-gnss-red-topbar"></use>
-                </svg>
-                
-                <svg id="meshtasticStatus" class="has-tooltip"  >
-                  <use href="#svg-icon-meshtastic-topbar"></use>
-                </svg>
-                <div class="tooltip" id="meshtasticTooltip">Meshtastic status socket connected</div>
-                
-                <svg id="meshtasticStatusRed"   >
-                  <use href="#svg-icon-meshtastic-red-topbar"></use>
-                </svg>
-                
-                
-                <svg id="reticulumStatus" onClick="sendReticulumControlMessage('announce');" class="has-tooltip">
-                  <use href="#svg-icon-reticulum-topbar"></use>
-                </svg>
-                <div class="tooltip" id="meshtasticTooltip">Reticulum status socket connected. Click to announce.</div>
-                
-                <svg id="reticulumStatusRed"  >
-                  <use href="#svg-icon-reticulum-red-topbar"></use>
-                </svg>
-                
-                <svg id="highRateSocketStatus" class="has-tooltip"  >
-                  <use href="#svg-icon-highrate-topbar"></use>
-                </svg>
-                <div class="tooltip" id="meshtasticTooltip">Highrate socket connected.</div>
-                
-                <svg id="highRateSocketStatusRed"  class="has-tooltip">
-                  <use href="#svg-icon-highrate-red-topbar"></use>
-                </svg>
-                <div class="tooltip" id="meshtasticTooltip">Highrate socket disconnected.</div>
-                
-                
-                <svg id="trackingIndicator"  >
-                  <use href="#svg-icon-tracking-topbar"></use>
-                </svg>  
-                <svg id="trackingIndicatorRed"  >
-                  <use href="#svg-icon-tracking-red-topbar"></use>
-                </svg>  
+            <img id="reticulumMsgSocketStatus" class="has-tooltip" src="icons/reticulum-message-green.png" width=20px;>
+             <div class="tooltip" id="reticulumTooltip">Reticulum message socket connected</div>
+            <img id="meshtasticMsgSocketStatus" class="has-tooltip" src="icons/meshtastic-message-green.png" width=20px;>
+             <div class="tooltip" id="meshtasticTooltip">Meshtastic message socket connected</div>
+            <img id="securePttStatus" class="has-tooltip" src="icons/ptt-green.png" width=20px;>
+             <div class="tooltip" id="meshtasticTooltip">SecurePTT status socket connected</div>
+            <img id="gpsSocketStatus" class="has-tooltip" src="icons/gnss-green.png" width=20px;>
+             <div class="tooltip" id="meshtasticTooltip">Local GNSS socket connected</div>
+            <img id="meshtasticStatus" class="has-tooltip" src="icons/meshtastic-green.png" width=20px;>
+             <div class="tooltip" id="meshtasticTooltip">Meshtastic status socket connected</div>
+            <img id="reticulumStatus" class="has-tooltip" src="icons/reticulum-green.png" width=20px; onClick="sendReticulumControlMessage('announce');">
+             <div class="tooltip" id="meshtasticTooltip">Reticulum status socket connected. Click to announce.</div>
+            <img id="highRateSocketStatus" class="has-tooltip" src="icons/drone-green.png" width=20px;>
+             <div class="tooltip" id="meshtasticTooltip">Highrate socket connected.</div>
+            <img id="trackingIndicator"  src="icons/tracking-green.png" width=20px;>             
+            
+            <img id="reticulumMsgSocketStatusRed"  src="icons/reticulum-message-red.png" width=20px;>
+            <img id="meshtasticMsgSocketStatusRed"  src="icons/meshtastic-message-red.png" width=20px;>
+            <img id="securePttStatusRed"  src="icons/ptt-red.png" width=20px;>
+            <img id="gpsSocketStatusRed"  src="icons/gnss-red.png" width=20px;>
+            <img id="meshtasticStatusRed"  src="icons/meshtastic-red.png" width=20px;>
+            <img id="reticulumStatusRed"  src="icons/reticulum-red.png" width=20px;>
+            <img id="highRateSocketStatusRed"  src="icons/drone-red.png" width=20px;>
+            <img id="trackingIndicatorRed"  src="icons/tracking-red.png" width=20px;>
+                 
         </div>
         <table style="display: none;">
             <tr><td id="securePttTx" class="mapSecurepttTransmissionStatus">TX</div></td> <td> </td></tr>  
