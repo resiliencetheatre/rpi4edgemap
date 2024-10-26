@@ -7,6 +7,8 @@
 # * DNS name is equipped as wifi AP name to /etc/hostapd.conf
 # * DNS name is equipped to /etc/dnsmasq.conf and /etc/dnsmasq.hosts
 # * DNS name is used as /etc/hostname
+# * DNS name is used at /opt/rnslink/rnslink.ini
+#   NOTE: ID Number must be modified by hand!
 #
 # Example run:
 #
@@ -79,6 +81,15 @@ echo $DNS_NAME > /etc/hostname
 # Set /etc/dnsmasq.conf
 #
 sed -i "s/^local=.*/local=\/${DNS_NAME}\//" /etc/dnsmasq.conf
+
+#
+# Set /opt/rnslink/rnslink.ini
+#
+sed -i "s/^callsign=.*/callsign=${DNS_NAME}/" /opt/rnslink/rnslink.ini
+
+echo " "
+echo "Remember to edit /opt/rnslink/rnslink.ini and change node_id manually!"
+echo " "
 
 echo " "
 echo "Done. Reboot unit."

@@ -127,7 +127,14 @@ def updateUserInterface():
         peer_age_in_minutes = row[4]
         peer_age_in_seconds = row[5]
         # Inform UI about nodes we have
-        message_content = "reticulumnode," + peer_callsign + "," + str(peer_age_in_minutes) + "," + peer_hash + "\n"   
+        # do we have link to destination?
+        
+        if peer_hash in destinations_we_have_link:
+            link_eshtablished = "Yes"
+        else:
+            link_eshtablished = "-";
+        
+        message_content = "reticulumnode," + peer_callsign + "," + str(peer_age_in_minutes) + "," + peer_hash + "," + link_eshtablished + "\n"
         write_reticulum_status_fifo(message_content)
         time.sleep(0.2)
     connection.commit()
@@ -171,10 +178,6 @@ async def read_server_control_fifo():
                 if fifo_msg_in == "announce":
                     announce_manual()
                 if fifo_msg_in == "clients_connected":
-                    # TODO: find how many clients connected to server?
-                    #tracked_client_connections=len(tracked_links_on_server)
-                    #response_text="client_count," + str(tracked_client_connections)
-                    #write_reticulum_status_fifo(response_text)
                     write_status_of_connected_client_count()  
                 await asyncio.sleep(1)
             else:
@@ -384,7 +387,7 @@ def client_link_connected(link):
     # Track links on server
     tracked_links_on_server.append(link) 
     # enable phy status to experiment
-    # link.track_phy_stats(True)
+    link.track_phy_stats(True)
     # Set callbacks 
     link.set_packet_callback(server_packet_received)
     link.set_link_closed_callback(client_disconnected)
@@ -394,7 +397,7 @@ def client_link_connected(link):
 
 def server_remote_identified(link, identity):
     # Enable for debug with 'True':
-    if False:        
+    if True:        
         RNS.log("Connected client identity:  " + str(identity)  )
         RNS.log("RSSI:   " + str( link.get_rssi() )  )
         RNS.log("SNR:    " + str( link.get_snr() )  )

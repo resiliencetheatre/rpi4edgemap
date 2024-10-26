@@ -1134,7 +1134,7 @@
         // fireup timeout for fadeout
         window.setInterval(function () {
         fadeOut(deliveryStatusDiv,1000);
-        }, 10000 );
+        }, 20000 );
         
         sendRetiCulumAndMeshtasticMessage( msgPayload );
         
@@ -1284,7 +1284,8 @@
         // reticulumnode,[callsign],[timestamp],[hash]
         if ( nodeArray[0] === "reticulumnode" )
         {
-            reticulumNodesOnSystem.add( nodeArray[1],nodeArray[2],nodeArray[3] ); 
+            // console.log("reticulumNodesOnSystem.add() : ", nodeArray[1],nodeArray[2],nodeArray[3],nodeArray[4] );
+            reticulumNodesOnSystem.add( nodeArray[1],nodeArray[2],nodeArray[3],nodeArray[4] ); 
             updateReticulumBlock(); 
         }
         fadeIn(reticulumNotifyDotDiv,200);
@@ -1717,12 +1718,21 @@
             if (key === "s") {
                // svgMenu.open();
             }
-            // Radio list
+            // Meshtastic list
             if (key === "r") {
                if ( isHidden(radiolistblockDiv) || isHidden(logDiv) ) {
                    openRadioList();
                }
             }
+            
+            // Reticulum list
+            if (key === "R") {
+               if ( isHidden(reticulumListblockDiv) || isHidden(logDiv) ) {
+                   openReticulumList();
+               }
+            }
+            
+            
             // Enable map features debugging if needed
             if (key === "D") {
                 if ( isHidden(logDiv) ) { 

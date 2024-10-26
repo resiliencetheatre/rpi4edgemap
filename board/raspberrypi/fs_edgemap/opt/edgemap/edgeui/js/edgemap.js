@@ -143,21 +143,24 @@ class reticulumList {
             this.members = [];
             this.age = [];
             this.hash = [];
+            this.link = [];
             
         }
-        add(callsign,age,hash) {            
+        add(callsign,age,hash,link) {            
             const index = this.members.findIndex(x => x === callsign);
             if (index !== -1) {
                 // Update existing but don't over write existing 
                 this.members[index] = callsign;
                 this.age[index] = age;
                 this.hash[index] = hash;
+                this.link[index] = link;
                 return true;
             } else {
                 // Add new
                 this.members.push(callsign);  
                 this.age.push(age); 
-                this.hash.push(hash); 
+                this.hash.push(hash);
+                this.hash.push(link);
                 return true;
             }
             return false;
@@ -169,6 +172,7 @@ class reticulumList {
                 this.members.splice(index, 1);
                 this.age.splice(index, 1);
                 this.hash.splice(index, 1);
+                this.link.splice(index, 1);
                 return true;
             }
             return false;
@@ -210,20 +214,19 @@ function updateMeshtasticRadioListBlock() {
     document.getElementById("radiolist").innerHTML = radioListContent;
 }
 
-/* There is also reticulum node age check here */
+/* TODO: UI updates with undefined  */
 function updateReticulumBlock() {
     document.getElementById("reticulumlist").innerHTML = "";
     var reticulumLoop=0;
     var reticulumListContent = "";
-    reticulumListContent = "<table width=90%><tr ><td style='border-bottom: 1px solid #0F0;' >Callsign</td><td style='border-bottom: 1px solid #0F0;' >Age</td><td style='border-bottom: 1px solid #0F0;'>Hash</td></tr>";
+    reticulumListContent = "<table width=90%><tr ><td style='border-bottom: 1px solid #0F0;' >Callsign</td><td style='border-bottom: 1px solid #0F0;' >Age</td><td style='border-bottom: 1px solid #0F0;'>Destination</td><td style='border-bottom: 1px solid #0F0;'>Link</td></tr>";
     for ( reticulumLoop = 0; reticulumLoop < reticulumNodesOnSystem.getSize(); reticulumLoop++) { 
+        // console.log("updateReticulumBlock()", reticulumNodesOnSystem.members[reticulumLoop],reticulumNodesOnSystem.age[reticulumLoop],reticulumNodesOnSystem.hash[reticulumLoop],reticulumNodesOnSystem.link[reticulumLoop]);
         if ( reticulumNodesOnSystem.age[reticulumLoop] < 30 ) {
-            reticulumListContent += "<tr><td>" + reticulumNodesOnSystem.members[reticulumLoop] + "</td><td>" + reticulumNodesOnSystem.age[reticulumLoop] + "</td><td>" + reticulumNodesOnSystem.hash[reticulumLoop] + "</td></tr>";
+            reticulumListContent += "<tr><td>" + reticulumNodesOnSystem.members[reticulumLoop] + "</td><td>" + reticulumNodesOnSystem.age[reticulumLoop] + "</td><td>" + reticulumNodesOnSystem.hash[reticulumLoop] + "</td><td>" + reticulumNodesOnSystem.link[reticulumLoop]  + "</td></tr>";
         }
     }
     reticulumListContent += "</table>";
-    
-    
     document.getElementById("reticulumlist").innerHTML = reticulumListContent;
 }
 
@@ -308,6 +311,7 @@ function toggleReticulumList() {
         fadeInTo09(reticulumListblockDiv ,400,elementOpacity);
         toggleReticulumList.radioListVisible = true; // ???
         fadeOut(radioNotifyDotDiv,200);
+        fadeOut(logDiv,200);
         return;
     }
     if ( toggleReticulumList.radioListVisible == true ) {
@@ -319,6 +323,7 @@ function toggleReticulumList() {
         fadeInTo09(reticulumListblockDiv ,400,elementOpacity);
         toggleReticulumList.radioListVisible = true;
         fadeOut(radioNotifyDotDiv,200);
+        fadeOut(logDiv,200);
         return;
     }    
 }
@@ -1225,6 +1230,15 @@ function openRadioList() {
 function closeRadioList() {
     if (logDiv.style.display !== "inline-block" ) {
         fadeOut(radiolistblockDiv ,200);
+    }
+}
+
+function openReticulumList() {
+    if ( logDiv.style.display == "" || logDiv.style.display !== "inline-block"  ) {
+        if ( reticulumListblockDiv.style.display !== "inline-block" ) {
+            fadeIn(reticulumListblockDiv ,200);
+            fadeOut(radiolistblockDiv,200);
+        }
     }
 }
 
