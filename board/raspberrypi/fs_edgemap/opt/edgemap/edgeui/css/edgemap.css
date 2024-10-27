@@ -1236,7 +1236,7 @@ input:focus {
 	color: #0F0;
 	position: absolute;
 	border-radius: 5px;
-    width: 380px;
+    width: 340px;
     height: 150px;
 	bottom: 10px;
     left: 10px;
@@ -1565,7 +1565,7 @@ body {
 	position: absolute;
 	border-radius: 5px;
 	top: 45px;
-    right: 35%;
+    right: 40%;
     /*width: 60%;*/
     left: 40%;
     
@@ -1575,6 +1575,21 @@ body {
     height: 20px;
     z-index: 5;
 }
+
+.map-top-reticulum-overlay {
+    font: 14px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+	background-color: #333;
+	color: #0f0;
+	position: absolute;
+	border-radius: 5px;
+	top: 45px;
+    right: 15%;
+    left: 65%;
+	opacity: 0.9;
+    height: 20px;
+    z-index: 5;
+}
+
 
 .map-top-latlon-overlay {
     font: 14px 'Helvetica Neue', Arial, Helvetica, sans-serif;

@@ -154,6 +154,11 @@
         </center>
     </div>
     
+    <div class="map-top-reticulum-overlay">
+        <center>
+            <span id="reticulumAnnounceNotify"  onClick="" ></span>
+        </center>
+    </div>
     
     
     <div id="mapClickLatlonSection" class="map-top-latlon-overlay" style="display: none;" >
@@ -1294,7 +1299,9 @@
         }
         // announcereceived,[callsign],[hash]
         if ( nodeArray[0] === "announcereceived" ) {
-            notifyMessage("Announce from " + nodeArray[1], 5000);
+            // notifyMessage("Announce from " + nodeArray[1], 5000);
+            // 
+            document.getElementById("reticulumAnnounceNotify").innerHTML = nodeArray[1];
         }
         // message-ack,[callsign]
         if ( nodeArray[0] === "message-ack" ) {

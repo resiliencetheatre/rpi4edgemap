@@ -130,9 +130,9 @@ def updateUserInterface():
         # do we have link to destination?
         
         if peer_hash in destinations_we_have_link:
-            link_eshtablished = "Yes"
+            link_eshtablished = "Ⓛ"
         else:
-            link_eshtablished = "-";
+            link_eshtablished = "";
         
         message_content = "reticulumnode," + peer_callsign + "," + str(peer_age_in_minutes) + "," + peer_hash + "," + link_eshtablished + "\n"
         write_reticulum_status_fifo(message_content)

@@ -215,11 +215,11 @@ function updateMeshtasticRadioListBlock() {
 }
 
 /* TODO: UI updates with undefined  */
-function updateReticulumBlock() {
+function updateReticulumBlock_old() {
     document.getElementById("reticulumlist").innerHTML = "";
     var reticulumLoop=0;
     var reticulumListContent = "";
-    reticulumListContent = "<table width=90%><tr ><td style='border-bottom: 1px solid #0F0;' >Callsign</td><td style='border-bottom: 1px solid #0F0;' >Age</td><td style='border-bottom: 1px solid #0F0;'>Destination</td><td style='border-bottom: 1px solid #0F0;'>Link</td></tr>";
+    reticulumListContent = "<table width=90%><tr ><td style='border-bottom: 1px solid #0F0;' >Callsign</td><td style='border-bottom: 1px solid #0F0;' >Δ</td><td style='border-bottom: 1px solid #0F0;'>Destination</td><td style='border-bottom: 1px solid #0F0;'>Link</td></tr>";
     for ( reticulumLoop = 0; reticulumLoop < reticulumNodesOnSystem.getSize(); reticulumLoop++) { 
         // console.log("updateReticulumBlock()", reticulumNodesOnSystem.members[reticulumLoop],reticulumNodesOnSystem.age[reticulumLoop],reticulumNodesOnSystem.hash[reticulumLoop],reticulumNodesOnSystem.link[reticulumLoop]);
         if ( reticulumNodesOnSystem.age[reticulumLoop] < 30 ) {
@@ -229,6 +229,24 @@ function updateReticulumBlock() {
     reticulumListContent += "</table>";
     document.getElementById("reticulumlist").innerHTML = reticulumListContent;
 }
+
+function updateReticulumBlock() {
+    document.getElementById("reticulumlist").innerHTML = "";
+    var reticulumLoop=0;
+    var reticulumListContent = "";
+    // Δ
+    reticulumListContent = "<table width=90%><tr ><td style='border-bottom: 1px solid #0F0;' >Callsign</td><td style='border-bottom: 1px solid #0F0;' >Age</td><td style='border-bottom: 1px solid #0F0;'>Destination</td><td style='border-bottom: 1px solid #0F0;'></td></tr>";
+    for ( reticulumLoop = 0; reticulumLoop < reticulumNodesOnSystem.getSize(); reticulumLoop++) { 
+        if ( reticulumNodesOnSystem.age[reticulumLoop] < 30 ) {
+            smallerHash = "<span style='font-size:10px;'>" + reticulumNodesOnSystem.hash[reticulumLoop] + "</span>";
+            reticulumListContent += "<tr><td>" + reticulumNodesOnSystem.members[reticulumLoop] + "</td><td>" + reticulumNodesOnSystem.age[reticulumLoop] + "</td><td>" + smallerHash + "</td><td>" + reticulumNodesOnSystem.link[reticulumLoop]  + "</td></tr>";
+        }
+    }
+    reticulumListContent += "</table>";
+    document.getElementById("reticulumlist").innerHTML = reticulumListContent;
+}
+
+
 
 // TODO: add openJanus() and janus destroy
 function toggleVideoConference() {
