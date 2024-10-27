@@ -1,0 +1,9 @@
+--- a/meshtastic/util.py	2024-08-17 06:42:47.423837611 +0300
++++ b/meshtastic/util.py	2024-08-14 04:49:49.579589548 +0300
+@@ -660,5 +660,5 @@
+ 
+ def message_to_json(message: Message, multiline: bool=False) -> str:
+     """Return protobuf message as JSON. Always print all fields, even when not present in data."""
+-    json = MessageToJson(message, always_print_fields_with_no_presence=True)
++    json = MessageToJson(message)
+     return stripnl(json) if not multiline else json
