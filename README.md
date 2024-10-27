@@ -206,7 +206,7 @@ Export BR2_EXTERNAL variable, make defconfig and start build with make:
 
 ```
 export BR2_EXTERNAL=~/build-directory/rpi4edgemap
-cd ~/build-directory
+cd ~/build-directory/buildroot
 make rpi4_edgemap_6.11_defconfig
 make
 ```
