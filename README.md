@@ -265,6 +265,13 @@ wget --no-check-certificate https://build.protomaps.com/20240520.pmtiles -O plan
 
 Check latest pmtiles [here](https://maps.protomaps.com/builds/) or [generate it yourself](https://resilience-theatre.com/wiki/doku.php?id=edgemap:planet_with_tilemaker). 
 
+Link downloaded planet.pmtiles under /opt/edgemap/edgeui
+
+```
+cd /opt/edgemap/edgeui/
+ln -s /opt/data/planet.pmtiles .
+```
+
 ## Patching iqaudio driver
 
 You can optionally patch iqaudio-codec.c driver to remove really anoying 
