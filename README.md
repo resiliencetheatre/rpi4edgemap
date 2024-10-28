@@ -200,6 +200,14 @@ cp ~/build-directory/rpi4edgemap/buildroot-extras/python-cython.mk ~/build-direc
 # python-yarl
 rm ~/build-directory/buildroot/package/python-yarl/python-yarl.hash
 cp ~/build-directory/rpi4edgemap/buildroot-extras/python-yarl.mk ~/build-directory/buildroot/package/python-yarl
+
+# espflash (optional, if you require to flash LoRA radios from Edgemap)
+rm ~/build-directory/buildroot/package/espflash/espflash.hash
+cp espflash.mk ~/build-directory/buildroot/package/espflash/
+
+# libcodec2  (optional)
+rm ~/build-directory/buildroot/package/libcodec2/libcodec2.hash
+cp libcodec2.mk ~/build-directory/buildroot/package/libcodec2/libcodec2.hash
 ```
 
 Export BR2_EXTERNAL variable, make defconfig and start build with make:
@@ -220,6 +228,42 @@ After build is completed, you find image file for MicroSD card at:
 ```
 
 Use 'dd' to copy this image to your MicroSD card.
+
+## First boot
+
+First boot requires you to create maps partition, set hostname and create CA certificate. You can login with 'root' and 
+'edgemap' as password to your Edgemap instance. 
+
+First create partition for maps:
+
+```
+create-partition-noenc.sh
+```
+
+Create CA and set hostname:
+
+```
+# /opt/edgemap/ca/tls-setup.sh
+Usage: tls-setup.sh [CA-NAME] [DNS-NAME]
+
+# Example:
+/opt/edgemap/ca/tls-setup.sh edgeCA edgemapx
+# Reboot after this completes:
+reboot
+```
+
+This will set your unit hostname and create wifi access point with same name. Wifi AP psk is 'abc12345', feel free to change it.
+
+### Copying pmtiles to map partition
+
+You can copy planet.pmtiles to your map partition with computer or try to download it directly from Edgemap:
+
+```
+cd /opt/data
+wget --no-check-certificate https://build.protomaps.com/20240520.pmtiles -O planet.pmtiles
+```
+
+Check latest pmtiles [here](https://maps.protomaps.com/builds/) or [generate it yourself](https://resilience-theatre.com/wiki/doku.php?id=edgemap:planet_with_tilemaker). 
 
 ## Patching iqaudio driver
 
