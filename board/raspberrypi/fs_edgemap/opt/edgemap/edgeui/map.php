@@ -1289,8 +1289,8 @@
         // reticulumnode,[callsign],[timestamp],[hash]
         if ( nodeArray[0] === "reticulumnode" )
         {
-            // console.log("reticulumNodesOnSystem.add() : ", nodeArray[1],nodeArray[2],nodeArray[3],nodeArray[4] );
-            reticulumNodesOnSystem.add( nodeArray[1],nodeArray[2],nodeArray[3],nodeArray[4] ); 
+            // console.log("reticulumNodesOnSystem.add() : ", nodeArray[1],nodeArray[2],nodeArray[3],nodeArray[4],nodeArray[5],nodeArray[6],nodeArray[7] );
+            reticulumNodesOnSystem.add( nodeArray[1],nodeArray[2],nodeArray[3],nodeArray[4],nodeArray[5],nodeArray[6],nodeArray[7] ); 
             updateReticulumBlock(); 
         }
         fadeIn(reticulumNotifyDotDiv,200);

@@ -146,6 +146,16 @@ def reticulumDbErase():
 #
 # UI update 
 #
+#
+# sqlite> SELECT *, (strftime('%s', 'now') - strftime('%s', timestamp)) / 60 AS elapsed_minutes,(strftime('%s', 'now') - strftime('%s', timestamp)) AS elapsed_seconds FROM rnsnodes;
+# id  callsign  destination                       timestamp            identity                          snr  rssi  quality  elapsed_minutes  elapsed_seconds
+# --  --------  --------------------------------  -------------------  --------------------------------  ---  ----  -------  ---------------  ---------------
+# 28  edgemapz  5c09b917797306149cff844712eeb3fb  2024-11-03 05:54:47  a40f5a48c7e681cd0d8da86edd0dd4e3  -    -     -        6                412            
+# 29  edgemapw  79fb0f022609584a9d68efa537b0c8b8  2024-11-03 05:55:57  0f6b1535fb933f79b36471725520c5e0  -    -     -        5                342            
+# 30  edgemapy  fbd832b36033e50d2da2fae6d9f2fd34  2024-11-03 05:56:16  a11991c158d0f75fd6b22b04da49b37e  -    -     -        5                323            
+# 31  edgemapx  4363b9b5a644688eb1e852125a383c89  2024-11-03 05:57:11  c62fb1e2ee44ad53a9a8dbb180d19b96  -    -     -        4                268            
+# sqlite> 
+#
 def updateUserInterface():
     row_count=0; 
     connection = sqlite3.connect(db_file)
@@ -157,17 +167,27 @@ def updateUserInterface():
         peer_callsign = row[1]
         peer_hash = row[2]
         peer_timestamp = row[3] # not used
-        peer_age_in_minutes = row[4]
-        peer_age_in_seconds = row[5]
+        peer_snr = row[5]
+        peer_rssi = row[6]
+        peer_q = row[7]
+        peer_age_in_minutes = row[8]
+        peer_age_in_seconds = row[9]
+        
+        # RNS.log(" ** peer_callsign " + str(peer_callsign ) )
+        # RNS.log(" ** peer_hash " + str( peer_hash ) )
+        # RNS.log(" ** peer_timestamp " + str(peer_timestamp) )
+        # RNS.log(" ** peer_age_in_minutes: " + str(peer_age_in_minutes) )
+        # RNS.log(" ** peer_age_in_seconds: " + str(peer_age_in_seconds) )
         # Inform UI about nodes we have
         # do we have link to destination?
         
         if peer_hash in destination_hashes_we_have_link:
             link_eshtablished = "Ⓛ"
         else:
-            link_eshtablished = "";
+            link_eshtablished = "-";
         
-        message_content = "reticulumnode," + peer_callsign + "," + str(peer_age_in_minutes) + "," + peer_hash + "," + link_eshtablished + "\n"
+        message_content = "reticulumnode," + peer_callsign + "," + str(peer_age_in_minutes) + "," + peer_hash + "," + link_eshtablished + "," + str(peer_snr) + "," + str(peer_rssi) + "," + str(peer_q) + "\n"
+        # RNS.log(" ** updateUserInterface(): " + message_content)
         write_reticulum_status_fifo(message_content)
         time.sleep(0.2)
     connection.commit()
@@ -181,6 +201,7 @@ def write_reticulum_status_fifo(payload):
 # Send nodes to UI every 15 s 
 async def update_ui_loop():
     while True:
+        # RNS.log("** Updating UI...")
         updateUserInterface()
         await asyncio.sleep(15)
 
@@ -586,7 +607,7 @@ def client():
     )
     RNS.Transport.register_announce_handler(announce_handler)
     
-    # Thread to update UI 
+    # Thread to update UI
     thread = threading.Thread(target=asyncio.run, args=(update_ui_loop(),))
     thread.daemon = True
     thread.start()

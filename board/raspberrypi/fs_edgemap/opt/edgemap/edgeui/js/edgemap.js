@@ -144,9 +144,12 @@ class reticulumList {
             this.age = [];
             this.hash = [];
             this.link = [];
+            this.snr = [];
+            this.rssi = [];
+            this.q = [];
             
         }
-        add(callsign,age,hash,link) {            
+        add(callsign,age,hash,link,snr,rssi,q) {            
             const index = this.members.findIndex(x => x === callsign);
             if (index !== -1) {
                 // Update existing but don't over write existing 
@@ -154,6 +157,9 @@ class reticulumList {
                 this.age[index] = age;
                 this.hash[index] = hash;
                 this.link[index] = link;
+                this.snr[index] = snr;
+                this.rssi[index] = rssi;
+                this.q[index] = q;
                 return true;
             } else {
                 // Add new
@@ -161,6 +167,9 @@ class reticulumList {
                 this.age.push(age); 
                 this.hash.push(hash);
                 this.hash.push(link);
+                this.snr.push(snr);
+                this.rssi.push(rssi);
+                this.q.push(q);
                 return true;
             }
             return false;
@@ -173,6 +182,9 @@ class reticulumList {
                 this.age.splice(index, 1);
                 this.hash.splice(index, 1);
                 this.link.splice(index, 1);
+                this.snr.splice(index, 1);
+                this.rssi.splice(index, 1);
+                this.q.splice(index, 1);
                 return true;
             }
             return false;
@@ -235,11 +247,11 @@ function updateReticulumBlock() {
     var reticulumLoop=0;
     var reticulumListContent = "";
     // Δ
-    reticulumListContent = "<table width=90%><tr ><td style='border-bottom: 1px solid #0F0;' >Callsign</td><td style='border-bottom: 1px solid #0F0;' >Age</td><td style='border-bottom: 1px solid #0F0;'>Destination</td><td style='border-bottom: 1px solid #0F0;'></td></tr>";
+    reticulumListContent = "<table width=90%><tr ><td style='border-bottom: 1px solid #0F0;' >Callsign</td><td style='border-bottom: 1px solid #0F0;' >Age</td><td style='border-bottom: 1px solid #0F0;'>Destination</td><td style='border-bottom: 1px solid #0F0;'>Link</td><td style='border-bottom: 1px solid #0F0;'>SNR</td><td style='border-bottom: 1px solid #0F0;'>RSSI</td><td style='border-bottom: 1px solid #0F0;'>Qual</td> </tr>";
     for ( reticulumLoop = 0; reticulumLoop < reticulumNodesOnSystem.getSize(); reticulumLoop++) { 
         if ( reticulumNodesOnSystem.age[reticulumLoop] < 30 ) {
             smallerHash = "<span style='font-size:10px;'>" + reticulumNodesOnSystem.hash[reticulumLoop] + "</span>";
-            reticulumListContent += "<tr><td>" + reticulumNodesOnSystem.members[reticulumLoop] + "</td><td>" + reticulumNodesOnSystem.age[reticulumLoop] + "</td><td>" + smallerHash + "</td><td>" + reticulumNodesOnSystem.link[reticulumLoop]  + "</td></tr>";
+            reticulumListContent += "<tr><td>" + reticulumNodesOnSystem.members[reticulumLoop] + "</td><td>" + reticulumNodesOnSystem.age[reticulumLoop] + "</td><td>" + smallerHash + "</td><td>" + reticulumNodesOnSystem.link[reticulumLoop]  + "</td><td>"+reticulumNodesOnSystem.snr[reticulumLoop]+"</td><td>"+reticulumNodesOnSystem.rssi[reticulumLoop]+"</td><td>"+reticulumNodesOnSystem.q[reticulumLoop]+"</td></tr>";
         }
     }
     reticulumListContent += "</table>";
