@@ -441,7 +441,7 @@
       style: "styles/style.json"
     });
     
-    const edgemapUiVersion = "v0.73";
+    const edgemapUiVersion = "v0.74";
     var intialZoomLevel=1;
 	var symbolSize = 30;
     

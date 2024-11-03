@@ -46,10 +46,13 @@ fruits = ["Peach", "Quince", "Date", "Tangerine", "Pomelo", "Carambola", "Grape"
 server_identity = None
 server_destination = None
 server_connected_clients_count = None
-tracked_announces = []
+tracked_destinations = []
 tracked_links_on_server = []
 tracked_links_on_client = []
-destinations_we_have_link = []
+destination_hashes_we_have_link = []
+
+
+
 # A reference to the server link. Check is there race condition.
 server_link = None
 # A reference to the client identity
@@ -85,11 +88,11 @@ def reticulumDbCreate():
     listOfTables = cursor.execute("""SELECT tbl_name FROM sqlite_master WHERE type='table' AND tbl_name="rnsnodes";""").fetchall();
     if listOfTables == []:
         RNS.log("[DB] creating rnsnodes table")
-        cursor.execute("CREATE TABLE rnsnodes (id INTEGER PRIMARY KEY AUTOINCREMENT, callsign TEXT, destination TEXT, timestamp TEXT )")
+        cursor.execute("CREATE TABLE rnsnodes (id INTEGER PRIMARY KEY AUTOINCREMENT, callsign TEXT, destination TEXT, timestamp TEXT, identity TEXT,snr TEXT, rssi TEXT, quality TEXT )")
     else:
         RNS.log("[DB] found existing rnsnodes table")
 
-def reticulumDbUpdate(callsign,destination_hash):    
+def reticulumDbUpdate(callsign,destination_hash,identity_hash,snr,rssi,quality):    
     connection = sqlite3.connect(db_file)
     # print(connection.total_changes)
     cursor = connection.cursor()
@@ -97,11 +100,41 @@ def reticulumDbUpdate(callsign,destination_hash):
     cursor.execute("SELECT * FROM rnsnodes WHERE callsign = ?", (callsign,) )
     rows = len( cursor.fetchall() )
     if ( rows == 0 ):
-        cursor.execute("INSERT INTO rnsnodes (callsign,destination,timestamp) VALUES (?,?,current_timestamp)", (callsign,destination_hash))
+        cursor.execute("INSERT INTO rnsnodes (callsign,destination,timestamp,identity,snr,rssi,quality) VALUES (?,?,current_timestamp,?,?,?,?)", (callsign,destination_hash,identity_hash,snr,rssi,quality))
     else:
-        cursor.execute("UPDATE rnsnodes SET callsign = ?, destination = ?, timestamp = current_timestamp  WHERE callsign = ?", (callsign, destination_hash, callsign))
+        cursor.execute("UPDATE rnsnodes SET callsign = ?, destination = ?, timestamp = current_timestamp, identity = ?, snr = ?, rssi = ?, quality = ? WHERE callsign = ?", (callsign, destination_hash, callsign, identity_hash,snr,rssi,quality))
     connection.commit()
     connection.close()
+
+def reticulumDbUpdateRadioLinkParams(destination_hash,snr,rssi,quality):    
+    connection = sqlite3.connect(db_file)
+    # print(connection.total_changes)
+    cursor = connection.cursor()
+    # Check if identity_hash exist
+    cursor.execute("SELECT * FROM rnsnodes WHERE destination = ?", (destination_hash,) )
+    rows = len( cursor.fetchall() )
+    if ( rows == 0 ):
+        cursor.execute("INSERT INTO rnsnodes (timestamp,destination,snr,rssi,quality) VALUES (current_timestamp,?,?,?,?)", (destination_hash,snr,rssi,quality))
+    else:
+        cursor.execute("UPDATE rnsnodes SET timestamp = current_timestamp, snr = ?, rssi = ?, quality = ? WHERE destination = ?", (snr,rssi,quality,destination_hash))
+    connection.commit()
+    connection.close()
+
+def reticulumDbUpdateRadioLinkParamsWithIdentity(destination_identity,snr,rssi,quality):    
+    connection = sqlite3.connect(db_file)
+    # print(connection.total_changes)
+    cursor = connection.cursor()
+    # Check if identity_hash exist
+    cursor.execute("SELECT * FROM rnsnodes WHERE identity = ?", (destination_identity,) )
+    rows = len( cursor.fetchall() )
+    if ( rows == 0 ):
+        # should not happen
+        RNS.log("reticulumDbUpdateRadioLinkParamsWithIdentity() - unknown identity")
+    else:
+        cursor.execute("UPDATE rnsnodes SET timestamp = current_timestamp, snr = ?, rssi = ?, quality = ? WHERE identity = ?", (snr,rssi,quality,destination_identity))
+    connection.commit()
+    connection.close()
+    
 
 def reticulumDbErase():    
     connection = sqlite3.connect(db_file)
@@ -129,7 +162,7 @@ def updateUserInterface():
         # Inform UI about nodes we have
         # do we have link to destination?
         
-        if peer_hash in destinations_we_have_link:
+        if peer_hash in destination_hashes_we_have_link:
             link_eshtablished = "Ⓛ"
         else:
             link_eshtablished = "";
@@ -145,7 +178,7 @@ def write_reticulum_status_fifo(payload):
     fifo_write.write(payload)
     fifo_write.flush()
 
-# Send nodes to UI every 15 s
+# Send nodes to UI every 15 s 
 async def update_ui_loop():
     while True:
         updateUserInterface()
@@ -225,10 +258,11 @@ latest_client_link = None
 # edgemap-message request
 def edgemap_message_request(path, data, request_id, link_id, remote_identity, requested_at):
     RNS.log("Message in from link: "+RNS.prettyhexrep(link_id))
-    # RNS.log("Edgemap message: "+RNS.prettyhexrep(request_id)+" on link: "+RNS.prettyhexrep(link_id))
-    # RNS.log(" Remote identity: "+str(remote_identity) ) 
-    # RNS.log(" Data received: " + str(data) )
-    # RNS.log(" Time stamp: " + str(requested_at) )
+    RNS.log("Edgemap message: "+RNS.prettyhexrep(request_id)+" on link: "+RNS.prettyhexrep(link_id))
+    RNS.log(" Remote identity: "+str(remote_identity) ) 
+    RNS.log(" Data received: " + str(data) )
+    RNS.log(" Time stamp: " + str(requested_at) )
+    
     
     # Write fifo and return ack field
     write_received_msg_to_fifo( str(data) )
@@ -397,8 +431,11 @@ def client_link_connected(link):
 
 def server_remote_identified(link, identity):
     # Enable for debug with 'True':
+    # reticulumDbUpdateRadioLinkParams(identity_hash,snr,rssi,quality) 
+    # but identity we get snr etc is CLIENT IDENTITY - WTF ?!?!?!
+    # fix this
     if True:        
-        RNS.log("Connected client identity:  " + str(identity)  )
+        RNS.log("Connected CLIENT identity:  " + str(identity)  )
         RNS.log("RSSI:   " + str( link.get_rssi() )  )
         RNS.log("SNR:    " + str( link.get_snr() )  )
         RNS.log("Quality:" + str( link.get_q() )  )
@@ -457,7 +494,7 @@ class AnnounceHandler:
     def received_announce(self, destination_hash, announced_identity, app_data):
         # RNS.log("[RAW] Announce: " + RNS.prettyhexrep(destination_hash))
         global g_connection_in_progress
-        global tracked_announces
+        global tracked_destinations
         global server_link
                                 
         if app_data is not None:
@@ -475,7 +512,10 @@ class AnnounceHandler:
                         insert_destination_hex = RNS.hexrep(destination_hash)
                         insert_destination_hex = insert_destination_hex.replace(":", "")
                         insert_destination_hex = str(insert_destination_hex)
-                        reticulumDbUpdate( insert_callsign,insert_destination_hex )
+                        announced_identity_hex = str(announced_identity)
+                        announced_identity_hex = announced_identity_hex[1:-1]
+                        # Update DB
+                        reticulumDbUpdate( insert_callsign,insert_destination_hex,announced_identity_hex,"-","-","-" )
                         # Inform UI: announcereceived,[callsign],[hash]
                         message_content = "announcereceived," + insert_callsign + "," + insert_destination_hex + "\n"   
                         fifo_write = open('/tmp/reticulumstatusin', 'w')
@@ -483,11 +523,10 @@ class AnnounceHandler:
                         fifo_write.flush()
                         # Track announces as client
                         server_link = ""
-                        if destination_hash.hex() not in tracked_announces:                            
-                            # Append destination_hash to tracked_announces
-                            tracked_announces.append(destination_hash.hex())
-                            announce_entries=len(tracked_announces)                            
-                            RNS.log("\033[1m [" + str(announce_entries) + "]\033[0m [NEW] Announce: " + RNS.prettyhexrep(destination_hash) + " " + insert_callsign)
+                        if destination_hash.hex() not in tracked_destinations:                            
+                            tracked_destinations.append(destination_hash.hex())
+                            announce_entries=len(tracked_destinations)                            
+                            RNS.log("\033[1m [" + str(announce_entries) + "]\033[0m [NEW] Announce: " + RNS.prettyhexrep(destination_hash) + " " + insert_callsign + " Identity:" +  str(announced_identity))
                         else:
                             # We've seen this announce already
                             pass
@@ -497,12 +536,15 @@ class AnnounceHandler:
                 # Should not happen
                 RNS.log("Received non-edgemap announce: " + RNS.prettyhexrep(destination_hash) + " " + callsign_split_string )
                 
-
+#
 # Run as 'client'
+#
 def client():
     global client_identity
     global server_link
     global g_initial_link_connect_delay
+    global tracked_links_on_client
+    global tracked_destinations
     
     # Reticulum instance
     reticulum = RNS.Reticulum("/opt/meshchat")
@@ -538,7 +580,7 @@ def client():
             sys.exit()
 
     
-    # Setup announce handler, everything is threaded from announce handler
+    # Setup announce handler
     announce_handler = AnnounceHandler(
         aspect_filter="link.edgemap"
     )
@@ -554,84 +596,28 @@ def client():
     thread_fifo_read.daemon = True
     thread_fifo_read.start()
     
-    # We run on announce handler -> threads now on
+    # NEW ERA TEST 
     while True:
-        time.sleep(1)
-
-#
-# Open link to announced destination
-#
-async def create_link_to_destination(destination_hash_string):
-    
-    global server_link
-    global g_initial_link_connect_delay
-    global g_connection_in_progress    
-    global destinations_we_have_link
-    
-    destination_hash = bytes.fromhex(destination_hash_string)    
-    g_connection_in_progress = True;
         
-    # Check if we know a path to the destination
-    if not RNS.Transport.has_path(destination_hash):
-        RNS.log(" Destination is not yet known. Requesting path and waiting for announce to arrive...")
-        RNS.Transport.request_path(destination_hash)
-        while not RNS.Transport.has_path(destination_hash):
-            time.sleep(0.1)
-            
-    # Recall server identity
-    server_identity = RNS.Identity.recall(destination_hash)
-    
-    # When the server identity is known, we set up a destination to server 
-    server_destination = RNS.Destination(
-        server_identity,
-        RNS.Destination.OUT,
-        RNS.Destination.SINGLE,
-        APP_NAME,
-        "edgemap"
-    )
-    
-    # When a link instance is created, Reticulum will attempt to establish
-    # verified and encrypted connectivity with the specified destination.
-    link = RNS.Link(server_destination)
-    link.set_packet_callback(client_packet_received)
-    link.set_link_established_callback(link_to_server_established)
-    link.set_link_closed_callback( link_closed )
-    
-    # We use global 'server_link' which is set on call back link_to_server_established()
-    while not server_link:
-        time.sleep(0.1)
+        tracked_destinations_count=len(tracked_destinations)
+        tracked_links_count=len(tracked_links_on_client)
+        RNS.log("Destinations: \033[1m[" +  str(tracked_destinations_count) + "]\033[0m Links: \033[1m["+ str(tracked_links_count) +"]\033[0m" )
+        time.sleep(120)
 
-    # 'Post connection message' - after thread is done
-    pcm = "Thread terminated for a link: " + str(link)    
-    # Run loop until exit
-    client_loop( server_link )
-    # Log terminated link
-    RNS.log(pcm)
-    tracked_announces.remove( destination_hash.hex() ) 
-    # TODO CHECK THIS 
-    destinations_we_have_link.remove( destination_hash.hex() )
-    RNS.log("Removed tracked announce: " + str( destination_hash.hex() )) 
+    RNS.log("*** END **** ")
 
-
-# Client loop
-def client_loop(server_link):
-    thread_id=str(threading.get_ident())
-    should_quit = False
-    global tracked_announces
-    global tracked_links_on_client
-    global g_fifo_file_in    
-    # We moved fifo read to own thread: client_fifo_read()
-    # I think we need this to keep thread alive
-    while True:
-        time.sleep(1)
     
-
-# Client reads fifo and sends to all: tracked_links_on_client[]
-def client_fifo_read():
+#
+# Client:   read fifo and send to all: tracked_links_on_client[]
+#           If there is no link to destination, create link before
+#           sending. 
+#
+async def client_fifo_read():
     global g_fifo_file_in
-    global tracked_announces
+    global tracked_destinations
     global tracked_links_on_client
-    global destinations_we_have_link
+    global destination_hashes_we_have_link
+    
     # Create FIFO In ( "messages in" to be sent out on link )
     if not os.path.isfile(g_fifo_file_in):
         create_fifo_pipe(g_fifo_file_in)
@@ -640,84 +626,130 @@ def client_fifo_read():
         create_fifo_pipe(g_fifo_file_in)
     
     fifo_read=open(g_fifo_file_in,'r')
-    
     # Connect destination links when fifo hits 
-
+    
     # Read fifo and send requests to link(s)
     while True:
         fifo_msg_in = fifo_read.readline()[:-1]
         
         if not fifo_msg_in == "":
-            announce_entries=len(tracked_announces)
-            for tracked_destination_hash in tracked_announces:
-                # Test do we have a link already before doing threads               
-                if tracked_destination_hash not in destinations_we_have_link:
-                    thread = threading.Thread(target=asyncio.run, args=(create_link_to_destination(tracked_destination_hash),))
-                    thread.daemon = True
-                    thread.start()
-                    # Delay between thread starting
-                    time.sleep(5)
+            
+            for tracked_destination_hash in tracked_destinations:
+                
+                # Test do we have a link already
+                if tracked_destination_hash not in destination_hashes_we_have_link: 
+                    
+                    # Inline link setup to destinations
+                    destination_hash = bytes.fromhex(tracked_destination_hash)    
+                    g_connection_in_progress = True;                     
+                    # Check if we know a path to the destination
+                    if not RNS.Transport.has_path(destination_hash):
+                        RNS.log(" Destination is not yet known. Requesting path and waiting for announce to arrive...")
+                        RNS.Transport.request_path(destination_hash)
+                        while not RNS.Transport.has_path(destination_hash):
+                            time.sleep(0.1)
+                    
+                    # Recall identity
+                    server_identity = RNS.Identity.recall(destination_hash)
+                    
+                    # When the server identity is known, we set up a destination to server 
+                    server_destination = RNS.Destination(
+                        server_identity,
+                        RNS.Destination.OUT,
+                        RNS.Destination.SINGLE,
+                        APP_NAME,
+                        "edgemap"
+                    )
+                    
+                    # When a link instance is created, Reticulum will attempt to establish
+                    # verified and encrypted connectivity with the specified destination.
+                    g_connection_in_progress = True
+                    link = RNS.Link(server_destination)
+                    link.track_phy_stats(True) # aku
+                    link.set_packet_callback(client_packet_received)
+                    link.set_link_established_callback(link_to_server_established)
+                    link.set_link_closed_callback( link_closed )
+
+                    # Is delay really the only way ?
+                    await asyncio.sleep(2)
+                
                 else:
                     RNS.log(" Found existing link to: " + str(tracked_destination_hash) )
 
-            # Send message to link entries
-            loop_entry=1
-            loop_entries=len(tracked_links_on_client)
-            for server_link_entry in tracked_links_on_client:                
-                RNS.log("[" + str(loop_entry) + "/" + str(loop_entries)+"] Making edgemap-message request to: " + str(server_link_entry))
-                request_recipe = server_link_entry.request(
-                    "/edgemap-message",
-                    data = fifo_msg_in, 
-                    response_callback = request_response_received,
-                    failed_callback = request_failed,
-                    progress_callback = request_progress_callback
-                )
-                # Sleep between requests
-                time.sleep( 4 ) 
-                loop_entry+=1
-        
-            time.sleep(0.1)    
-        
+            RNS.log("Sending message to all peers in 1 s")
+            await asyncio.sleep(1)
+
+            if True:
+                # Send message to link entries. 
+                # What if request takes ..long.. time ?
+                loop_entry=1
+                loop_entries=len(tracked_links_on_client)
+                for server_link_entry in tracked_links_on_client:                
+                    RNS.log("\033[1m[" + str(loop_entry) + "/" + str(loop_entries)+"]\033[0m Making edgemap-message request to: " + str(server_link_entry))
+                    # Make request and set callbacks
+                    request_recipe = server_link_entry.request(
+                        "/edgemap-message",
+                        data = fifo_msg_in, 
+                        response_callback = client_request_response_received,
+                        failed_callback = client_request_failed,
+                        progress_callback = client_request_progress_callback
+                    )
+                    RNS.log(" Message "+RNS.prettyhexrep(request_recipe.request_id) + " requested" )
+                    
+                    # Update physical link values on every msg send
+                    rssi = server_link_entry.get_rssi()
+                    snr = server_link_entry.get_snr()
+                    quality = server_link_entry.get_q()
+                    remote_identity = str(server_link_entry.get_remote_identity())
+                    remote_identity = remote_identity[1:-1]
+                    reticulumDbUpdateRadioLinkParamsWithIdentity(remote_identity,snr,rssi,quality)
+                    
+                    # Is delay really the only way?
+                    # Adjust this delay based on your transport testing
+                    await asyncio.sleep(4) 
+                    loop_entry+=1
         else:
             # No fifo data
-            time.sleep(1)
+            await asyncio.sleep(1)
             pass
+
 
 #
 # This function is called when a link (from Client to Server) has been established
-#
+# 
 def link_to_server_established(link):
     global tracked_links_on_client
     global g_connection_in_progress
-    global destinations_we_have_link
-    
-    # We store a reference to the link instance for later use
-    # create_link_to_destination() requires this global server_link to start
-    # Q: Can we do this without global variable?
-    global server_link 
-    server_link = link
-    
+    global destination_hashes_we_have_link
+        
     # Identifies the initiator of the link to the remote peer
     link.identify(client_identity)
-    
+
     # Append link to track links (TODO: this info to Web UI ?)
     tracked_links_on_client.append(link)
-    # get destination hash
+    
+    # get destination hash and log it
     destination_hash_of_link = link.destination.hash.hex()
-    destinations_we_have_link.append(destination_hash_of_link)
- 
-    RNS.log("\033[1m[" + str( len(tracked_links_on_client) ) + "]\033[0m Link " + str(link) + " to " + str( destination_hash_of_link ) )
-    #RNS.log("\033[1mTracking now " + str( len(tracked_links_on_client) ) + " link connections \033[0m")
+    destination_hashes_we_have_link.append(destination_hash_of_link) 
+    RNS.log("\033[1m[" + str( len(tracked_links_on_client) ) + "]\033[0m [NEW] Link " + str(link) + " to " + str( destination_hash_of_link ) )
+    
+    # Store physical link values
+    rssi = link.get_rssi()
+    snr = link.get_snr()
+    quality = link.get_q()
+    reticulumDbUpdateRadioLinkParams(destination_hash_of_link,snr,rssi,quality)
     
     # Connection has been completed
     g_connection_in_progress = False    
     
 
+#
 # When a link is closed
+#
 def link_closed(link):
     global tracked_links_on_client
     global g_connection_in_progress
-    global tracked_announces
+    global tracked_destinations
     
     if link.teardown_reason == RNS.Link.TIMEOUT:
         RNS.log("\033[31m\033[1mThe link timed out:  \033[0m" + str(link) )
@@ -726,43 +758,59 @@ def link_closed(link):
     else:
         RNS.log("Link closed: " + str(link)  )
 
-    # List announces
-    announce_entries=len(tracked_announces)
-    RNS.log("We have now: " + str(announce_entries) + " announces for destinations")
-    for announce_entry in tracked_announces:
-        RNS.log(" => " + str( announce_entry ) )
+    # List destinations
+    announce_entries=len(tracked_destinations)
+    RNS.log("We have now: " + str(announce_entries) + " destinations")
+    for announce_entry in tracked_destinations:
+        RNS.log(" Destination: " + str( announce_entry ) )
+    
+    # List link
+    link_entries=len(tracked_links_on_client)
+    RNS.log("We have now: " + str(link_entries) + " links")
+    for link_entry in tracked_links_on_client:
+        RNS.log(" Link: " + str( link_entry ) )
+    
+    
     
     # Maybe we don't have that link on array
     try:
         destination_hash = link.destination.hash.hex()
-        tracked_links_on_client.remove(link)
         
-        if destination_hash in destinations_we_have_link:
-            RNS.log("\033[31m[UNTRACK LINK]: \033[0m " + str(destination_hash) )
-            destinations_we_have_link.remove(destination_hash)
-        if destination_hash in tracked_announces:
-            RNS.log("\033[31m[UNTRACK ANNOUNCE]: \033[0m " + str(destination_hash) )
-            tracked_announces.remove(destination_hash)
+        # link is gone at this point, it won't be found in tracked_links_on_client
+        # I think we need to get link as hex ? 
+        if link in tracked_links_on_client:
+            RNS.log("\033[31m[UNTRACK LINK]: \033[0m " + str(link) )
+            tracked_links_on_client.remove(link) #???
+        
+        if destination_hash in destination_hashes_we_have_link: 
+            RNS.log("\033[31m[UNTRACK DESTINATION (STR)]: \033[0m " + str(destination_hash) )
+            destination_hashes_we_have_link.remove(destination_hash)
+        
+        if destination_hash in tracked_destinations:
+            RNS.log("\033[31m[UNTRACK DESTINATION (LINK)]: \033[0m " + str(destination_hash) )
+            tracked_destinations.remove(destination_hash)
         
     except Exception as e:
-                
+        
+        # NOTE: This segment is totally untested part - should be reviewed!
+        
         RNS.log(" Failed to remove entry from tracked links: %s" % (str(e)), RNS.LOG_ERROR)
         
-        # Remove announced destination from tracked_announces
+        # Remove announced destination from tracked_destinations
         destination_hash = link.destination.hash.hex()
         RNS.log(" link_closed() destination hex: " + str( destination_hash ))
         
         # TODO does this work?
-        if destination_hash in destinations_we_have_link:
-            destinations_we_have_link.remove(destination_hash)
+        if destination_hash in destination_hashes_we_have_link:
+            destination_hashes_we_have_link.remove(destination_hash)
         
-        if destination_hash in tracked_announces:
+        if destination_hash in tracked_destinations:
             RNS.log("\033[31m[UNTRACK] announce: \033[0m " + str(destination_hash) )
-            tracked_announces.remove(destination_hash)
+            tracked_destinations.remove(destination_hash)
                             
-            announce_entries = len(tracked_announces)
+            announce_entries = len(tracked_destinations)
             RNS.log("We have now: " + str(announce_entries) + " announces for destinations")
-            for announce_entry in tracked_announces:
+            for announce_entry in tracked_destinations:
                 RNS.log(" => " + str(announce_entry) )
 
         if link.get_remote_identity() != None:
@@ -773,8 +821,8 @@ def link_closed(link):
     time.sleep(1.5)
     
 
-# When a packet is received over the link, we
-# simply print out the data.
+# When a packet is received over the link (from server), we
+# simply print out the data. This is unused at the moment.
 def client_packet_received(message, packet):
     text = message.decode("utf-8")
     thread_id=str(threading.get_ident())
@@ -788,26 +836,26 @@ def client_packet_received(message, packet):
     sys.stdout.flush()
 
 # request callbacks for messages
-def request_response_received(request_receipt):
+def client_request_response_received(request_receipt):
     request_id = request_receipt.request_id
     response = request_receipt.response
-    RNS.log(" Response: " + str(response) + " in " + str( round(request_receipt.get_response_time(),2) ) + " s")
+    RNS.log(" Message " + RNS.prettyhexrep(request_receipt.request_id) + " succeed (" + str( round(request_receipt.get_response_time(),2) ) + " s)" )
+    RNS.log(" Response: " + str(response) )
     response_string = str(response)
     write_reticulum_status_fifo( response_string )
 
-# TODO: What to do when msg fails  ???
-def request_failed(request_receipt):
-    # RED: \033[31m \033[0m
-    RNS.log("\033[31mMessage request "+RNS.prettyhexrep(request_receipt.request_id)+" failed.\033[0m")
-    RNS.log(" Response time: " + str(request_receipt.get_response_time() ) )
-    # TODO: How do we tear link down?
+# TODO: What to do when msg fails, inform UI ?
+def client_request_failed(request_receipt):
+    RNS.log(" \033[31mMessage " + RNS.prettyhexrep(request_receipt.request_id) + " failed\033[0m")    
+    # I think we don't need to disconnect link, we may try again
 
-def request_received(request_receipt):
+# what is this?
+def client_request_received(request_receipt):
     RNS.log("The request "+RNS.prettyhexrep(request_receipt.request_id)+" was received by the remote peer.")
 
-def request_progress_callback(request_receipt):
+def client_request_progress_callback(request_receipt):
     pass
-    # RNS.log("The request "+RNS.prettyhexrep(request_receipt.request_id)+" progress: " +  str(request_receipt.progress) )
+    #RNS.log("The request "+RNS.prettyhexrep(request_receipt.request_id)+" progress: " +  str(request_receipt.progress) )
 
 #
 # Connection request (unused at the moment)

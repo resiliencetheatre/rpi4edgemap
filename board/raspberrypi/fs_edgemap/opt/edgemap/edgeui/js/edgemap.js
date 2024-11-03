@@ -397,7 +397,7 @@ function checkMeshtasticRadioExpiry() {
     let currentTime = Math.round(+new Date()/1000);
     for ( nodeLoop = 0; nodeLoop < meshtasticRadiosOnSystem.getSize(); nodeLoop++) {
         var radioAge = parseInt ( currentTime ) - parseInt( meshtasticRadiosOnSystem.timestamps[nodeLoop] );
-        if ( radioAge > 300 ) {
+        if ( radioAge > 1200 ) {
             meshtasticRadiosOnSystem.remove( meshtasticRadiosOnSystem.members[nodeLoop] );
             updateMeshtasticRadioListBlock(); 
         }
