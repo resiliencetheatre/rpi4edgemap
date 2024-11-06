@@ -92,7 +92,8 @@ def reticulumDbCreate():
     else:
         RNS.log("[DB] found existing rnsnodes table")
 
-def reticulumDbUpdate(callsign,destination_hash,identity_hash,snr,rssi,quality):    
+# On update from announce we only need to update time
+def reticulumDbUpdate(callsign,destination_hash,identity_hash):
     connection = sqlite3.connect(db_file)
     # print(connection.total_changes)
     cursor = connection.cursor()
@@ -100,10 +101,16 @@ def reticulumDbUpdate(callsign,destination_hash,identity_hash,snr,rssi,quality):
     cursor.execute("SELECT * FROM rnsnodes WHERE callsign = ?", (callsign,) )
     rows = len( cursor.fetchall() )
     if ( rows == 0 ):
+        snr = "-"
+        rssi = "-"
+        quality = "-"
         cursor.execute("INSERT INTO rnsnodes (callsign,destination,timestamp,identity,snr,rssi,quality) VALUES (?,?,current_timestamp,?,?,?,?)", (callsign,destination_hash,identity_hash,snr,rssi,quality))
     else:
-        cursor.execute("UPDATE rnsnodes SET callsign = ?, destination = ?, timestamp = current_timestamp, identity = ?, snr = ?, rssi = ?, quality = ? WHERE callsign = ?", (callsign, destination_hash, callsign, identity_hash,snr,rssi,quality))
+        cursor.execute("UPDATE rnsnodes SET callsign = ?, destination = ?, timestamp = current_timestamp, identity = ? WHERE callsign = ?", (callsign, destination_hash,identity_hash,callsign))
+    
+    affected_rows = cursor.rowcount
     connection.commit()
+    cursor.close()
     connection.close()
 
 def reticulumDbUpdateRadioLinkParams(destination_hash,snr,rssi,quality):    
@@ -118,6 +125,7 @@ def reticulumDbUpdateRadioLinkParams(destination_hash,snr,rssi,quality):
     else:
         cursor.execute("UPDATE rnsnodes SET timestamp = current_timestamp, snr = ?, rssi = ?, quality = ? WHERE destination = ?", (snr,rssi,quality,destination_hash))
     connection.commit()
+    cursor.close()
     connection.close()
 
 def reticulumDbUpdateRadioLinkParamsWithIdentity(destination_identity,snr,rssi,quality):    
@@ -133,6 +141,7 @@ def reticulumDbUpdateRadioLinkParamsWithIdentity(destination_identity,snr,rssi,q
     else:
         cursor.execute("UPDATE rnsnodes SET timestamp = current_timestamp, snr = ?, rssi = ?, quality = ? WHERE identity = ?", (snr,rssi,quality,destination_identity))
     connection.commit()
+    cursor.close()
     connection.close()
     
 
@@ -141,6 +150,7 @@ def reticulumDbErase():
     cursor = connection.cursor()
     cursor.execute("DELETE FROM rnsnodes")
     connection.commit()
+    cursor.close()
     connection.close()
 
 #
@@ -536,7 +546,7 @@ class AnnounceHandler:
                         announced_identity_hex = str(announced_identity)
                         announced_identity_hex = announced_identity_hex[1:-1]
                         # Update DB
-                        reticulumDbUpdate( insert_callsign,insert_destination_hex,announced_identity_hex,"-","-","-" )
+                        reticulumDbUpdate( insert_callsign,insert_destination_hex,announced_identity_hex)
                         # Inform UI: announcereceived,[callsign],[hash]
                         message_content = "announcereceived," + insert_callsign + "," + insert_destination_hex + "\n"   
                         fifo_write = open('/tmp/reticulumstatusin', 'w')
