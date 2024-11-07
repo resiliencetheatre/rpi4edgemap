@@ -40,9 +40,14 @@ import configparser
 import sqlite3
 from threading import Thread
 from random import randrange, uniform
+# app_data
+import base64
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes, hmac
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 APP_NAME = "link"
-fruits = ["Peach", "Quince", "Date", "Tangerine", "Pomelo", "Carambola", "Grape"]
 server_identity = None
 server_destination = None
 server_connected_clients_count = None
@@ -50,8 +55,6 @@ tracked_destinations = []
 tracked_links_on_server = []
 tracked_links_on_client = []
 destination_hashes_we_have_link = []
-
-
 
 # A reference to the server link. Check is there race condition.
 server_link = None
@@ -71,10 +74,103 @@ g_fifo_file_in = config['settings']['fifo_file_in']
 g_fifo_file_out = config['settings']['fifo_file_out']
 g_fifo_reticulum_control = config['settings']['fifo_file_reticulum_control']
 # Announce rates & connect delay
-g_initial_announce_delay = int(g_node_id) + 2
+g_initial_announce_delay = int(g_node_id) + (2 * int(g_node_id))
 # Not in use in this version (where announces do not trigger connection)
 g_initial_link_connect_delay = 4 * ( int(g_node_id) - 1 )
 g_connection_in_progress=False
+
+# Encrypt password placeholder
+g_password = "strong_password"
+g_encrypted = True
+
+#
+# Encrypt / decrypt functions
+#
+def generate_key(password: str, salt: bytes) -> bytes:
+    """Derive a 32-byte key from the password using PBKDF2."""
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+        backend=default_backend()
+    )
+    return kdf.derive(password.encode())
+
+def encrypt_aes256(message: str, password: str) -> str:
+    """Encrypts a message using AES-256 with HMAC for integrity, and returns a base64-encoded result."""
+    
+    # Generate random salt and IV
+    salt = os.urandom(16)
+    iv = os.urandom(16)
+    
+    # Derive AES key from password
+    key = generate_key(password, salt)
+    
+    # Encrypt message
+    cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=default_backend())
+    encryptor = cipher.encryptor()
+    ciphertext = encryptor.update(message.encode()) + encryptor.finalize()
+    
+    # Calculate HMAC for integrity check
+    h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
+    h.update(ciphertext)
+    hmac_value = h.finalize()
+    
+    # Combine salt, IV, HMAC, and ciphertext and encode as base64
+    encrypted_data = salt + iv + hmac_value + ciphertext
+    encoded_result = base64.b64encode(encrypted_data).decode('utf-8')
+    return encoded_result
+
+def decrypt_aes256(encoded_data: str, password: str) -> str:
+    """Decrypts a base64-encoded, AES-256 encrypted message with HMAC integrity check."""
+    
+    # Decode the base64 data
+    encrypted_data = base64.b64decode(encoded_data)
+    
+    # Extract salt, IV, HMAC, and ciphertext
+    salt = encrypted_data[:16]
+    iv = encrypted_data[16:32]
+    hmac_value = encrypted_data[32:64]
+    ciphertext = encrypted_data[64:]
+    
+    # Derive AES key from password
+    key = generate_key(password, salt)
+    
+    # Verify HMAC for integrity
+    h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
+    h.update(ciphertext)
+    h.verify(hmac_value)  # Will raise an InvalidSignature exception if verification fails
+    
+    # Decrypt ciphertext
+    cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=default_backend())
+    decryptor = cipher.decryptor()
+    decrypted_message = decryptor.update(ciphertext) + decryptor.finalize()
+    return decrypted_message.decode('utf-8')
+
+# Read position from file to globals
+# TODO: add Handle live GPS
+def readManualPosition():
+    
+    if ( os.path.isfile("/opt/edgemap-persist/location.txt") ):
+        
+        # Callsign (TODO: which one to use?)            
+        if ( os.path.isfile("/opt/edgemap-persist/callsign.txt") ):
+            t2_callsign_file = open("/opt/edgemap-persist/callsign.txt", "r")
+            t2_callsign_from_file = t2_callsign_file.readline()
+            t2_callsign_file.close()
+            
+            # Read location from file
+            if ( os.path.isfile("/opt/edgemap-persist/location.txt") ):
+                t2_location_file = open("/opt/edgemap-persist/location.txt","r")
+                t2_location_from_file = t2_location_file.readline()
+                t2_location_file.close()
+                t2_gps_array = t2_location_from_file.split(",")
+                return t2_gps_array[0].rstrip(),t2_gps_array[1].rstrip()
+    else:
+        RNS.log("No location saved")
+        return "-","-"
+    
 
 ##########################################################
 # Database 
@@ -262,12 +358,23 @@ async def announce_loop():
     global g_node_callsign
     global g_initial_announce_delay
     global g_announce_delay
+    global g_password
+    global g_encrypted
     
     RNS.log("First periodic announce in " + str(g_initial_announce_delay) + " s." )
     await asyncio.sleep( g_initial_announce_delay )
     
     while True:
-        callsign_app_data = "edgemap." + g_node_callsign
+        
+        if g_encrypted:
+            lat,lon = readManualPosition()
+            callsign_app_data_to_be_encrypted = "edgemap;" + g_node_callsign + ";" + str(lat) + "," + str(lon)
+            callsign_app_data = encrypt_aes256(callsign_app_data_to_be_encrypted, g_password)
+            pass
+        else:
+            callsign_app_data = "edgemap." + g_node_callsign
+        
+        # Send it
         callsign_app_data_encoded=callsign_app_data.encode('utf-8')
         server_destination.announce(app_data=callsign_app_data_encoded)
         g_announce_delay = randrange(120, 240)
@@ -278,14 +385,20 @@ async def announce_loop():
 def announce_manual(): 
     global server_destination
     global g_node_callsign
-    callsign_app_data = "edgemap." + g_node_callsign
+    if g_encrypted:
+        lat,lon = readManualPosition()
+        callsign_app_data_to_be_encrypted = "edgemap;" + g_node_callsign + ";" + str(lat) + "," + str(lon)
+        callsign_app_data = encrypt_aes256(callsign_app_data_to_be_encrypted, g_password)
+        pass
+    else:
+        callsign_app_data = "edgemap." + g_node_callsign
+        
+    # Send it
     callsign_app_data_encoded=callsign_app_data.encode('utf-8')
     server_destination.announce(app_data=callsign_app_data_encoded)
     RNS.log("Sent manual announce")
-    
-# A reference to the latest client link that connected
-latest_client_link = None
 
+    
 # edgemap-message request
 def edgemap_message_request(path, data, request_id, link_id, remote_identity, requested_at):
     RNS.log("Message in from link: "+RNS.prettyhexrep(link_id))
@@ -293,8 +406,6 @@ def edgemap_message_request(path, data, request_id, link_id, remote_identity, re
     RNS.log(" Remote identity: "+str(remote_identity) ) 
     RNS.log(" Data received: " + str(data) )
     RNS.log(" Time stamp: " + str(requested_at) )
-    
-    
     # Write fifo and return ack field
     write_received_msg_to_fifo( str(data) )
     reply = "message-ack," + g_node_callsign
@@ -516,6 +627,9 @@ def remote_identified(link, identity):
 # Client Part
 ##########################################################
 
+
+
+
 #
 # announce handler class for client
 #
@@ -527,18 +641,41 @@ class AnnounceHandler:
         global g_connection_in_progress
         global tracked_destinations
         global server_link
+        global g_encrypted
+        global g_password
                                 
         if app_data is not None:
-            announce_app_data_decoded = app_data.decode('utf-8')
+            announce_app_data_encrypted = app_data.decode('utf-8')
             # RNS.log("[RAW] Announce app_data: " + str(announce_app_data_decoded) )
-            callsign_split_array = announce_app_data_decoded.split('.')
             
-            if len(callsign_split_array) == 2:
-                # If we have connection to another announce in progress, skip any incoming announce handling
+            if g_encrypted:
+                try:
+                    announce_app_data_decoded = decrypt_aes256(announce_app_data_encrypted, g_password)
+                    # RNS.log("** announce_app_data_decoded: " + str( announce_app_data_decoded) )
+                except Exception as e:
+                    print("Decryption failed:", e)
+            else:
+                pass
+                
+            # Plaintext app_data
+            callsign_split_array = announce_app_data_decoded.split(';')
+            
+            if len(callsign_split_array) == 3:
+                # If we have connection to another announce in progress, skip any incoming announce handling (obsolete)
                 if g_connection_in_progress == False:
                     insert_callsign = callsign_split_array[1]
+                    insert_position_string = callsign_split_array[2]
                     if callsign_split_array[0] == 'edgemap':
-                        # RNS.log("Received edgemap announce: " + RNS.prettyhexrep(destination_hash) + " " + insert_callsign )
+                        # RNS.log("Received edgemap announce: " + RNS.prettyhexrep(destination_hash) + " " + insert_callsign + " " + insert_position_string)
+                        # Generate trackMarker message and write it to FIFO
+                        insert_position_string_fields = insert_position_string.split(",")
+                        # Check if we have stored location and if so, send trackMarker
+                        if ( (insert_position_string_fields[1] != "-") and (insert_position_string_fields[0] != "-" ) ):
+                            announce_generated_message = insert_callsign + "|trackMarker|" + insert_position_string_fields[1] + "," + insert_position_string_fields[0] + "|Manual position"
+                            write_received_msg_to_fifo(announce_generated_message)
+                        else:
+                            RNS.log("No position provided in announce")
+                        
                         insert_destination = RNS.prettyhexrep(destination_hash)[1:-1]
                         insert_destination_hex = RNS.hexrep(destination_hash)
                         insert_destination_hex = insert_destination_hex.replace(":", "")
@@ -566,6 +703,7 @@ class AnnounceHandler:
             else:
                 # Should not happen
                 RNS.log("Received non-edgemap announce: " + RNS.prettyhexrep(destination_hash) + " " + callsign_split_string )
+            
                 
 #
 # Run as 'client'
@@ -633,11 +771,102 @@ def client():
         tracked_destinations_count=len(tracked_destinations)
         tracked_links_count=len(tracked_links_on_client)
         RNS.log("Destinations: \033[1m[" +  str(tracked_destinations_count) + "]\033[0m Links: \033[1m["+ str(tracked_links_count) +"]\033[0m" )
-        time.sleep(120)
+        
+        sleep_time = randrange(60, 120)
+        time.sleep(sleep_time)
+       
+        # Playing with randomness is stupid
+        # Option:   send lat,lon on announcement -> need to encrypt payload ?
+        #           send lat,lon on every message as added field ?
+        # sendTrackMarkerManualPosition()
+        
+        # sleep_time = randrange(120, 240)
+        # RNS.log("**** Waiting #2 " + str(sleep_time) + " s")
+        # time.sleep(sleep_time)
+        
 
     RNS.log("*** END **** ")
 
+
+#
+# Client Send message (TODO)
+#
+def client_send_message(message):
+    global tracked_destinations
+    global tracked_links_on_client
+    global destination_hashes_we_have_link
     
+    if not message == "":
+        for tracked_destination_hash in tracked_destinations:
+            if tracked_destination_hash not in destination_hashes_we_have_link: 
+                # Inline link setup to destinations
+                destination_hash = bytes.fromhex(tracked_destination_hash)    
+                g_connection_in_progress = True;                     
+                # Check if we know a path to the destination
+                if not RNS.Transport.has_path(destination_hash):
+                    RNS.log(" Destination is not yet known. Requesting path and waiting for announce to arrive...")
+                    RNS.Transport.request_path(destination_hash)
+                    while not RNS.Transport.has_path(destination_hash):
+                        time.sleep(0.1)
+                # Recall identity
+                server_identity = RNS.Identity.recall(destination_hash)
+                # When the server identity is known, we set up a destination to server 
+                server_destination = RNS.Destination(
+                    server_identity,
+                    RNS.Destination.OUT,
+                    RNS.Destination.SINGLE,
+                    APP_NAME,
+                    "edgemap"
+                )
+                # When a link instance is created, Reticulum will attempt to establish
+                # verified and encrypted connectivity with the specified destination.
+                g_connection_in_progress = True
+                link = RNS.Link(server_destination)
+                link.track_phy_stats(True)
+                link.set_packet_callback(client_packet_received)
+                link.set_link_established_callback(link_to_server_established)
+                link.set_link_closed_callback( link_closed )
+                # Is delay really the only way ?
+                time.sleep(2)
+            else:
+                RNS.log(" Found existing link to: " + str(tracked_destination_hash) )
+        
+        RNS.log("Sending message to all peers in 1 s")
+        time.sleep(1)
+
+        # Send messages
+        loop_entry=1
+        loop_entries=len(tracked_links_on_client)
+        for server_link_entry in tracked_links_on_client:                
+            RNS.log("\033[1m[" + str(loop_entry) + "/" + str(loop_entries)+"]\033[0m Making edgemap-message request to: " + str(server_link_entry))
+            # Make request and set callbacks
+            request_recipe = server_link_entry.request(
+                "/edgemap-message",
+                data = message, 
+                response_callback = client_request_response_received,
+                failed_callback = client_request_failed,
+                progress_callback = client_request_progress_callback
+            )
+            RNS.log(" Message "+RNS.prettyhexrep(request_recipe.request_id) + " requested" )
+            
+            # Update physical link values on every msg send
+            rssi = server_link_entry.get_rssi()
+            snr = server_link_entry.get_snr()
+            quality = server_link_entry.get_q()
+            remote_identity = str(server_link_entry.get_remote_identity())
+            remote_identity = remote_identity[1:-1]
+            reticulumDbUpdateRadioLinkParamsWithIdentity(remote_identity,snr,rssi,quality)
+            
+            # Is delay really the only way?
+            # Adjust this delay based on your transport testing
+            time.sleep(4) 
+            loop_entry+=1
+    
+    
+    
+
+
+
 #
 # Client:   read fifo and send to all: tracked_links_on_client[]
 #           If there is no link to destination, create link before
