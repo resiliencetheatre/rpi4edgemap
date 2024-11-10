@@ -382,7 +382,7 @@ declare class CollisionBoxStruct extends Struct {
 declare class CollisionBoxArray extends StructArrayLayout6i1ul2ui20 {
 	/**
 	 * Return the CollisionBoxStruct at the given location in the array.
-	 * @param index The index of the element.
+	 * @param index - The index of the element.
 	 */
 	get(index: number): CollisionBoxStruct;
 }
@@ -412,7 +412,7 @@ declare class PlacedSymbolStruct extends Struct {
 declare class PlacedSymbolArray extends StructArrayLayout2i2ui3ul3ui2f3ub1ul1i48 {
 	/**
 	 * Return the PlacedSymbolStruct at the given location in the array.
-	 * @param index The index of the element.
+	 * @param index - The index of the element.
 	 */
 	get(index: number): PlacedSymbolStruct;
 }
@@ -452,7 +452,7 @@ export type SymbolInstance = SymbolInstanceStruct;
 declare class SymbolInstanceArray extends StructArrayLayout8i15ui1ul2f2ui64 {
 	/**
 	 * Return the SymbolInstanceStruct at the given location in the array.
-	 * @param index The index of the element.
+	 * @param index - The index of the element.
 	 */
 	get(index: number): SymbolInstanceStruct;
 }
@@ -474,7 +474,7 @@ export type TextAnchorOffset = TextAnchorOffsetStruct;
 declare class TextAnchorOffsetArray extends StructArrayLayout1ui2f12 {
 	/**
 	 * Return the TextAnchorOffsetStruct at the given location in the array.
-	 * @param index The index of the element.
+	 * @param index - The index of the element.
 	 */
 	get(index: number): TextAnchorOffsetStruct;
 }
@@ -487,7 +487,7 @@ declare class FeatureIndexStruct extends Struct {
 declare class FeatureIndexArray extends StructArrayLayout1ul2ui8 {
 	/**
 	 * Return the FeatureIndexStruct at the given location in the array.
-	 * @param index The index of the element.
+	 * @param index - The index of the element.
 	 */
 	get(index: number): FeatureIndexStruct;
 }
@@ -2390,6 +2390,80 @@ export declare class CanvasSource extends ImageSource {
 	hasTransition(): boolean;
 	_hasInvalidDimensions(): boolean;
 }
+export declare const enum IntersectionResult {
+	None = 0,
+	Partial = 1,
+	Full = 2
+}
+declare class Aabb {
+	min: vec3;
+	max: vec3;
+	center: vec3;
+	constructor(min_: vec3, max_: vec3);
+	quadrant(index: number): Aabb;
+	distanceX(point: Array<number>): number;
+	distanceY(point: Array<number>): number;
+	/**
+	 * Performs a frustum-aabb intersection test.
+	 */
+	intersectsFrustum(frustum: Frustum): IntersectionResult;
+	/**
+	 * Performs a halfspace-aabb intersection test.
+	 */
+	intersectsPlane(plane: vec4): IntersectionResult;
+}
+declare class Frustum {
+	points: vec4[];
+	planes: vec4[];
+	aabb: Aabb;
+	constructor(points: vec4[], planes: vec4[], aabb: Aabb);
+	static fromInvProjectionMatrix(invProj: mat4, worldSize?: number, zoom?: number): Frustum;
+}
+export type CoveringZoomOptions = {
+	/**
+	 * Whether to round or floor the target zoom level. If true, the value will be rounded to the closest integer. Otherwise the value will be floored.
+	 */
+	roundZoom?: boolean;
+	/**
+	 * Tile size, expressed in screen pixels.
+	 */
+	tileSize: number;
+};
+export type CoveringTilesOptions = CoveringZoomOptions & {
+	/**
+	 * Smallest allowed tile zoom.
+	 */
+	minzoom?: number;
+	/**
+	 * Largest allowed tile zoom.
+	 */
+	maxzoom?: number;
+	/**
+	 * `true` if tiles should be sent back to the worker for each overzoomed zoom level, `false` if not.
+	 * Fill this option when computing covering tiles for a source.
+	 * When true, any tile at `maxzoom` level that should be overscaled to a greater zoom will have
+	 * its zoom set to the overscaled greater zoom. When false, such tiles will have zoom set to `maxzoom`.
+	 */
+	reparseOverscaled?: boolean;
+	/**
+	 * When terrain is present, tile visibility will be computed in regards to the min and max elevations for each tile.
+	 */
+	terrain?: Terrain;
+	/**
+	 * Optional function to redefine how tiles are loaded at high pitch angles.
+	 */
+	calculateTileZoom?: CalculateTileZoomFunction;
+};
+/**
+ * Function to define how tiles are loaded at high pitch angles
+ * @param requestedCenterZoom - the requested zoom level, valid at the center point.
+ * @param distanceToTile2D - 2D distance from the camera to the candidate tile, in mercator units.
+ * @param distanceToTileZ - vertical distance from the camera to the candidate tile, in mercator units.
+ * @param distanceToCenter3D - distance from camera to center point, in mercator units
+ * @param cameraVerticalFOV - camera vertical field of view, in degrees
+ * @return the desired zoom level for this tile. May not be an integer.
+ */
+export type CalculateTileZoomFunction = (requestedCenterZoom: number, distanceToTile2D: number, distanceToTileZ: number, distanceToCenter3D: number, cameraVerticalFOV: number) => number;
 /**
  * The `Source` interface must be implemented by each source type, including "core" types (`vector`, `raster`,
  * `video`, etc.) and all custom, third-party types.
@@ -2490,6 +2564,10 @@ export interface Source {
 	 * Allows to execute a prepare step before the source is used.
 	 */
 	prepare?(): void;
+	/**
+	 * Optional function to redefine how tiles are loaded at high pitch angles.
+	 */
+	calculateTileZoom?: CalculateTileZoomFunction;
 }
 /**
  * A general definition of a {@link Source} class for factory usage
@@ -2582,7 +2660,7 @@ declare class SourceCache extends Evented {
 	getRenderableIds(symbolLayer?: boolean): Array<string>;
 	hasRenderableParent(tileID: OverscaledTileID): boolean;
 	_isIdRenderable(id: string, symbolLayer?: boolean): boolean;
-	reload(): void;
+	reload(sourceDataChanged?: boolean): void;
 	_reloadTile(id: string, state: TileState): Promise<void>;
 	_tileLoaded(tile: Tile, id: string, previousState: TileState): void;
 	/**
@@ -3361,10 +3439,10 @@ declare class RenderToTexture {
 	terrain: Terrain;
 	pool: RenderPool;
 	/**
-	 * coordsDescendingInv contains a list of all tiles which should be rendered for one render-to-texture tile
+	 * coordsAscending contains a list of all tiles which should be rendered for one render-to-texture tile
 	 * e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
 	 */
-	_coordsDescendingInv: {
+	_coordsAscending: {
 		[_: string]: {
 			[_: string]: Array<OverscaledTileID>;
 		};
@@ -3373,7 +3451,7 @@ declare class RenderToTexture {
 	 * create a string representation of all to tiles rendered to render-to-texture tiles
 	 * this string representation is used to check if tile should be re-rendered.
 	 */
-	_coordsDescendingInvStr: {
+	_coordsAscendingStr: {
 		[_: string]: {
 			[_: string]: string;
 		};
@@ -3490,6 +3568,11 @@ declare class Painter {
 	_renderTileMasks(tileStencilRefs: {
 		[_: string]: number;
 	}, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean, useBorders: boolean): void;
+	/**
+	 * Fills the depth buffer with the geometry of all supplied tiles.
+	 * Does not change the color buffer or the stencil buffer.
+	 */
+	_renderTilesDepthBuffer(): void;
 	stencilModeFor3D(): StencilMode;
 	stencilModeForClipping(tileID: OverscaledTileID): StencilMode;
 	stencilConfigForOverlap(tileIDs: Array<OverscaledTileID>): [
@@ -3508,7 +3591,8 @@ declare class Painter {
 		Array<OverscaledTileID>
 	];
 	colorModeForRenderPass(): Readonly<ColorMode>;
-	depthModeForSublayer(n: number, mask: DepthMaskType, func?: DepthFuncType | null): Readonly<DepthMode>;
+	getDepthModeForSublayer(n: number, mask: DepthMaskType, func?: DepthFuncType | null): Readonly<DepthMode>;
+	getDepthModeFor3D(): Readonly<DepthMode>;
 	opaquePassEnabledForLayer(): boolean;
 	render(style: Style, options: PainterOptions): void;
 	/**
@@ -3517,7 +3601,7 @@ declare class Painter {
 	 * to accurate (that is, the camera has not moved much since it was updated last).
 	 */
 	maybeDrawDepthAndCoords(requireExact: boolean): void;
-	renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>): void;
+	renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, isRenderingToTexture?: boolean): void;
 	saveTileTexture(texture: Texture): void;
 	getTileTexture(size: number): Texture;
 	/**
@@ -3971,6 +4055,7 @@ export type MapLayerEventType = {
 	 * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/mouse-position/)
 	 * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
 	 * @see [Display a popup on over](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
+	 * @see [Animate symbol to follow the mouse](https://maplibre.org/maplibre-gl-js/docs/examples/animate-symbol-to-follow-mouse/)
 	 */
 	mousemove: MapLayerMouseEvent;
 	/**
@@ -4351,6 +4436,7 @@ export type MapSourceDataEvent = MapLibreEvent & {
 	source: SourceSpecification;
 	sourceId: string;
 	sourceDataType: MapSourceDataType;
+	sourceDataChanged?: boolean;
 	/**
 	 * The tile being loaded or changed, if the event has a `dataType` of `source` and
 	 * the event is related to loading of a tile.
@@ -4655,37 +4741,62 @@ export type ProjectionData = {
 	 */
 	fallbackMatrix: mat4;
 };
-export type CoveringZoomOptions = {
+export type ProjectionDataParams = {
 	/**
-	 * Whether to round or floor the target zoom level. If true, the value will be rounded to the closest integer. Otherwise the value will be floored.
+	 * The ID of the current tile
 	 */
-	roundZoom?: boolean;
+	overscaledTileID: OverscaledTileID | null;
 	/**
-	 * Tile size, expressed in screen pixels.
+	 * Set to true if a pixel-aligned matrix should be used, if possible (mostly used for raster tiles under mercator projection)
 	 */
-	tileSize: number;
+	aligned?: boolean;
+	/**
+	 * Set to true if the terrain matrix should be ignored
+	 */
+	ignoreTerrainMatrix?: boolean;
+	/**
+	 * Set to true if the globe matrix should be ignored (i.e. when rendering to texture for terrain)
+	 */
+	ignoreGlobeMatrix?: boolean;
 };
-export type CoveringTilesOptions = CoveringZoomOptions & {
+export interface CoveringTilesDetailsProvider {
 	/**
-	 * Smallest allowed tile zoom.
+	 * Returns the distance from the point to the tile
+	 * @param pointX - point x.
+	 * @param pointY - point y.
+	 * @param tileID - Tile x, y and z for zoom.
+	 * @param aabb - tile AABB
 	 */
-	minzoom?: number;
+	distanceToTile2d: (pointX: number, pointY: number, tileID: {
+		x: number;
+		y: number;
+		z: number;
+	}, aabb: Aabb) => number;
 	/**
-	 * Largest allowed tile zoom.
+	 * Returns the wrap value for a given tile.
 	 */
-	maxzoom?: number;
+	getWrap: (centerCoord: MercatorCoordinate, tileID: {
+		x: number;
+		y: number;
+		z: number;
+	}, parentWrap: number) => number;
 	/**
-	 * `true` if tiles should be sent back to the worker for each overzoomed zoom level, `false` if not.
-	 * Fill this option when computing covering tiles for a source.
-	 * When true, any tile at `maxzoom` level that should be overscaled to a greater zoom will have
-	 * its zoom set to the overscaled greater zoom. When false, such tiles will have zoom set to `maxzoom`.
+	 * Returns the AABB of the specified tile.
+	 * @param tileID - Tile x, y and z for zoom.
+	 * @param wrap - wrap number of the tile.
+	 * @param elevation - camera center point elevation.
+	 * @param options - CoveringTilesOptions.
 	 */
-	reparseOverscaled?: boolean;
+	getTileAABB: (tileID: {
+		x: number;
+		y: number;
+		z: number;
+	}, wrap: number, elevation: number, options: CoveringTilesOptions) => Aabb;
 	/**
-	 * When terrain is present, tile visibility will be computed in regards to the min and max elevations for each tile.
+	 * Whether to allow variable zoom, which is used at high pitch angle to avoid loading an excessive amount of tiles.
 	 */
-	terrain?: Terrain;
-};
+	allowVariableZoom: (transform: IReadonlyTransform, options: CoveringTilesOptions) => boolean;
+}
 export type TransformUpdateResult = {
 	forcePlacementUpdate?: boolean;
 	fireProjectionEvent?: MapProjectionEvent;
@@ -4828,10 +4939,10 @@ export interface ITransformMutators {
 	/**
 	 * This method works in combination with freezeElevation activated.
 	 * freezeElevation is enabled during map-panning because during this the camera should sit in constant height.
-	 * After panning finished, call this method to recalculate the zoom level for the current camera-height in current terrain.
+	 * After panning finished, call this method to recalculate the zoom level and center point for the current camera-height in current terrain.
 	 * @param terrain - the terrain
 	 */
-	recalculateZoom(terrain: Terrain): void;
+	recalculateZoomAndCenter(terrain?: Terrain): void;
 	/**
 	 * Set's the transform's center so that the given point on screen is at the given world coordinates.
 	 * @param lnglat - Desired world coordinates of the point.
@@ -4913,24 +5024,27 @@ export interface IReadonlyTransform extends ITransformGetters {
 	 */
 	isPaddingEqual(padding: PaddingOptions): boolean;
 	/**
-	 * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
-	 * @param options - The options, most importantly the source's tile size.
-	 * @returns An integer zoom level at which all tiles will be visible.
-	 */
-	coveringZoomLevel(options: CoveringZoomOptions): number;
-	/**
 	 * @internal
 	 * Return any "wrapped" copies of a given tile coordinate that are visible
 	 * in the current view.
 	 */
 	getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID>;
 	/**
-	 * Returns a list of tile coordinates that when rendered cover the entire screen at an optimal detail level.
-	 * Tiles are ordered by ascending distance from camera.
-	 * @param options - Additional options - min & max zoom, terrain presence, etc.
-	 * @returns Array of OverscaledTileID. All OverscaledTileID instances are newly created.
+	 * @internal
+	 * Return the camera frustum for the current view.
 	 */
-	coveringTiles(options: CoveringTilesOptions): Array<OverscaledTileID>;
+	getCameraFrustum(): Frustum;
+	/**
+	 * @internal
+	 * Return the clipping plane, behind wich nothing should be rendered. If the camera frustum is sufficient
+	 * to describe the render geometry (additional clipping is not required), this may be null.
+	 */
+	getClippingPlane(): vec4 | null;
+	/**
+	 * @internal
+	 * Returns this transform's CoveringTilesDetailsProvider.
+	 */
+	getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider;
 	/**
 	 * @internal
 	 * Given a LngLat location, return the screen point that corresponds to it.
@@ -4996,9 +5110,25 @@ export interface IReadonlyTransform extends ITransformGetters {
 	 */
 	getCameraPoint(): Point;
 	/**
-	 * The altitude of the camera above the center of the map in meters.
+	 * The altitude of the camera above the sea level in meters.
 	 */
 	getCameraAltitude(): number;
+	/**
+	 * The longitude and latitude of the camera.
+	 */
+	getCameraLngLat(): LngLat;
+	/**
+	 * Given the camera position (lng, lat, alt), calculate the center point and zoom level
+	 * @param lngLat - lng, lat of the camera
+	 * @param alt - altitude of the camera above sea level, in meters
+	 * @param bearing - bearing of the camera, in degrees
+	 * @param pitch - pitch angle of the camera, in degrees
+	 */
+	calculateCenterFromCameraLngLatAlt(lngLat: LngLat, alt: number, bearing?: number, pitch?: number): {
+		center: LngLat;
+		elevation: number;
+		zoom: number;
+	};
 	getRayDirectionFromPixel(p: Point): vec3;
 	/**
 	 * When the map is pitched, some of the 3D features that intersect a query will not intersect
@@ -5036,10 +5166,9 @@ export interface IReadonlyTransform extends ITransformGetters {
 	/**
 	 * @internal
 	 * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
-	 * @param overscaledTileID - The ID of the current tile.
-	 * @param aligned - Set to true if a pixel-aligned matrix should be used, if possible (mostly used for raster tiles under mercator projection).
+	 * @param params - Parameters for the projection data generation.
 	 */
-	getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData;
+	getProjectionData(params: ProjectionDataParams): ProjectionData;
 	/**
 	 * @internal
 	 * Returns whether the supplied location is occluded in this projection.
@@ -5406,7 +5535,7 @@ declare class CollisionIndex {
 	gridBottomBoundary: number;
 	perspectiveRatioCutoff: number;
 	constructor(transform: IReadonlyTransform, grid?: GridIndex<FeatureKey>, ignoredGrid?: GridIndex<FeatureKey>);
-	placeCollisionBox(collisionBox: SingleCollisionBox, overlapMode: OverlapMode, textPixelRatio: number, unwrappedTileID: UnwrappedTileID, pitchWithMap: boolean, rotateWithMap: boolean, translation: [
+	placeCollisionBox(collisionBox: SingleCollisionBox, overlapMode: OverlapMode, textPixelRatio: number, tileID: OverscaledTileID, unwrappedTileID: UnwrappedTileID, pitchWithMap: boolean, rotateWithMap: boolean, translation: [
 		number,
 		number
 	], collisionGroupPredicate?: (key: FeatureKey) => boolean, getElevation?: (x: number, y: number) => number, shift?: Point, simpleProjectionMatrix?: mat4): PlacedBox;
@@ -5569,7 +5698,7 @@ declare class Placement {
 	constructor(transform: ITransform, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement);
 	private _getTerrainElevationFunc;
 	getBucketParts(results: Array<BucketPart>, styleLayer: StyleLayer, tile: Tile, sortAcrossTiles: boolean): void;
-	attemptAnchorPlacement(textAnchorOffset: TextAnchorOffset, textBox: SingleCollisionBox, width: number, height: number, textBoxScale: number, rotateWithMap: boolean, pitchWithMap: boolean, textPixelRatio: number, unwrappedTileID: any, collisionGroup: CollisionGroup, textOverlapMode: OverlapMode, symbolInstance: SymbolInstance, bucket: SymbolBucket, orientation: number, translationText: [
+	attemptAnchorPlacement(textAnchorOffset: TextAnchorOffset, textBox: SingleCollisionBox, width: number, height: number, textBoxScale: number, rotateWithMap: boolean, pitchWithMap: boolean, textPixelRatio: number, tileID: OverscaledTileID, unwrappedTileID: any, collisionGroup: CollisionGroup, textOverlapMode: OverlapMode, symbolInstance: SymbolInstance, bucket: SymbolBucket, orientation: number, translationText: [
 		number,
 		number
 	], translationIcon: [
@@ -6738,7 +6867,7 @@ export type CustomRenderMethodInput = {
 	 * For more details of this object's internals, see its doc comments in `src/geo/projection/projection_data.ts`.
 	 *
 	 * These uniforms are set so that `projectTile` in shader accepts a vec2 in range 0..1 in web mercator coordinates.
-	 * Use `map.transform.getProjectionData(tileID)` to get uniforms for a given tile and pass vec2 in tile-local range 0..EXTENT instead.
+	 * Use `map.transform.getProjectionData({overscaledTileID: tileID})` to get uniforms for a given tile and pass vec2 in tile-local range 0..EXTENT instead.
 	 *
 	 * For projection 3D features, use `projectTileFor3D` in the shader.
 	 *
@@ -7039,6 +7168,7 @@ export type StyleSetterOptions = {
  * - when previous style carries certain 'state' that needs to be carried over to a new style gracefully;
  * - when a desired style is a certain combination of previous and incoming style;
  * - when an incoming style requires modification based on external state.
+ * - when an incoming style uses relative paths, which need to be converted to absolute.
  *
  * @param previous - The current style.
  * @param next - The next style.
@@ -7049,8 +7179,18 @@ export type StyleSetterOptions = {
  * map.setStyle('https://demotiles.maplibre.org/style.json', {
  *   transformStyle: (previousStyle, nextStyle) => ({
  *       ...nextStyle,
+ *       // make relative sprite path like "../sprite" absolute
+ *       sprite: new URL(nextStyle.sprite, "https://demotiles.maplibre.org/styles/osm-bright-gl-style/sprites/").href,
+ *       // make relative glyphs path like "../fonts/{fontstack}/{range}.pbf" absolute
+ *       glyphs: new URL(nextStyle.glyphs, "https://demotiles.maplibre.org/font/").href,
  *       sources: {
- *           ...nextStyle.sources,
+ *           // make relative vector url like "../../" absolute
+ *           ...nextStyle.sources.map(source => {
+ *              if (source.url) {
+	 *              source.url = new URL(source.url, "https://api.maptiler.com/tiles/osm-bright-gl-style/");
+ *              }
+ *              return source;
+ *           }),
  *           // copy a source from previous style
  *           'osm': previousStyle.sources.osm
  *       },
@@ -8215,6 +8355,10 @@ export type CameraOptions = CenterZoomBearing & {
 	 * The desired roll in degrees. The roll is the angle about the camera boresight.
 	 */
 	roll?: number;
+	/**
+	 * The elevation of the center point in meters above sea level.
+	 */
+	elevation?: number;
 };
 /**
  * Holds center, zoom and bearing properties
@@ -8440,6 +8584,14 @@ declare abstract class Camera extends Evented {
 	 * If specified, this Camera instance can be used as a stateless component in React etc.
 	 */
 	transformCameraUpdate: CameraUpdateTransformFunction | null;
+	/**
+	 * @internal
+	 * If true, the elevation of the center point will automatically be set to the terrain elevation
+	 * (or zero if terrain is not enabled). If false, the elevation of the center point will default
+	 * to sea level and will not automatically update. Defaults to true. Needs to be set to false to
+	 * keep the camera above ground when pitch \> 90 degrees.
+	 */
+	_centerClampedToGround: boolean;
 	abstract _requestRenderFrame(a: () => void): TaskID;
 	abstract _cancelRenderFrame(_: TaskID): void;
 	constructor(transform: ITransform, cameraHelper: ICameraHelper, options: {
@@ -8478,6 +8630,39 @@ declare abstract class Camera extends Evented {
 	 * ```
 	 */
 	setCenter(center: LngLatLike, eventData?: any): this;
+	/**
+	 * Returns the elevation of the map's center point.
+	 *
+	 * @returns The elevation of the map's center point, in meters above sea level.
+	 */
+	getCenterElevation(): number;
+	/**
+	 * Sets the elevation of the map's center point, in meters above sea level. Equivalent to `jumpTo({elevation: elevation})`.
+	 *
+	 * Triggers the following events: `movestart` and `moveend`.
+	 *
+	 * @param elevation - The elevation to set, in meters above sea level.
+	 * @param eventData - Additional properties to be added to event objects of events triggered by this method.
+	 */
+	setCenterElevation(elevation: number, eventData?: any): this;
+	/**
+	 * Returns the value of `centerClampedToGround`.
+	 *
+	 * If true, the elevation of the center point will automatically be set to the terrain elevation
+	 * (or zero if terrain is not enabled). If false, the elevation of the center point will default
+	 * to sea level and will not automatically update. Defaults to true. Needs to be set to false to
+	 * keep the camera above ground when pitch \> 90 degrees.
+	 */
+	getCenterClampedToGround(): boolean;
+	/**
+	 * Sets the value of `centerClampedToGround`.
+	 *
+	 * If true, the elevation of the center point will automatically be set to the terrain elevation
+	 * (or zero if terrain is not enabled). If false, the elevation of the center point will default
+	 * to sea level and will not automatically update. Defaults to true. Needs to be set to false to
+	 * keep the camera above ground when pitch \> 90 degrees.
+	 */
+	setCenterClampedToGround(centerClampedToGround: boolean): void;
 	/**
 	 * Pans the map by the specified offset.
 	 *
@@ -8578,6 +8763,32 @@ declare abstract class Camera extends Evented {
 	 * ```
 	 */
 	zoomOut(options?: AnimationOptions, eventData?: any): this;
+	/**
+	 * Returns the map's current vertical field of view, in degrees.
+	 *
+	 * @returns The map's current vertical field of view.
+	 * @defaultValue 36.87
+	 * @example
+	 * ```ts
+	 * const verticalFieldOfView = map.getVerticalFieldOfView();
+	 * ```
+	 */
+	getVerticalFieldOfView(): number;
+	/**
+	 * Sets the map's vertical field of view, in degrees.
+	 *
+	 * Triggers the following events: `movestart`, `move`, and `moveend`.
+	 *
+	 * @param fov - The vertical field of view to set, in degrees (0-180).
+	 * @param eventData - Additional properties to be added to event objects of events triggered by this method.
+	 * @defaultValue 36.87
+	 * @example
+	 * Change vertical field of view to 30 degrees
+	 * ```ts
+	 * map.setVerticalFieldOfView(30);
+	 * ```
+	 */
+	setVerticalFieldOfView(fov: number, eventData?: any): this;
 	/**
 	 * Returns the map's current bearing. The bearing is the compass direction that is "up"; for example, a bearing
 	 * of 90° orients the map so that east is up.
@@ -8805,15 +9016,47 @@ declare abstract class Camera extends Evented {
 	 */
 	jumpTo(options: JumpToOptions, eventData?: any): this;
 	/**
-	 * Calculates pitch, zoom and bearing for looking at `newCenter` with the camera position being `newCenter`
-	 * and returns them as {@link CameraOptions}.
+	 * Given a camera 'from' position and a position to look at (`to`), calculates zoom and camera rotation and returns them as {@link CameraOptions}.
 	 * @param from - The camera to look from
 	 * @param altitudeFrom - The altitude of the camera to look from
 	 * @param to - The center to look at
 	 * @param altitudeTo - Optional altitude of the center to look at. If none given the ground height will be used.
 	 * @returns the calculated camera options
+	 * @example
+	 * ```ts
+	 * // Calculate options to look from (1°, 0°, 1000m) to (1°, 1°, 0m)
+	 * const cameraLngLat = new LngLat(1, 0);
+	 * const cameraAltitude = 1000;
+	 * const targetLngLat = new LngLat(1, 1);
+	 * const targetAltitude = 0;
+	 * const cameraOptions = map.calculateCameraOptionsFromTo(cameraLngLat, cameraAltitude, targetLngLat, targetAltitude);
+	 * // Apply calculated options
+	 * map.jumpTo(cameraOptions);
+	 * ```
 	 */
 	calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number): CameraOptions;
+	/**
+	 * Given a camera position and rotation, calculates zoom and center point and returns them as {@link CameraOptions}.
+	 * @param cameraLngLat - The lng, lat of the camera to look from
+	 * @param cameraAlt - The altitude of the camera to look from, in meters above sea level
+	 * @param bearing - Bearing of the camera, in degrees
+	 * @param pitch - Pitch of the camera, in degrees
+	 * @param roll - Roll of the camera, in degrees
+	 * @returns the calculated camera options
+	 * @example
+	 * ```ts
+	 * // Calculate options to look from camera position(1°, 0°, 1000m) with bearing = 90°, pitch = 30°, and roll = 45°
+	 * const cameraLngLat = new LngLat(1, 0);
+	 * const cameraAltitude = 1000;
+	 * const bearing = 90;
+	 * const pitch = 30;
+	 * const roll = 45;
+	 * const cameraOptions = map.calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat, cameraAltitude, bearing, pitch, roll);
+	 * // Apply calculated options
+	 * map.jumpTo(cameraOptions);
+	 * ```
+	 */
+	calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLat, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions;
 	/**
 	 * Changes any combination of `center`, `zoom`, `bearing`, `pitch`, `roll`, and `padding` with an animated transition
 	 * between old and new values. The map will retain its current values for any
@@ -9238,6 +9481,8 @@ declare const defaultLocale: {
 	"ScaleControl.Kilometers": string;
 	"ScaleControl.Miles": string;
 	"ScaleControl.NauticalMiles": string;
+	"GlobeControl.Enable": string;
+	"GlobeControl.Disable": string;
 	"TerrainControl.Enable": string;
 	"TerrainControl.Disable": string;
 	"CooperativeGesturesHandler.WindowsHelpText": string;
@@ -10014,12 +10259,12 @@ export type MapOptions = {
 	 */
 	maxZoom?: number | null;
 	/**
-	 * The minimum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+	 * The minimum pitch of the map (0-180).
 	 * @defaultValue 0
 	 */
 	minPitch?: number | null;
 	/**
-	 * The maximum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+	 * The maximum pitch of the map (0-180).
 	 * @defaultValue 60
 	 */
 	maxPitch?: number | null;
@@ -10073,6 +10318,11 @@ export type MapOptions = {
 	 * @defaultValue [0, 0]
 	 */
 	center?: LngLatLike;
+	/**
+	 * The elevation of the initial geographical centerpoint of the map, in meters above sea level. If `elevation` is not specified in the constructor options, it will default to `0`.
+	 * @defaultValue 0
+	 */
+	elevation?: number;
 	/**
 	 * The initial zoom level of the map. If `zoom` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
 	 * @defaultValue 0
@@ -10210,6 +10460,13 @@ export type MapOptions = {
 	 * @defaultValue true
 	 */
 	cancelPendingTileRequestsWhileZooming?: boolean;
+	/**
+	 * If true, the elevation of the center point will automatically be set to the terrain elevation
+	 * (or zero if terrain is not enabled). If false, the elevation of the center point will default
+	 * to sea level and will not automatically update. Defaults to true. Needs to be set to false to
+	 * keep the camera above ground when pitch \> 90 degrees.
+	 */
+	centerClampedToGround?: boolean;
 };
 export type CompleteMapOptions = Complete<MapOptions>;
 export type DelegatedListener = {
@@ -10564,7 +10821,7 @@ declare class Map$1 extends Camera {
 	 *
 	 * A {@link ErrorEvent} event will be fired if minPitch is out of bounds.
 	 *
-	 * @param minPitch - The minimum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+	 * @param minPitch - The minimum pitch to set (0-180). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
 	 * If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
 	 */
 	setMinPitch(minPitch?: number | null): Map$1;
@@ -10581,7 +10838,7 @@ declare class Map$1 extends Camera {
 	 *
 	 * A {@link ErrorEvent} event will be fired if maxPitch is out of bounds.
 	 *
-	 * @param maxPitch - The maximum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+	 * @param maxPitch - The maximum pitch to set (0-180). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
 	 * If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
 	 */
 	setMaxPitch(maxPitch?: number | null): Map$1;
@@ -13227,6 +13484,30 @@ export declare class TerrainControl implements IControl {
 	_updateTerrainIcon: () => void;
 }
 /**
+ * A `GlobeControl` control contains a button for toggling the map projection between "mercator" and "globe".
+ *
+ * @group Markers and Controls
+ *
+ * @example
+ * ```ts
+ * let map = new Map()
+ *     .addControl(new GlobeControl());
+ * ```
+ *
+ * @see [Display a globe with a fill extrusion layer](https://maplibre.org/maplibre-gl-js/docs/examples/globe-fill-extrusion/)
+ */
+export declare class GlobeControl implements IControl {
+	_map: Map$1;
+	_container: HTMLElement;
+	_globeButton: HTMLButtonElement;
+	/** {@inheritDoc IControl.onAdd} */
+	onAdd(map: Map$1): HTMLElement;
+	/** {@inheritDoc IControl.onRemove} */
+	onRemove(): void;
+	_toggleProjection: () => void;
+	_updateGlobeIcon: () => void;
+}
+/**
  * Initializes resources like WebWorkers that can be shared across maps to lower load
  * times in some situations. `setWorkerUrl()` and `setWorkerCount()`, if being
  * used, must be set before `prewarm()` is called to have an effect.
@@ -13532,7 +13813,7 @@ export declare class RasterTileSource extends Evented implements Source {
 	_options: RasterSourceSpecification | RasterDEMSourceSpecification;
 	_tileJSONRequest: AbortController;
 	constructor(id: string, options: RasterSourceSpecification | RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented);
-	load(): Promise<void>;
+	load(sourceDataChanged?: boolean): Promise<void>;
 	loaded(): boolean;
 	onAdd(map: Map$1): void;
 	onRemove(): void;

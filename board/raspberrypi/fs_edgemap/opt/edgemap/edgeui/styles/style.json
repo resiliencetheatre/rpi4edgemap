@@ -1,5 +1,6 @@
 {
     "version": 8,
+    "projection": { "type": "globe" },
     "name": "protomaps",
     "metadata": {
         "maputnik:license": "",

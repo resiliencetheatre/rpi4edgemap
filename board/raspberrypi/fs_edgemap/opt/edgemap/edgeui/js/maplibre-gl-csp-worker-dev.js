@@ -1,6 +1,6 @@
 /**
  * MapLibre GL JS
- * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.0.0-pre.3/LICENSE.txt
+ * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.0.0-pre.6/LICENSE.txt
  */
 var maplibregl = (function () {
 'use strict';
@@ -270,10 +270,19 @@ var __setModuleDefault = Object.create ? (function(o, v) {
     o["default"] = v;
 };
 
+var ownKeys = function(o) {
+    ownKeys = Object.getOwnPropertyNames || function (o) {
+        var ar = [];
+        for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+        return ar;
+    };
+    return ownKeys(o);
+};
+
 function __importStar(mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
     __setModuleDefault(result, mod);
     return result;
 }
@@ -9121,7 +9130,7 @@ function storageAvailable(type) {
         storage.removeItem('_mapbox_test_');
         return true;
     }
-    catch (e) {
+    catch (_a) {
         return false;
     }
 }
@@ -9321,7 +9330,7 @@ function getImageData(image, x, y, width, height) {
             try {
                 return yield readImageUsingVideoFrame(image, x, y, width, height);
             }
-            catch (e) {
+            catch (_a) {
                 // fall back to OffscreenCanvas
             }
         }
@@ -9598,6 +9607,9 @@ var $root = {
 	center: {
 		type: "array",
 		value: "number"
+	},
+	centerAltitude: {
+		type: "number"
 	},
 	zoom: {
 		type: "number"
@@ -13060,6 +13072,9 @@ function diffStyles(before, after) {
         if (!deepEqual(before.center, after.center)) {
             commands.push({ command: 'setCenter', args: [after.center] });
         }
+        if (!deepEqual(before.centerAltitude, after.centerAltitude)) {
+            commands.push({ command: 'setCenterAltitude', args: [after.centerAltitude] });
+        }
         if (!deepEqual(before.zoom, after.zoom)) {
             commands.push({ command: 'setZoom', args: [after.zoom] });
         }
@@ -14343,7 +14358,179 @@ class Coercion {
     }
 }
 
+/**
+ * Rearranges items so that all items in the [left, k] are the smallest.
+ * The k-th element will have the (k - left + 1)-th smallest value in [left, right].
+ *
+ * @template T
+ * @param {T[]} arr the array to partially sort (in place)
+ * @param {number} k middle index for partial sorting (as defined above)
+ * @param {number} [left=0] left index of the range to sort
+ * @param {number} [right=arr.length-1] right index
+ * @param {(a: T, b: T) => number} [compare = (a, b) => a - b] compare function
+ */
+function quickselect(arr, k, left = 0, right = arr.length - 1, compare = defaultCompare) {
+
+    while (right > left) {
+        if (right - left > 600) {
+            const n = right - left + 1;
+            const m = k - left + 1;
+            const z = Math.log(n);
+            const s = 0.5 * Math.exp(2 * z / 3);
+            const sd = 0.5 * Math.sqrt(z * s * (n - s) / n) * (m - n / 2 < 0 ? -1 : 1);
+            const newLeft = Math.max(left, Math.floor(k - m * s / n + sd));
+            const newRight = Math.min(right, Math.floor(k + (n - m) * s / n + sd));
+            quickselect(arr, k, newLeft, newRight, compare);
+        }
+
+        const t = arr[k];
+        let i = left;
+        /** @type {number} */
+        let j = right;
+
+        swap$2(arr, left, k);
+        if (compare(arr[right], t) > 0) swap$2(arr, left, right);
+
+        while (i < j) {
+            swap$2(arr, i, j);
+            i++;
+            j--;
+            while (compare(arr[i], t) < 0) i++;
+            while (compare(arr[j], t) > 0) j--;
+        }
+
+        if (compare(arr[left], t) === 0) swap$2(arr, left, j);
+        else {
+            j++;
+            swap$2(arr, j, right);
+        }
+
+        if (j <= k) left = j + 1;
+        if (k <= j) right = j - 1;
+    }
+}
+
+/**
+ * @template T
+ * @param {T[]} arr
+ * @param {number} i
+ * @param {number} j
+ */
+function swap$2(arr, i, j) {
+    const tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+}
+
+/**
+ * @template T
+ * @param {T} a
+ * @param {T} b
+ * @returns {number}
+ */
+function defaultCompare(a, b) {
+    return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/**
+ * Classifies an array of rings into polygons with outer rings and holes
+ * @param rings - the rings to classify
+ * @param maxRings - the maximum number of rings to include in a polygon, use 0 to include all rings
+ * @returns an array of polygons with internal rings as holes
+ */
+function classifyRings(rings, maxRings) {
+    const len = rings.length;
+    if (len <= 1)
+        return [rings];
+    const polygons = [];
+    let polygon;
+    let ccw;
+    for (const ring of rings) {
+        const area = calculateSignedArea(ring);
+        if (area === 0)
+            continue;
+        ring.area = Math.abs(area);
+        if (ccw === undefined)
+            ccw = area < 0;
+        if (ccw === area < 0) {
+            if (polygon)
+                polygons.push(polygon);
+            polygon = [ring];
+        }
+        else {
+            polygon.push(ring);
+        }
+    }
+    if (polygon)
+        polygons.push(polygon);
+    // Earcut performance degrades with the # of rings in a polygon. For this
+    // reason, we limit strip out all but the `maxRings` largest rings.
+    if (maxRings > 1) {
+        for (let j = 0; j < polygons.length; j++) {
+            if (polygons[j].length <= maxRings)
+                continue;
+            quickselect(polygons[j], maxRings, 1, polygons[j].length - 1, compareAreas);
+            polygons[j] = polygons[j].slice(0, maxRings);
+        }
+    }
+    return polygons;
+}
+function compareAreas(a, b) {
+    return b.area - a.area;
+}
+/**
+ * Returns the signed area for the polygon ring.  Positive areas are exterior rings and
+ * have a clockwise winding.  Negative areas are interior rings and have a counter clockwise
+ * ordering.
+ *
+ * @param ring - Exterior or interior ring
+ * @returns Signed area
+ */
+function calculateSignedArea(ring) {
+    let sum = 0;
+    for (let i = 0, len = ring.length, j = len - 1, p1, p2; i < len; j = i++) {
+        p1 = ring[i];
+        p2 = ring[j];
+        sum += (p2.x - p1.x) * (p1.y + p2.y);
+    }
+    return sum;
+}
+/**
+ * Returns if there are multiple outer rings.
+ * The first ring is an outer ring. Its direction, cw or ccw, defines the direction of outer rings.
+ *
+ * @param rings - List of rings
+ * @returns Are there multiple outer rings
+ */
+function hasMultipleOuterRings(rings) {
+    // Following https://github.com/mapbox/vector-tile-js/blob/77851380b63b07fd0af3d5a3f144cc86fb39fdd1/lib/vectortilefeature.js#L197
+    const len = rings.length;
+    for (let i = 0, direction; i < len; i++) {
+        const area = calculateSignedArea(rings[i]);
+        if (area === 0)
+            continue;
+        if (direction === undefined) {
+            // Keep the direction of the first ring
+            direction = area < 0;
+        }
+        else if (direction === area < 0) {
+            // Same direction as the first ring -> a second outer ring
+            return true;
+        }
+    }
+    return false;
+}
+
 const geometryTypes = ['Unknown', 'Point', 'LineString', 'Polygon'];
+const simpleGeometryType = {
+    'Unknown': 'Unknown',
+    'Point': 'Point',
+    'MultiPoint': 'Point',
+    'LineString': 'LineString',
+    'MultiLineString': 'LineString',
+    'Polygon': 'Polygon',
+    'MultiPolygon': 'Polygon'
+};
 class EvaluationContext {
     constructor() {
         this.globals = null;
@@ -14357,8 +14544,32 @@ class EvaluationContext {
     id() {
         return this.feature && 'id' in this.feature ? this.feature.id : null;
     }
+    geometryDollarType() {
+        return this.feature ?
+            typeof this.feature.type === 'number' ? geometryTypes[this.feature.type] : simpleGeometryType[this.feature.type] :
+            null;
+    }
     geometryType() {
-        return this.feature ? typeof this.feature.type === 'number' ? geometryTypes[this.feature.type] : this.feature.type : null;
+        let geometryType = this.feature.type;
+        if (typeof geometryType !== 'number') {
+            return geometryType;
+        }
+        geometryType = geometryTypes[this.feature.type];
+        if (geometryType === 'Unknown') {
+            return geometryType;
+        }
+        const geom = this.geometry();
+        const len = geom.length;
+        if (len === 1) {
+            return geometryType;
+        }
+        if (geometryType !== 'Polygon') {
+            return `Multi${geometryType}`;
+        }
+        if (hasMultipleOuterRings(geom)) {
+            return 'MultiPolygon';
+        }
+        return 'Polygon';
     }
     geometry() {
         return this.feature && 'geometry' in this.feature ? this.feature.geometry : null;
@@ -16219,10 +16430,10 @@ class Within {
     }
     evaluate(ctx) {
         if (ctx.geometry() != null && ctx.canonicalID() != null) {
-            if (ctx.geometryType() === 'Point') {
+            if (ctx.geometryDollarType() === 'Point') {
                 return pointsWithinPolygons(ctx, this.geometries);
             }
-            else if (ctx.geometryType() === 'LineString') {
+            else if (ctx.geometryDollarType() === 'LineString') {
                 return linesWithinPolygons(ctx, this.geometries);
             }
         }
@@ -16304,124 +16515,6 @@ let TinyQueue$1 = class TinyQueue {
         data[pos] = item;
     }
 };
-
-function quickselect(arr, k, left, right, compare) {
-    quickselectStep(arr, k, left, right || (arr.length - 1), compare || defaultCompare);
-}
-
-function quickselectStep(arr, k, left, right, compare) {
-
-    while (right > left) {
-        if (right - left > 600) {
-            var n = right - left + 1;
-            var m = k - left + 1;
-            var z = Math.log(n);
-            var s = 0.5 * Math.exp(2 * z / 3);
-            var sd = 0.5 * Math.sqrt(z * s * (n - s) / n) * (m - n / 2 < 0 ? -1 : 1);
-            var newLeft = Math.max(left, Math.floor(k - m * s / n + sd));
-            var newRight = Math.min(right, Math.floor(k + (n - m) * s / n + sd));
-            quickselectStep(arr, k, newLeft, newRight, compare);
-        }
-
-        var t = arr[k];
-        var i = left;
-        var j = right;
-
-        swap$2(arr, left, k);
-        if (compare(arr[right], t) > 0) swap$2(arr, left, right);
-
-        while (i < j) {
-            swap$2(arr, i, j);
-            i++;
-            j--;
-            while (compare(arr[i], t) < 0) i++;
-            while (compare(arr[j], t) > 0) j--;
-        }
-
-        if (compare(arr[left], t) === 0) swap$2(arr, left, j);
-        else {
-            j++;
-            swap$2(arr, j, right);
-        }
-
-        if (j <= k) left = j + 1;
-        if (k <= j) right = j - 1;
-    }
-}
-
-function swap$2(arr, i, j) {
-    var tmp = arr[i];
-    arr[i] = arr[j];
-    arr[j] = tmp;
-}
-
-function defaultCompare(a, b) {
-    return a < b ? -1 : a > b ? 1 : 0;
-}
-
-/**
- * Classifies an array of rings into polygons with outer rings and holes
- * @param rings - the rings to classify
- * @param maxRings - the maximum number of rings to include in a polygon, use 0 to include all rings
- * @returns an array of polygons with internal rings as holes
- */
-function classifyRings(rings, maxRings) {
-    const len = rings.length;
-    if (len <= 1)
-        return [rings];
-    const polygons = [];
-    let polygon;
-    let ccw;
-    for (const ring of rings) {
-        const area = calculateSignedArea(ring);
-        if (area === 0)
-            continue;
-        ring.area = Math.abs(area);
-        if (ccw === undefined)
-            ccw = area < 0;
-        if (ccw === area < 0) {
-            if (polygon)
-                polygons.push(polygon);
-            polygon = [ring];
-        }
-        else {
-            polygon.push(ring);
-        }
-    }
-    if (polygon)
-        polygons.push(polygon);
-    // Earcut performance degrades with the # of rings in a polygon. For this
-    // reason, we limit strip out all but the `maxRings` largest rings.
-    if (maxRings > 1) {
-        for (let j = 0; j < polygons.length; j++) {
-            if (polygons[j].length <= maxRings)
-                continue;
-            quickselect(polygons[j], maxRings, 1, polygons[j].length - 1, compareAreas);
-            polygons[j] = polygons[j].slice(0, maxRings);
-        }
-    }
-    return polygons;
-}
-function compareAreas(a, b) {
-    return b.area - a.area;
-}
-/**
- * Returns the signed area for the polygon ring.  Positive areas are exterior rings and
- * have a clockwise winding.  Negative areas are interior rings and have a counter clockwise
- * ordering.
- *
- * @param ring - Exterior or interior ring
- * @returns Signed area
- */
-function calculateSignedArea(ring) {
-    let sum = 0;
-    for (let i = 0, len = ring.length, j = len - 1, p1, p2; i < len; j = i++) {
-        p1 = ring[i];
-        p2 = ring[j];
-        sum += (p2.x - p1.x) * (p1.y + p2.y);
-    }
-    return sum;
-}
 
 // This is taken from https://github.com/mapbox/cheap-ruler/ in order to take only the relevant parts
 // Values that define WGS84 ellipsoid model of the Earth
@@ -17440,7 +17533,7 @@ CompoundExpression.register(expressions$1, {
     'filter-type-==': [
         BooleanType,
         [StringType],
-        (ctx, [v]) => ctx.geometryType() === v.value
+        (ctx, [v]) => ctx.geometryDollarType() === v.value
     ],
     'filter-<': [
         BooleanType,
@@ -17527,7 +17620,7 @@ CompoundExpression.register(expressions$1, {
     'filter-type-in': [
         BooleanType,
         [array$1(StringType)],
-        (ctx, [v]) => v.value.indexOf(ctx.geometryType()) >= 0
+        (ctx, [v]) => v.value.indexOf(ctx.geometryDollarType()) >= 0
     ],
     'filter-id-in': [
         BooleanType,
@@ -18043,7 +18136,6 @@ class StyleExpression {
         this._evaluator.formattedSection = formattedSection || null;
         try {
             const val = this.expression.evaluate(this._evaluator);
-            // eslint-disable-next-line no-self-compare
             if (val === null || val === undefined || (typeof val === 'number' && val !== val)) {
                 return this._defaultValue;
             }
@@ -18562,7 +18654,7 @@ function runtimeTypeChecks(expectedTypes) {
 function convertComparisonOp(property, value, op, expectedTypes) {
     let get;
     if (property === '$type') {
-        return [op, ['geometry-type'], value];
+        return convertInOp('$type', [value], op === '!=');
     }
     else if (property === '$id') {
         get = ['id'];
@@ -18595,6 +18687,10 @@ function convertInOp(property, values, negate = false) {
         return negate;
     let get;
     if (property === '$type') {
+        const len = values.length;
+        for (let i = 0; i < len; i++) {
+            values.push(`Multi${values[i]}`);
+        }
         get = ['geometry-type'];
     }
     else if (property === '$id') {
@@ -19160,7 +19256,6 @@ function validateNumber(options) {
     const value = options.value;
     const valueSpec = options.valueSpec;
     let type = getType(value);
-    // eslint-disable-next-line no-self-compare
     if (type === 'number' && value !== value) {
         type = 'NaN';
     }
@@ -20802,7 +20897,16 @@ function makeFetchRequest(requestParameters, abortController) {
         if (requestParameters.type === 'json' && !request.headers.has('Accept')) {
             request.headers.set('Accept', 'application/json');
         }
-        const response = yield fetch(request);
+        let response;
+        try {
+            response = yield fetch(request);
+        }
+        catch (e) {
+            // When the error is due to CORS policy, DNS issue or malformed URL, the fetch call does not resolve but throws a generic TypeError instead.
+            // It is preferable to throw an AJAXError so that the Map event "error" can catch it and still have
+            // access to the faulty url. In such case, we provide the arbitrary HTTP error code of `0`.
+            throw new AJAXError(0, e.message, requestParameters.url, new Blob());
+        }
         if (!response.ok) {
             const body = yield response.blob();
             throw new AJAXError(response.status, response.statusText, requestParameters.url, body);
@@ -21074,7 +21178,7 @@ function serialize(input, transferables) {
     if (!klass.serialize) {
         for (const key in input) {
             if (!input.hasOwnProperty(key))
-                continue; // eslint-disable-line no-prototype-builtins
+                continue;
             if (registry[classRegistryKey].omit.indexOf(key) >= 0)
                 continue;
             const property = input[key];
@@ -21866,7 +21970,6 @@ const unicodeBlockLookup = {
     // 'Supplementary Private Use Area-B': (char) => char >= 0x100000 && char <= 0x10FFFF,
 };
 
-/* eslint-disable new-cap */
 function allowsIdeographicBreaking(chars) {
     for (const char of chars) {
         if (!charAllowsIdeographicBreaking(char.charCodeAt(0)))
@@ -21897,7 +22000,7 @@ function sanitizedRegExpFromScriptCodes(scriptCodes) {
         try {
             return new RegExp(`\\p{sc=${code}}`, 'u').source;
         }
-        catch (e) {
+        catch (_a) {
             return null;
         }
     }).filter(pe => pe);
@@ -23931,7 +24034,7 @@ CollisionBoxStruct.prototype.size = 20;
 class CollisionBoxArray extends StructArrayLayout6i1ul2ui20 {
     /**
      * Return the CollisionBoxStruct at the given location in the array.
-     * @param index The index of the element.
+     * @param index - The index of the element.
      */
     get(index) {
         return new CollisionBoxStruct(this, index);
@@ -23966,7 +24069,7 @@ PlacedSymbolStruct.prototype.size = 48;
 class PlacedSymbolArray extends StructArrayLayout2i2ui3ul3ui2f3ub1ul1i48 {
     /**
      * Return the PlacedSymbolStruct at the given location in the array.
-     * @param index The index of the element.
+     * @param index - The index of the element.
      */
     get(index) {
         return new PlacedSymbolStruct(this, index);
@@ -24010,7 +24113,7 @@ SymbolInstanceStruct.prototype.size = 64;
 class SymbolInstanceArray extends StructArrayLayout8i15ui1ul2f2ui64 {
     /**
      * Return the SymbolInstanceStruct at the given location in the array.
-     * @param index The index of the element.
+     * @param index - The index of the element.
      */
     get(index) {
         return new SymbolInstanceStruct(this, index);
@@ -24040,7 +24143,7 @@ TextAnchorOffsetStruct.prototype.size = 12;
 class TextAnchorOffsetArray extends StructArrayLayout1ui2f12 {
     /**
      * Return the TextAnchorOffsetStruct at the given location in the array.
-     * @param index The index of the element.
+     * @param index - The index of the element.
      */
     get(index) {
         return new TextAnchorOffsetStruct(this, index);
@@ -24058,7 +24161,7 @@ FeatureIndexStruct.prototype.size = 8;
 class FeatureIndexArray extends StructArrayLayout1ul2ui8 {
     /**
      * Return the FeatureIndexStruct at the given location in the array.
-     * @param index The index of the element.
+     * @param index - The index of the element.
      */
     get(index) {
         return new FeatureIndexStruct(this, index);
@@ -32291,12 +32394,17 @@ class FeatureIndex {
         return false;
     }
     getId(feature, sourceLayerId) {
+        var _a;
         let id = feature.id;
         if (this.promoteId) {
             const propName = typeof this.promoteId === 'string' ? this.promoteId : this.promoteId[sourceLayerId];
             id = feature.properties[propName];
             if (typeof id === 'boolean')
                 id = Number(id);
+            // When cluster is true, the id is the cluster_id even though promoteId is set
+            if (id === undefined && ((_a = feature.properties) === null || _a === void 0 ? void 0 : _a.cluster) && this.promoteId) {
+                id = Number(feature.properties.cluster_id);
+            }
         }
         return id;
     }
@@ -37096,7 +37204,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
                     this._dataUpdateable = isUpdateableGeoJSON(parsed, promoteId) ? toUpdateable(parsed, promoteId) : undefined;
                     return parsed;
                 }
-                catch (e) {
+                catch (_a) {
                     throw new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`);
                 }
             }

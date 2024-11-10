@@ -1,6 +1,6 @@
 /**
  * MapLibre GL JS
- * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.0.0-pre.3/LICENSE.txt
+ * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.0.0-pre.6/LICENSE.txt
  */
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -10,7 +10,7 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 var name = "maplibre-gl";
 var description = "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library";
-var version$2 = "5.0.0-pre.3";
+var version$2 = "5.0.0-pre.6";
 var main = "dist/maplibre-gl.js";
 var style = "dist/maplibre-gl.css";
 var license = "BSD-3-Clause";
@@ -33,7 +33,7 @@ var dependencies = {
 	"@mapbox/unitbezier": "^0.0.1",
 	"@mapbox/vector-tile": "^1.3.1",
 	"@mapbox/whoots-js": "^3.1.0",
-	"@maplibre/maplibre-gl-style-spec": "^20.4.0",
+	"@maplibre/maplibre-gl-style-spec": "^21.1.0",
 	"@types/geojson": "^7946.0.14",
 	"@types/geojson-vt": "3.2.5",
 	"@types/mapbox__point-geometry": "^0.1.4",
@@ -63,50 +63,51 @@ var devDependencies = {
 	"@rollup/plugin-strip": "^3.0.4",
 	"@rollup/plugin-terser": "^0.4.4",
 	"@rollup/plugin-typescript": "^12.1.1",
+	"@stylistic/eslint-plugin-ts": "^2.10.1",
 	"@types/benchmark": "^2.1.5",
-	"@types/cssnano": "^5.0.0",
+	"@types/cssnano": "^5.1.3",
 	"@types/d3": "^7.4.3",
-	"@types/diff": "^5.2.3",
+	"@types/diff": "^6.0.0",
 	"@types/earcut": "^2.1.4",
-	"@types/eslint": "^8.56.7",
+	"@types/eslint": "^9.6.1",
 	"@types/gl": "^6.0.5",
 	"@types/glob": "^8.1.0",
-	"@types/jest": "^29.5.13",
+	"@types/jest": "^29.5.14",
 	"@types/jsdom": "^21.1.7",
 	"@types/minimist": "^1.2.5",
 	"@types/murmurhash-js": "^1.0.6",
 	"@types/nise": "^1.4.5",
-	"@types/node": "^22.7.7",
+	"@types/node": "^22.9.0",
 	"@types/offscreencanvas": "^2019.7.3",
 	"@types/pixelmatch": "^5.2.6",
 	"@types/pngjs": "^6.0.5",
-	"@types/react": "^18.3.11",
+	"@types/react": "^18.3.12",
 	"@types/react-dom": "^18.3.1",
 	"@types/request": "^2.48.12",
 	"@types/shuffle-seed": "^1.1.3",
 	"@types/window-or-global": "^1.0.6",
-	"@typescript-eslint/eslint-plugin": "^7.18.0",
-	"@typescript-eslint/parser": "^7.18.0",
+	"@typescript-eslint/eslint-plugin": "^8.13.0",
+	"@typescript-eslint/parser": "^8.13.0",
 	address: "^2.0.3",
 	autoprefixer: "^10.4.20",
 	benchmark: "^2.1.4",
 	canvas: "^2.11.2",
-	cspell: "^8.15.4",
+	cspell: "^8.16.0",
 	cssnano: "^7.0.6",
 	d3: "^7.9.0",
 	"d3-queue": "^3.0.7",
-	"devtools-protocol": "^0.0.1368592",
+	"devtools-protocol": "^0.0.1379457",
 	diff: "^7.0.0",
 	"dts-bundle-generator": "^9.5.1",
-	eslint: "^8.57.0",
-	"eslint-config-mourner": "^3.0.0",
+	eslint: "^9.14.0",
 	"eslint-plugin-html": "^8.1.2",
 	"eslint-plugin-import": "^2.31.0",
-	"eslint-plugin-jest": "^28.8.3",
-	"eslint-plugin-react": "^7.37.1",
+	"eslint-plugin-jest": "^28.9.0",
+	"eslint-plugin-react": "^7.37.2",
 	"eslint-plugin-tsdoc": "0.3.0",
 	expect: "^29.7.0",
 	glob: "^11.0.0",
+	globals: "^15.12.0",
 	"is-builtin-module": "^4.0.0",
 	jest: "^29.7.0",
 	"jest-environment-jsdom": "^29.7.0",
@@ -117,7 +118,7 @@ var devDependencies = {
 	"junit-report-builder": "^5.1.1",
 	minimist: "^1.2.8",
 	"mock-geolocation": "^1.0.11",
-	"monocart-coverage-reports": "^2.11.1",
+	"monocart-coverage-reports": "^2.11.2",
 	nise: "^6.1.1",
 	"npm-font-open-sans": "^1.1.0",
 	"npm-run-all": "^4.1.5",
@@ -128,23 +129,23 @@ var devDependencies = {
 	"postcss-cli": "^11.0.0",
 	"postcss-inline-svg": "^6.0.0",
 	"pretty-bytes": "^6.1.1",
-	puppeteer: "^23.6.0",
+	puppeteer: "^23.7.0",
 	react: "^18.3.1",
 	"react-dom": "^18.3.1",
-	rollup: "^4.24.0",
+	rollup: "^4.24.4",
 	"rollup-plugin-sourcemaps2": "^0.4.2",
 	rw: "^1.3.3",
 	semver: "^7.6.3",
 	"shuffle-seed": "^1.1.6",
 	"source-map-explorer": "^2.5.3",
-	st: "^3.0.0",
+	st: "^3.0.1",
 	stylelint: "^16.10.0",
 	"stylelint-config-standard": "^36.0.1",
 	"ts-jest": "^29.2.5",
 	"ts-node": "^10.9.2",
-	tslib: "^2.8.0",
-	typedoc: "^0.26.10",
-	"typedoc-plugin-markdown": "^4.2.9",
+	tslib: "^2.8.1",
+	typedoc: "^0.26.11",
+	"typedoc-plugin-markdown": "^4.2.10",
 	"typedoc-plugin-missing-exports": "^3.0.0",
 	typescript: "^5.6.3"
 };
@@ -156,12 +157,11 @@ var scripts = {
 	"generate-typings": "dts-bundle-generator --export-referenced-types --umd-module-name=maplibregl -o ./dist/maplibre-gl.d.ts ./src/index.ts",
 	"generate-docs": "typedoc && node --no-warnings --loader ts-node/esm build/generate-docs.ts",
 	"generate-images": "node --no-warnings --loader ts-node/esm build/generate-doc-images.ts",
-	"build-dist": "npm run build-css && npm run generate-typings && npm run build-dev && npm run build-csp-dev && npm run build-prod && npm run build-prod-unminified && npm run build-csp",
+	"build-dist": "npm run build-css && npm run generate-typings && npm run build-dev && npm run build-csp-dev && npm run build-prod && npm run build-csp",
 	"build-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev",
 	"watch-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev --watch",
-	"build-prod": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production,MINIFY:true",
-	"build-prod-unminified": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production",
-	"build-csp": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.csp.ts --environment BUILD:production,MINIFY:true",
+	"build-prod": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production",
+	"build-csp": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.csp.ts --environment BUILD:production",
 	"build-csp-dev": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.csp.ts --environment BUILD:dev",
 	"build-css": "postcss -o dist/maplibre-gl.css src/css/maplibre-gl.css",
 	"watch-css": "postcss --watch -o dist/maplibre-gl.css src/css/maplibre-gl.css",
@@ -172,7 +172,7 @@ var scripts = {
 	"start-docs": "docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material",
 	start: "run-p watch-css watch-dev start-server",
 	"start-bench": "run-p watch-css watch-benchmarks start-server",
-	lint: "eslint --cache --ext .ts,.tsx,.js,.html --ignore-path .gitignore .",
+	lint: "eslint",
 	"lint-css": "stylelint **/*.css --fix -f verbose",
 	test: "run-p lint lint-css test-render jest",
 	jest: "jest",
@@ -485,10 +485,19 @@ var __setModuleDefault = Object.create ? (function(o, v) {
     o["default"] = v;
 };
 
+var ownKeys = function(o) {
+    ownKeys = Object.getOwnPropertyNames || function (o) {
+        var ar = [];
+        for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+        return ar;
+    };
+    return ownKeys(o);
+};
+
 function __importStar(mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
     __setModuleDefault(result, mod);
     return result;
 }
@@ -9336,7 +9345,7 @@ function storageAvailable(type) {
         storage.removeItem('_mapbox_test_');
         return true;
     }
-    catch (e) {
+    catch (_a) {
         return false;
     }
 }
@@ -9536,7 +9545,7 @@ function getImageData(image, x, y, width, height) {
             try {
                 return yield readImageUsingVideoFrame(image, x, y, width, height);
             }
-            catch (e) {
+            catch (_a) {
                 // fall back to OffscreenCanvas
             }
         }
@@ -9910,7 +9919,16 @@ function makeFetchRequest(requestParameters, abortController) {
         if (requestParameters.type === 'json' && !request.headers.has('Accept')) {
             request.headers.set('Accept', 'application/json');
         }
-        const response = yield fetch(request);
+        let response;
+        try {
+            response = yield fetch(request);
+        }
+        catch (e) {
+            // When the error is due to CORS policy, DNS issue or malformed URL, the fetch call does not resolve but throws a generic TypeError instead.
+            // It is preferable to throw an AJAXError so that the Map event "error" can catch it and still have
+            // access to the faulty url. In such case, we provide the arbitrary HTTP error code of `0`.
+            throw new AJAXError(0, e.message, requestParameters.url, new Blob());
+        }
         if (!response.ok) {
             const body = yield response.blob();
             throw new AJAXError(response.status, response.statusText, requestParameters.url, body);
@@ -10101,7 +10119,7 @@ function testWebpTextureUpload(gl) {
             return;
         webpSupported.supported = true;
     }
-    catch (e) {
+    catch (_a) {
         // Catch "Unspecified Error." in Edge 18.
     }
     gl.deleteTexture(texture);
@@ -10474,6 +10492,9 @@ var $root = {
 	center: {
 		type: "array",
 		value: "number"
+	},
+	centerAltitude: {
+		type: "number"
 	},
 	zoom: {
 		type: "number"
@@ -13936,6 +13957,9 @@ function diffStyles(before, after) {
         if (!deepEqual(before.center, after.center)) {
             commands.push({ command: 'setCenter', args: [after.center] });
         }
+        if (!deepEqual(before.centerAltitude, after.centerAltitude)) {
+            commands.push({ command: 'setCenterAltitude', args: [after.centerAltitude] });
+        }
         if (!deepEqual(before.zoom, after.zoom)) {
             commands.push({ command: 'setZoom', args: [after.zoom] });
         }
@@ -15219,7 +15243,179 @@ class Coercion {
     }
 }
 
+/**
+ * Rearranges items so that all items in the [left, k] are the smallest.
+ * The k-th element will have the (k - left + 1)-th smallest value in [left, right].
+ *
+ * @template T
+ * @param {T[]} arr the array to partially sort (in place)
+ * @param {number} k middle index for partial sorting (as defined above)
+ * @param {number} [left=0] left index of the range to sort
+ * @param {number} [right=arr.length-1] right index
+ * @param {(a: T, b: T) => number} [compare = (a, b) => a - b] compare function
+ */
+function quickselect(arr, k, left = 0, right = arr.length - 1, compare = defaultCompare) {
+
+    while (right > left) {
+        if (right - left > 600) {
+            const n = right - left + 1;
+            const m = k - left + 1;
+            const z = Math.log(n);
+            const s = 0.5 * Math.exp(2 * z / 3);
+            const sd = 0.5 * Math.sqrt(z * s * (n - s) / n) * (m - n / 2 < 0 ? -1 : 1);
+            const newLeft = Math.max(left, Math.floor(k - m * s / n + sd));
+            const newRight = Math.min(right, Math.floor(k + (n - m) * s / n + sd));
+            quickselect(arr, k, newLeft, newRight, compare);
+        }
+
+        const t = arr[k];
+        let i = left;
+        /** @type {number} */
+        let j = right;
+
+        swap$2(arr, left, k);
+        if (compare(arr[right], t) > 0) swap$2(arr, left, right);
+
+        while (i < j) {
+            swap$2(arr, i, j);
+            i++;
+            j--;
+            while (compare(arr[i], t) < 0) i++;
+            while (compare(arr[j], t) > 0) j--;
+        }
+
+        if (compare(arr[left], t) === 0) swap$2(arr, left, j);
+        else {
+            j++;
+            swap$2(arr, j, right);
+        }
+
+        if (j <= k) left = j + 1;
+        if (k <= j) right = j - 1;
+    }
+}
+
+/**
+ * @template T
+ * @param {T[]} arr
+ * @param {number} i
+ * @param {number} j
+ */
+function swap$2(arr, i, j) {
+    const tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+}
+
+/**
+ * @template T
+ * @param {T} a
+ * @param {T} b
+ * @returns {number}
+ */
+function defaultCompare(a, b) {
+    return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/**
+ * Classifies an array of rings into polygons with outer rings and holes
+ * @param rings - the rings to classify
+ * @param maxRings - the maximum number of rings to include in a polygon, use 0 to include all rings
+ * @returns an array of polygons with internal rings as holes
+ */
+function classifyRings(rings, maxRings) {
+    const len = rings.length;
+    if (len <= 1)
+        return [rings];
+    const polygons = [];
+    let polygon;
+    let ccw;
+    for (const ring of rings) {
+        const area = calculateSignedArea(ring);
+        if (area === 0)
+            continue;
+        ring.area = Math.abs(area);
+        if (ccw === undefined)
+            ccw = area < 0;
+        if (ccw === area < 0) {
+            if (polygon)
+                polygons.push(polygon);
+            polygon = [ring];
+        }
+        else {
+            polygon.push(ring);
+        }
+    }
+    if (polygon)
+        polygons.push(polygon);
+    // Earcut performance degrades with the # of rings in a polygon. For this
+    // reason, we limit strip out all but the `maxRings` largest rings.
+    if (maxRings > 1) {
+        for (let j = 0; j < polygons.length; j++) {
+            if (polygons[j].length <= maxRings)
+                continue;
+            quickselect(polygons[j], maxRings, 1, polygons[j].length - 1, compareAreas);
+            polygons[j] = polygons[j].slice(0, maxRings);
+        }
+    }
+    return polygons;
+}
+function compareAreas(a, b) {
+    return b.area - a.area;
+}
+/**
+ * Returns the signed area for the polygon ring.  Positive areas are exterior rings and
+ * have a clockwise winding.  Negative areas are interior rings and have a counter clockwise
+ * ordering.
+ *
+ * @param ring - Exterior or interior ring
+ * @returns Signed area
+ */
+function calculateSignedArea(ring) {
+    let sum = 0;
+    for (let i = 0, len = ring.length, j = len - 1, p1, p2; i < len; j = i++) {
+        p1 = ring[i];
+        p2 = ring[j];
+        sum += (p2.x - p1.x) * (p1.y + p2.y);
+    }
+    return sum;
+}
+/**
+ * Returns if there are multiple outer rings.
+ * The first ring is an outer ring. Its direction, cw or ccw, defines the direction of outer rings.
+ *
+ * @param rings - List of rings
+ * @returns Are there multiple outer rings
+ */
+function hasMultipleOuterRings(rings) {
+    // Following https://github.com/mapbox/vector-tile-js/blob/77851380b63b07fd0af3d5a3f144cc86fb39fdd1/lib/vectortilefeature.js#L197
+    const len = rings.length;
+    for (let i = 0, direction; i < len; i++) {
+        const area = calculateSignedArea(rings[i]);
+        if (area === 0)
+            continue;
+        if (direction === undefined) {
+            // Keep the direction of the first ring
+            direction = area < 0;
+        }
+        else if (direction === area < 0) {
+            // Same direction as the first ring -> a second outer ring
+            return true;
+        }
+    }
+    return false;
+}
+
 const geometryTypes = ['Unknown', 'Point', 'LineString', 'Polygon'];
+const simpleGeometryType = {
+    'Unknown': 'Unknown',
+    'Point': 'Point',
+    'MultiPoint': 'Point',
+    'LineString': 'LineString',
+    'MultiLineString': 'LineString',
+    'Polygon': 'Polygon',
+    'MultiPolygon': 'Polygon'
+};
 class EvaluationContext {
     constructor() {
         this.globals = null;
@@ -15233,8 +15429,32 @@ class EvaluationContext {
     id() {
         return this.feature && 'id' in this.feature ? this.feature.id : null;
     }
+    geometryDollarType() {
+        return this.feature ?
+            typeof this.feature.type === 'number' ? geometryTypes[this.feature.type] : simpleGeometryType[this.feature.type] :
+            null;
+    }
     geometryType() {
-        return this.feature ? typeof this.feature.type === 'number' ? geometryTypes[this.feature.type] : this.feature.type : null;
+        let geometryType = this.feature.type;
+        if (typeof geometryType !== 'number') {
+            return geometryType;
+        }
+        geometryType = geometryTypes[this.feature.type];
+        if (geometryType === 'Unknown') {
+            return geometryType;
+        }
+        const geom = this.geometry();
+        const len = geom.length;
+        if (len === 1) {
+            return geometryType;
+        }
+        if (geometryType !== 'Polygon') {
+            return `Multi${geometryType}`;
+        }
+        if (hasMultipleOuterRings(geom)) {
+            return 'MultiPolygon';
+        }
+        return 'Polygon';
     }
     geometry() {
         return this.feature && 'geometry' in this.feature ? this.feature.geometry : null;
@@ -17095,10 +17315,10 @@ class Within {
     }
     evaluate(ctx) {
         if (ctx.geometry() != null && ctx.canonicalID() != null) {
-            if (ctx.geometryType() === 'Point') {
+            if (ctx.geometryDollarType() === 'Point') {
                 return pointsWithinPolygons(ctx, this.geometries);
             }
-            else if (ctx.geometryType() === 'LineString') {
+            else if (ctx.geometryDollarType() === 'LineString') {
                 return linesWithinPolygons(ctx, this.geometries);
             }
         }
@@ -17180,124 +17400,6 @@ let TinyQueue$1 = class TinyQueue {
         data[pos] = item;
     }
 };
-
-function quickselect(arr, k, left, right, compare) {
-    quickselectStep(arr, k, left, right || (arr.length - 1), compare || defaultCompare);
-}
-
-function quickselectStep(arr, k, left, right, compare) {
-
-    while (right > left) {
-        if (right - left > 600) {
-            var n = right - left + 1;
-            var m = k - left + 1;
-            var z = Math.log(n);
-            var s = 0.5 * Math.exp(2 * z / 3);
-            var sd = 0.5 * Math.sqrt(z * s * (n - s) / n) * (m - n / 2 < 0 ? -1 : 1);
-            var newLeft = Math.max(left, Math.floor(k - m * s / n + sd));
-            var newRight = Math.min(right, Math.floor(k + (n - m) * s / n + sd));
-            quickselectStep(arr, k, newLeft, newRight, compare);
-        }
-
-        var t = arr[k];
-        var i = left;
-        var j = right;
-
-        swap$2(arr, left, k);
-        if (compare(arr[right], t) > 0) swap$2(arr, left, right);
-
-        while (i < j) {
-            swap$2(arr, i, j);
-            i++;
-            j--;
-            while (compare(arr[i], t) < 0) i++;
-            while (compare(arr[j], t) > 0) j--;
-        }
-
-        if (compare(arr[left], t) === 0) swap$2(arr, left, j);
-        else {
-            j++;
-            swap$2(arr, j, right);
-        }
-
-        if (j <= k) left = j + 1;
-        if (k <= j) right = j - 1;
-    }
-}
-
-function swap$2(arr, i, j) {
-    var tmp = arr[i];
-    arr[i] = arr[j];
-    arr[j] = tmp;
-}
-
-function defaultCompare(a, b) {
-    return a < b ? -1 : a > b ? 1 : 0;
-}
-
-/**
- * Classifies an array of rings into polygons with outer rings and holes
- * @param rings - the rings to classify
- * @param maxRings - the maximum number of rings to include in a polygon, use 0 to include all rings
- * @returns an array of polygons with internal rings as holes
- */
-function classifyRings(rings, maxRings) {
-    const len = rings.length;
-    if (len <= 1)
-        return [rings];
-    const polygons = [];
-    let polygon;
-    let ccw;
-    for (const ring of rings) {
-        const area = calculateSignedArea(ring);
-        if (area === 0)
-            continue;
-        ring.area = Math.abs(area);
-        if (ccw === undefined)
-            ccw = area < 0;
-        if (ccw === area < 0) {
-            if (polygon)
-                polygons.push(polygon);
-            polygon = [ring];
-        }
-        else {
-            polygon.push(ring);
-        }
-    }
-    if (polygon)
-        polygons.push(polygon);
-    // Earcut performance degrades with the # of rings in a polygon. For this
-    // reason, we limit strip out all but the `maxRings` largest rings.
-    if (maxRings > 1) {
-        for (let j = 0; j < polygons.length; j++) {
-            if (polygons[j].length <= maxRings)
-                continue;
-            quickselect(polygons[j], maxRings, 1, polygons[j].length - 1, compareAreas);
-            polygons[j] = polygons[j].slice(0, maxRings);
-        }
-    }
-    return polygons;
-}
-function compareAreas(a, b) {
-    return b.area - a.area;
-}
-/**
- * Returns the signed area for the polygon ring.  Positive areas are exterior rings and
- * have a clockwise winding.  Negative areas are interior rings and have a counter clockwise
- * ordering.
- *
- * @param ring - Exterior or interior ring
- * @returns Signed area
- */
-function calculateSignedArea(ring) {
-    let sum = 0;
-    for (let i = 0, len = ring.length, j = len - 1, p1, p2; i < len; j = i++) {
-        p1 = ring[i];
-        p2 = ring[j];
-        sum += (p2.x - p1.x) * (p1.y + p2.y);
-    }
-    return sum;
-}
 
 // This is taken from https://github.com/mapbox/cheap-ruler/ in order to take only the relevant parts
 // Values that define WGS84 ellipsoid model of the Earth
@@ -18316,7 +18418,7 @@ CompoundExpression.register(expressions$1, {
     'filter-type-==': [
         BooleanType,
         [StringType],
-        (ctx, [v]) => ctx.geometryType() === v.value
+        (ctx, [v]) => ctx.geometryDollarType() === v.value
     ],
     'filter-<': [
         BooleanType,
@@ -18403,7 +18505,7 @@ CompoundExpression.register(expressions$1, {
     'filter-type-in': [
         BooleanType,
         [array$1(StringType)],
-        (ctx, [v]) => v.value.indexOf(ctx.geometryType()) >= 0
+        (ctx, [v]) => v.value.indexOf(ctx.geometryDollarType()) >= 0
     ],
     'filter-id-in': [
         BooleanType,
@@ -18919,7 +19021,6 @@ class StyleExpression {
         this._evaluator.formattedSection = formattedSection || null;
         try {
             const val = this.expression.evaluate(this._evaluator);
-            // eslint-disable-next-line no-self-compare
             if (val === null || val === undefined || (typeof val === 'number' && val !== val)) {
                 return this._defaultValue;
             }
@@ -19438,7 +19539,7 @@ function runtimeTypeChecks(expectedTypes) {
 function convertComparisonOp(property, value, op, expectedTypes) {
     let get;
     if (property === '$type') {
-        return [op, ['geometry-type'], value];
+        return convertInOp('$type', [value], op === '!=');
     }
     else if (property === '$id') {
         get = ['id'];
@@ -19471,6 +19572,10 @@ function convertInOp(property, values, negate = false) {
         return negate;
     let get;
     if (property === '$type') {
+        const len = values.length;
+        for (let i = 0; i < len; i++) {
+            values.push(`Multi${values[i]}`);
+        }
         get = ['geometry-type'];
     }
     else if (property === '$id') {
@@ -20036,7 +20141,6 @@ function validateNumber(options) {
     const value = options.value;
     const valueSpec = options.valueSpec;
     let type = getType(value);
-    // eslint-disable-next-line no-self-compare
     if (type === 'number' && value !== value) {
         type = 'NaN';
     }
@@ -21874,7 +21978,7 @@ function serialize(input, transferables) {
     if (!klass.serialize) {
         for (const key in input) {
             if (!input.hasOwnProperty(key))
-                continue; // eslint-disable-line no-prototype-builtins
+                continue;
             if (registry[classRegistryKey].omit.indexOf(key) >= 0)
                 continue;
             const property = input[key];
@@ -22304,7 +22408,6 @@ const unicodeBlockLookup = {
     // 'Supplementary Private Use Area-B': (char) => char >= 0x100000 && char <= 0x10FFFF,
 };
 
-/* eslint-disable new-cap */
 function allowsIdeographicBreaking(chars) {
     for (const char of chars) {
         if (!charAllowsIdeographicBreaking(char.charCodeAt(0)))
@@ -22335,7 +22438,7 @@ function sanitizedRegExpFromScriptCodes(scriptCodes) {
         try {
             return new RegExp(`\\p{sc=${code}}`, 'u').source;
         }
-        catch (e) {
+        catch (_a) {
             return null;
         }
     }).filter(pe => pe);
@@ -24369,7 +24472,7 @@ CollisionBoxStruct.prototype.size = 20;
 class CollisionBoxArray extends StructArrayLayout6i1ul2ui20 {
     /**
      * Return the CollisionBoxStruct at the given location in the array.
-     * @param index The index of the element.
+     * @param index - The index of the element.
      */
     get(index) {
         return new CollisionBoxStruct(this, index);
@@ -24404,7 +24507,7 @@ PlacedSymbolStruct.prototype.size = 48;
 class PlacedSymbolArray extends StructArrayLayout2i2ui3ul3ui2f3ub1ul1i48 {
     /**
      * Return the PlacedSymbolStruct at the given location in the array.
-     * @param index The index of the element.
+     * @param index - The index of the element.
      */
     get(index) {
         return new PlacedSymbolStruct(this, index);
@@ -24448,7 +24551,7 @@ SymbolInstanceStruct.prototype.size = 64;
 class SymbolInstanceArray extends StructArrayLayout8i15ui1ul2f2ui64 {
     /**
      * Return the SymbolInstanceStruct at the given location in the array.
-     * @param index The index of the element.
+     * @param index - The index of the element.
      */
     get(index) {
         return new SymbolInstanceStruct(this, index);
@@ -24478,7 +24581,7 @@ TextAnchorOffsetStruct.prototype.size = 12;
 class TextAnchorOffsetArray extends StructArrayLayout1ui2f12 {
     /**
      * Return the TextAnchorOffsetStruct at the given location in the array.
-     * @param index The index of the element.
+     * @param index - The index of the element.
      */
     get(index) {
         return new TextAnchorOffsetStruct(this, index);
@@ -24496,7 +24599,7 @@ FeatureIndexStruct.prototype.size = 8;
 class FeatureIndexArray extends StructArrayLayout1ul2ui8 {
     /**
      * Return the FeatureIndexStruct at the given location in the array.
-     * @param index The index of the element.
+     * @param index - The index of the element.
      */
     get(index) {
         return new FeatureIndexStruct(this, index);
@@ -32504,9 +32607,14 @@ function coerceSpriteToArray(sprite) {
 }
 
 function normalizeSpriteURL(url, format, extension) {
-    const split = url.split('?');
-    split[0] += `${format}${extension}`;
-    return split.join('?');
+    try {
+        const parsed = new URL(url);
+        parsed.pathname += `${format}${extension}`;
+        return parsed.toString();
+    }
+    catch (_a) {
+        throw new Error(`Invalid sprite URL "${url}", must be absolute. Modify style specification directly or use TransformStyleFunction to correct the issue dynamically`);
+    }
 }
 function loadSprite(originalSprite, requestManager, pixelRatio, abortController) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -34955,7 +35063,7 @@ class RasterTileSource extends Evented {
         extend(this, pick(options, ['url', 'scheme', 'tileSize']));
     }
     load() {
-        return __awaiter(this, void 0, void 0, function* () {
+        return __awaiter(this, arguments, void 0, function* (sourceDataChanged = false) {
             this._loaded = false;
             this.fire(new Event('dataloading', { dataType: 'source' }));
             this._tileJSONRequest = new AbortController();
@@ -34971,7 +35079,7 @@ class RasterTileSource extends Evented {
                     // before the TileJSON arrives. this makes sure the tiles needed are loaded once TileJSON arrives
                     // ref: https://github.com/mapbox/mapbox-gl-js/pull/4347#discussion_r104418088
                     this.fire(new Event('data', { dataType: 'source', sourceDataType: 'metadata' }));
-                    this.fire(new Event('data', { dataType: 'source', sourceDataType: 'content' }));
+                    this.fire(new Event('data', { dataType: 'source', sourceDataType: 'content', sourceDataChanged }));
                 }
             }
             catch (err) {
@@ -34999,7 +35107,7 @@ class RasterTileSource extends Evented {
             this._tileJSONRequest = null;
         }
         callback();
-        this.load();
+        this.load(true);
     }
     /**
      * Sets the source `tiles` property and re-renders the map.
@@ -35589,13 +35697,11 @@ class RasterDEMTileSource extends RasterTileSource {
                     };
                     if (!tile.actor || tile.state === 'expired') {
                         tile.actor = this.dispatcher.getActor();
-                        /* eslint-disable require-atomic-updates */
                         const data = yield tile.actor.sendAsync({ type: "LDT" /* MessageType.loadDEMTile */, data: params });
                         tile.dem = data;
                         tile.needsHillshadePrepare = true;
                         tile.needsTerrainPrepare = true;
                         tile.state = 'loaded';
-                        /* eslint-enable require-atomic-updates */
                     }
                 }
             }
@@ -35619,7 +35725,7 @@ class RasterDEMTileSource extends RasterTileSource {
                 try {
                     return new RGBAImage({ width, height }, yield readImageUsingVideoFrame(img, -1, -1, width, height));
                 }
-                catch (e) {
+                catch (_a) {
                     // fall-back to browser canvas decoding
                 }
             }
@@ -36859,12 +36965,17 @@ class FeatureIndex {
         return false;
     }
     getId(feature, sourceLayerId) {
+        var _a;
         let id = feature.id;
         if (this.promoteId) {
             const propName = typeof this.promoteId === 'string' ? this.promoteId : this.promoteId[sourceLayerId];
             id = feature.properties[propName];
             if (typeof id === 'boolean')
                 id = Number(id);
+            // When cluster is true, the id is the cluster_id even though promoteId is set
+            if (id === undefined && ((_a = feature.properties) === null || _a === void 0 ? void 0 : _a.cluster) && this.promoteId) {
+                id = Number(feature.properties.cluster_id);
+            }
         }
         return id;
     }
@@ -37633,6 +37744,633 @@ class SourceFeatureState {
 }
 
 /**
+ * An `EdgeInset` object represents screen space padding applied to the edges of the viewport.
+ * This shifts the apparent center or the vanishing point of the map. This is useful for adding floating UI elements
+ * on top of the map and having the vanishing point shift as UI elements resize.
+ *
+ * @group Geography and Geometry
+ */
+class EdgeInsets {
+    constructor(top = 0, bottom = 0, left = 0, right = 0) {
+        if (isNaN(top) || top < 0 ||
+            isNaN(bottom) || bottom < 0 ||
+            isNaN(left) || left < 0 ||
+            isNaN(right) || right < 0) {
+            throw new Error('Invalid value for edge-insets, top, bottom, left and right must all be numbers');
+        }
+        this.top = top;
+        this.bottom = bottom;
+        this.left = left;
+        this.right = right;
+    }
+    /**
+     * Interpolates the inset in-place.
+     * This maintains the current inset value for any inset not present in `target`.
+     * @param start - interpolation start
+     * @param target - interpolation target
+     * @param t - interpolation step/weight
+     * @returns the insets
+     */
+    interpolate(start, target, t) {
+        if (target.top != null && start.top != null)
+            this.top = interpolate.number(start.top, target.top, t);
+        if (target.bottom != null && start.bottom != null)
+            this.bottom = interpolate.number(start.bottom, target.bottom, t);
+        if (target.left != null && start.left != null)
+            this.left = interpolate.number(start.left, target.left, t);
+        if (target.right != null && start.right != null)
+            this.right = interpolate.number(start.right, target.right, t);
+        return this;
+    }
+    /**
+     * Utility method that computes the new apprent center or vanishing point after applying insets.
+     * This is in pixels and with the top left being (0.0) and +y being downwards.
+     *
+     * @param width - the width
+     * @param height - the height
+     * @returns the point
+     */
+    getCenter(width, height) {
+        // Clamp insets so they never overflow width/height and always calculate a valid center
+        const x = clamp$1((this.left + width - this.right) / 2, 0, width);
+        const y = clamp$1((this.top + height - this.bottom) / 2, 0, height);
+        return new Point(x, y);
+    }
+    equals(other) {
+        return this.top === other.top &&
+            this.bottom === other.bottom &&
+            this.left === other.left &&
+            this.right === other.right;
+    }
+    clone() {
+        return new EdgeInsets(this.top, this.bottom, this.left, this.right);
+    }
+    /**
+     * Returns the current state as json, useful when you want to have a
+     * read-only representation of the inset.
+     *
+     * @returns state as json
+     */
+    toJSON() {
+        return {
+            top: this.top,
+            bottom: this.bottom,
+            left: this.left,
+            right: this.right
+        };
+    }
+}
+
+const MAX_VALID_LATITUDE = 85.051129;
+/**
+ * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
+ * interpolating between the two endpoints will cross it.
+ * @param center - The LngLat object of the desired center. This object will be mutated.
+ */
+function normalizeCenter(tr, center) {
+    if (!tr.renderWorldCopies || tr.lngRange)
+        return;
+    const delta = center.lng - tr.center.lng;
+    center.lng +=
+        delta > 180 ? -360 :
+            delta < -180 ? 360 : 0;
+}
+/**
+ * Computes scaling from zoom level.
+ */
+function zoomScale(zoom) { return Math.pow(2, zoom); }
+/**
+ * Computes zoom level from scaling.
+ */
+function scaleZoom(scale) { return Math.log(scale) / Math.LN2; }
+function getTileZoom(zoom) {
+    return Math.max(0, Math.floor(zoom));
+}
+/**
+ * @internal
+ * This class stores all values that define a transform's state,
+ * such as center, zoom, minZoom, etc.
+ * This can be used as a helper for implementing the ITransform interface.
+ */
+class TransformHelper {
+    constructor(callbacks, minZoom, maxZoom, minPitch, maxPitch, renderWorldCopies) {
+        this._callbacks = callbacks;
+        this._tileSize = 512; // constant
+        this._renderWorldCopies = renderWorldCopies === undefined ? true : !!renderWorldCopies;
+        this._minZoom = minZoom || 0;
+        this._maxZoom = maxZoom || 22;
+        this._minPitch = (minPitch === undefined || minPitch === null) ? 0 : minPitch;
+        this._maxPitch = (maxPitch === undefined || maxPitch === null) ? 60 : maxPitch;
+        this.setMaxBounds();
+        this._width = 0;
+        this._height = 0;
+        this._center = new LngLat(0, 0);
+        this._elevation = 0;
+        this._zoom = 0;
+        this._tileZoom = getTileZoom(this._zoom);
+        this._scale = zoomScale(this._zoom);
+        this._bearingInRadians = 0;
+        this._fovInRadians = 0.6435011087932844;
+        this._pitchInRadians = 0;
+        this._rollInRadians = 0;
+        this._unmodified = true;
+        this._edgeInsets = new EdgeInsets();
+        this._minElevationForCurrentTile = 0;
+    }
+    apply(thatI, constrain) {
+        this._latRange = thatI.latRange;
+        this._lngRange = thatI.lngRange;
+        this._width = thatI.width;
+        this._height = thatI.height;
+        this._center = thatI.center;
+        this._elevation = thatI.elevation;
+        this._minElevationForCurrentTile = thatI.minElevationForCurrentTile;
+        this._zoom = thatI.zoom;
+        this._tileZoom = getTileZoom(this._zoom);
+        this._scale = zoomScale(this._zoom);
+        this._bearingInRadians = thatI.bearingInRadians;
+        this._fovInRadians = thatI.fovInRadians;
+        this._pitchInRadians = thatI.pitchInRadians;
+        this._rollInRadians = thatI.rollInRadians;
+        this._unmodified = thatI.unmodified;
+        this._edgeInsets = new EdgeInsets(thatI.padding.top, thatI.padding.bottom, thatI.padding.left, thatI.padding.right);
+        this._minZoom = thatI.minZoom;
+        this._maxZoom = thatI.maxZoom;
+        this._minPitch = thatI.minPitch;
+        this._maxPitch = thatI.maxPitch;
+        this._renderWorldCopies = thatI.renderWorldCopies;
+        if (constrain) {
+            this._constrain();
+        }
+        this._calcMatrices();
+    }
+    get pixelsToClipSpaceMatrix() { return this._pixelsToClipSpaceMatrix; }
+    get clipSpaceToPixelsMatrix() { return this._clipSpaceToPixelsMatrix; }
+    get minElevationForCurrentTile() { return this._minElevationForCurrentTile; }
+    setMinElevationForCurrentTile(ele) {
+        this._minElevationForCurrentTile = ele;
+    }
+    get tileSize() { return this._tileSize; }
+    get tileZoom() { return this._tileZoom; }
+    get scale() { return this._scale; }
+    /**
+     * Gets the transform's width in pixels. Use {@link resize} to set the transform's size.
+     */
+    get width() { return this._width; }
+    /**
+     * Gets the transform's height in pixels. Use {@link resize} to set the transform's size.
+     */
+    get height() { return this._height; }
+    /**
+     * Gets the transform's bearing in radians.
+     */
+    get bearingInRadians() { return this._bearingInRadians; }
+    get lngRange() { return this._lngRange; }
+    get latRange() { return this._latRange; }
+    get pixelsToGLUnits() { return this._pixelsToGLUnits; }
+    get minZoom() { return this._minZoom; }
+    setMinZoom(zoom) {
+        if (this._minZoom === zoom)
+            return;
+        this._minZoom = zoom;
+        this.setZoom(this.getConstrained(this._center, this.zoom).zoom);
+    }
+    get maxZoom() { return this._maxZoom; }
+    setMaxZoom(zoom) {
+        if (this._maxZoom === zoom)
+            return;
+        this._maxZoom = zoom;
+        this.setZoom(this.getConstrained(this._center, this.zoom).zoom);
+    }
+    get minPitch() { return this._minPitch; }
+    setMinPitch(pitch) {
+        if (this._minPitch === pitch)
+            return;
+        this._minPitch = pitch;
+        this.setPitch(Math.max(this.pitch, pitch));
+    }
+    get maxPitch() { return this._maxPitch; }
+    setMaxPitch(pitch) {
+        if (this._maxPitch === pitch)
+            return;
+        this._maxPitch = pitch;
+        this.setPitch(Math.min(this.pitch, pitch));
+    }
+    get renderWorldCopies() { return this._renderWorldCopies; }
+    setRenderWorldCopies(renderWorldCopies) {
+        if (renderWorldCopies === undefined) {
+            renderWorldCopies = true;
+        }
+        else if (renderWorldCopies === null) {
+            renderWorldCopies = false;
+        }
+        this._renderWorldCopies = renderWorldCopies;
+    }
+    get worldSize() {
+        return this._tileSize * this._scale;
+    }
+    get centerOffset() {
+        return this.centerPoint._sub(this.size._div(2));
+    }
+    /**
+     * Gets the transform's dimensions packed into a Point object.
+     */
+    get size() {
+        return new Point(this._width, this._height);
+    }
+    get bearing() {
+        return this._bearingInRadians / Math.PI * 180;
+    }
+    setBearing(bearing) {
+        const b = wrap(bearing, -180, 180) * Math.PI / 180;
+        if (this._bearingInRadians === b)
+            return;
+        this._unmodified = false;
+        this._bearingInRadians = b;
+        this._calcMatrices();
+        // 2x2 matrix for rotating points
+        this._rotationMatrix = create$9();
+        rotate$4(this._rotationMatrix, this._rotationMatrix, -this._bearingInRadians);
+    }
+    get rotationMatrix() { return this._rotationMatrix; }
+    get pitchInRadians() {
+        return this._pitchInRadians;
+    }
+    get pitch() {
+        return this._pitchInRadians / Math.PI * 180;
+    }
+    setPitch(pitch) {
+        const p = clamp$1(pitch, this.minPitch, this.maxPitch) / 180 * Math.PI;
+        if (this._pitchInRadians === p)
+            return;
+        this._unmodified = false;
+        this._pitchInRadians = p;
+        this._calcMatrices();
+    }
+    get rollInRadians() {
+        return this._rollInRadians;
+    }
+    get roll() {
+        return this._rollInRadians / Math.PI * 180;
+    }
+    setRoll(roll) {
+        const r = roll / 180 * Math.PI;
+        if (this._rollInRadians === r)
+            return;
+        this._unmodified = false;
+        this._rollInRadians = r;
+        this._calcMatrices();
+    }
+    get fovInRadians() {
+        return this._fovInRadians;
+    }
+    get fov() {
+        return radiansToDegrees(this._fovInRadians);
+    }
+    setFov(fov) {
+        fov = clamp$1(fov, 0.1, 150);
+        if (this.fov === fov)
+            return;
+        this._unmodified = false;
+        this._fovInRadians = degreesToRadians(fov);
+        this._calcMatrices();
+    }
+    get zoom() { return this._zoom; }
+    setZoom(zoom) {
+        const constrainedZoom = this.getConstrained(this._center, zoom).zoom;
+        if (this._zoom === constrainedZoom)
+            return;
+        this._unmodified = false;
+        this._zoom = constrainedZoom;
+        this._tileZoom = Math.max(0, Math.floor(constrainedZoom));
+        this._scale = zoomScale(constrainedZoom);
+        this._constrain();
+        this._calcMatrices();
+    }
+    get center() { return this._center; }
+    setCenter(center) {
+        if (center.lat === this._center.lat && center.lng === this._center.lng)
+            return;
+        this._unmodified = false;
+        this._center = center;
+        this._constrain();
+        this._calcMatrices();
+    }
+    /**
+     * Elevation at current center point, meters above sea level
+     */
+    get elevation() { return this._elevation; }
+    setElevation(elevation) {
+        if (elevation === this._elevation)
+            return;
+        this._elevation = elevation;
+        this._constrain();
+        this._calcMatrices();
+    }
+    get padding() { return this._edgeInsets.toJSON(); }
+    setPadding(padding) {
+        if (this._edgeInsets.equals(padding))
+            return;
+        this._unmodified = false;
+        // Update edge-insets in-place
+        this._edgeInsets.interpolate(this._edgeInsets, padding, 1);
+        this._calcMatrices();
+    }
+    /**
+     * The center of the screen in pixels with the top-left corner being (0,0)
+     * and +y axis pointing downwards. This accounts for padding.
+     */
+    get centerPoint() {
+        return this._edgeInsets.getCenter(this._width, this._height);
+    }
+    /**
+     * @internal
+     */
+    get pixelsPerMeter() { return this._pixelPerMeter; }
+    get unmodified() { return this._unmodified; }
+    /**
+     * Returns if the padding params match
+     *
+     * @param padding - the padding to check against
+     * @returns true if they are equal, false otherwise
+     */
+    isPaddingEqual(padding) {
+        return this._edgeInsets.equals(padding);
+    }
+    /**
+     * Helper method to update edge-insets in place
+     *
+     * @param start - the starting padding
+     * @param target - the target padding
+     * @param t - the step/weight
+     */
+    interpolatePadding(start, target, t) {
+        this._unmodified = false;
+        this._edgeInsets.interpolate(start, target, t);
+        this._constrain();
+        this._calcMatrices();
+    }
+    resize(width, height) {
+        this._width = width;
+        this._height = height;
+        this._constrain();
+        this._calcMatrices();
+    }
+    /**
+     * Returns the maximum geographical bounds the map is constrained to, or `null` if none set.
+     * @returns max bounds
+     */
+    getMaxBounds() {
+        if (!this._latRange || this._latRange.length !== 2 ||
+            !this._lngRange || this._lngRange.length !== 2)
+            return null;
+        return new LngLatBounds([this._lngRange[0], this._latRange[0]], [this._lngRange[1], this._latRange[1]]);
+    }
+    /**
+     * Sets or clears the map's geographical constraints.
+     * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
+     */
+    setMaxBounds(bounds) {
+        if (bounds) {
+            this._lngRange = [bounds.getWest(), bounds.getEast()];
+            this._latRange = [bounds.getSouth(), bounds.getNorth()];
+            this._constrain();
+        }
+        else {
+            this._lngRange = null;
+            this._latRange = [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE];
+        }
+    }
+    getConstrained(lngLat, zoom) {
+        return this._callbacks.getConstrained(lngLat, zoom);
+    }
+    /**
+     * When the map is pitched, some of the 3D features that intersect a query will not intersect
+     * the query at the surface of the earth. Instead the feature may be closer and only intersect
+     * the query because it extrudes into the air.
+     * @param queryGeometry - For point queries, the line from the query point to the "camera point",
+     * for other geometries, the envelope of the query geometry and the "camera point"
+     * @returns a geometry that includes all of the original query as well as all possible ares of the
+     * screen where the *base* of a visible extrusion could be.
+     *
+     */
+    getCameraQueryGeometry(cameraPoint, queryGeometry) {
+        if (queryGeometry.length === 1) {
+            return [queryGeometry[0], cameraPoint];
+        }
+        else {
+            let minX = cameraPoint.x;
+            let minY = cameraPoint.y;
+            let maxX = cameraPoint.x;
+            let maxY = cameraPoint.y;
+            for (const p of queryGeometry) {
+                minX = Math.min(minX, p.x);
+                minY = Math.min(minY, p.y);
+                maxX = Math.max(maxX, p.x);
+                maxY = Math.max(maxY, p.y);
+            }
+            return [
+                new Point(minX, minY),
+                new Point(maxX, minY),
+                new Point(maxX, maxY),
+                new Point(minX, maxY),
+                new Point(minX, minY)
+            ];
+        }
+    }
+    /**
+     * @internal
+     * Snaps the transform's center, zoom, etc. into the valid range.
+     */
+    _constrain() {
+        if (!this.center || !this._width || !this._height || this._constraining)
+            return;
+        this._constraining = true;
+        const unmodified = this._unmodified;
+        const { center, zoom } = this.getConstrained(this.center, this.zoom);
+        this.setCenter(center);
+        this.setZoom(zoom);
+        this._unmodified = unmodified;
+        this._constraining = false;
+    }
+    /**
+     * This function is called every time one of the transform's defining properties (center, pitch, etc.) changes.
+     * This function should update the transform's internal data, such as matrices.
+     * Any derived `_calcMatrices` function should also call the base function first. The base function only depends on the `_width` and `_height` fields.
+     */
+    _calcMatrices() {
+        if (this._width && this._height) {
+            this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
+            let m = identity$2(new Float64Array(16));
+            scale$5(m, m, [this._width / 2, -this._height / 2, 1]);
+            translate$2(m, m, [1, -1, 0]);
+            this._clipSpaceToPixelsMatrix = m;
+            m = identity$2(new Float64Array(16));
+            scale$5(m, m, [1, -1, 1]);
+            translate$2(m, m, [-1, -1, 0]);
+            scale$5(m, m, [2 / this._width, 2 / this._height, 1]);
+            this._pixelsToClipSpaceMatrix = m;
+        }
+        this._callbacks.calcMatrices();
+    }
+}
+
+/**
+ * A simple/heuristic function that returns whether the tile is visible under the current transform.
+ * @returns an {@link IntersectionResult}.
+ */
+function isTileVisible(frustum, aabb, plane) {
+    const frustumTest = aabb.intersectsFrustum(frustum);
+    if (!plane) {
+        return frustumTest;
+    }
+    const planeTest = aabb.intersectsPlane(plane);
+    if (frustumTest === 0 /* IntersectionResult.None */ || planeTest === 0 /* IntersectionResult.None */) {
+        return 0 /* IntersectionResult.None */;
+    }
+    if (frustumTest === 2 /* IntersectionResult.Full */ && planeTest === 2 /* IntersectionResult.Full */) {
+        return 2 /* IntersectionResult.Full */;
+    }
+    return 1 /* IntersectionResult.Partial */;
+}
+function calculateTileZoom(requestedCenterZoom, distanceToTile2D, distanceToTileZ, distanceToCenter3D, cameraVerticalFOV) {
+    /**
+    * Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
+    * tiles to be loaded. At 0, tiles are loaded with approximately constant screen X resolution.
+    * At 1, tiles are loaded with approximately constant screen area.
+    * At 2, tiles are loaded with approximately constant screen Y resolution.
+    */
+    const pitchTileLoadingBehavior = 1.0;
+    /**
+    * Controls how tiles are loaded at high pitch angles. Controls how different the distance to a tile must be (compared with the center point)
+    * before a new zoom level is requested. For example, if tileZoomDeadband = 1 and the center zoom is 14, tiles distant enough to be loaded at
+    * z13 will be loaded at z14, and tiles distant enough to be loaded at z14 will be loaded at z15. A higher number causes more tiles to be loaded
+    * at the center zoom level. This also results in more tiles being loaded overall.
+    */
+    const tileZoomDeadband = 0.0;
+    let thisTileDesiredZ = requestedCenterZoom;
+    const thisTilePitch = Math.atan(distanceToTile2D / distanceToTileZ);
+    const distanceToTile3D = Math.hypot(distanceToTile2D, distanceToTileZ);
+    // if distance to candidate tile is a tiny bit farther than distance to center,
+    // use the same zoom as the center. This is achieved by the scaling distance ratio by cos(fov/2)
+    thisTileDesiredZ = requestedCenterZoom + scaleZoom(distanceToCenter3D / distanceToTile3D / Math.max(0.5, Math.cos(degreesToRadians(cameraVerticalFOV / 2))));
+    thisTileDesiredZ += pitchTileLoadingBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2;
+    thisTileDesiredZ = thisTileDesiredZ + clamp$1(requestedCenterZoom - thisTileDesiredZ, -tileZoomDeadband, tileZoomDeadband);
+    return thisTileDesiredZ;
+}
+/**
+ * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
+ * @param options - The options, most importantly the source's tile size.
+ * @returns An integer zoom level at which all tiles will be visible.
+ */
+function coveringZoomLevel(transform, options) {
+    const z = (options.roundZoom ? Math.round : Math.floor)(transform.zoom + scaleZoom(transform.tileSize / options.tileSize));
+    // At negative zoom levels load tiles from z0 because negative tile zoom levels don't exist.
+    return Math.max(0, z);
+}
+/**
+ * Returns a list of tiles that optimally covers the screen. Adapted for globe projection.
+ * Correctly handles LOD when moving over the antimeridian.
+ * @param transform - The transform instance.
+ * @param frustum - The covering frustum.
+ * @param plane - The clipping plane used by globe transform, or null.
+ * @param cameraCoord - The x, y, z position of the camera in MercatorCoordinates.
+ * @param centerCoord - The x, y, z position of the center point in MercatorCoordinates.
+ * @param options - Additional coveringTiles options.
+ * @param details - Interface to define required helper functions.
+ * @returns A list of tile coordinates, ordered by ascending distance from camera.
+ */
+function coveringTiles(transform, options) {
+    const frustum = transform.getCameraFrustum();
+    const plane = transform.getClippingPlane();
+    const cameraCoord = transform.screenPointToMercatorCoordinate(transform.getCameraPoint());
+    const centerCoord = MercatorCoordinate.fromLngLat(transform.center, transform.elevation);
+    cameraCoord.z = centerCoord.z + Math.cos(transform.pitchInRadians) * transform.cameraToCenterDistance / transform.worldSize;
+    const detailsProvider = transform.getCoveringTilesDetailsProvider();
+    const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);
+    const desiredZ = coveringZoomLevel(transform, options);
+    const minZoom = options.minzoom || 0;
+    const maxZoom = options.maxzoom !== undefined ? options.maxzoom : transform.maxZoom;
+    const nominalZ = Math.min(Math.max(0, desiredZ), maxZoom);
+    const numTiles = Math.pow(2, nominalZ);
+    const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
+    const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
+    const distanceToCenter2d = Math.hypot(centerCoord.x - cameraCoord.x, centerCoord.y - cameraCoord.y);
+    const distanceZ = Math.abs(centerCoord.z - cameraCoord.z);
+    const distanceToCenter3d = Math.hypot(distanceToCenter2d, distanceZ);
+    const newRootTile = (wrap) => {
+        return {
+            zoom: 0,
+            x: 0,
+            y: 0,
+            wrap,
+            fullyVisible: false
+        };
+    };
+    // Do a depth-first traversal to find visible tiles and proper levels of detail
+    const stack = [];
+    const result = [];
+    if (transform.renderWorldCopies) {
+        // Render copy of the globe thrice on both sides
+        for (let i = 1; i <= 3; i++) {
+            stack.push(newRootTile(-i));
+            stack.push(newRootTile(i));
+        }
+    }
+    stack.push(newRootTile(0));
+    while (stack.length > 0) {
+        const it = stack.pop();
+        const x = it.x;
+        const y = it.y;
+        let fullyVisible = it.fullyVisible;
+        const tileID = { x, y, z: it.zoom };
+        const aabb = detailsProvider.getTileAABB(tileID, it.wrap, transform.elevation, options);
+        // Visibility of a tile is not required if any of its ancestor is fully visible
+        if (!fullyVisible) {
+            const intersectResult = isTileVisible(frustum, aabb, plane);
+            if (intersectResult === 0 /* IntersectionResult.None */)
+                continue;
+            fullyVisible = intersectResult === 2 /* IntersectionResult.Full */;
+        }
+        const distToTile2d = detailsProvider.distanceToTile2d(cameraCoord.x, cameraCoord.y, tileID, aabb);
+        let thisTileDesiredZ = desiredZ;
+        if (allowVariableZoom) {
+            const tileZoomFunc = options.calculateTileZoom || calculateTileZoom;
+            thisTileDesiredZ = tileZoomFunc(transform.zoom + scaleZoom(transform.tileSize / options.tileSize), distToTile2d, distanceZ, distanceToCenter3d, transform.fov);
+        }
+        thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(thisTileDesiredZ);
+        thisTileDesiredZ = Math.max(0, thisTileDesiredZ);
+        const z = Math.min(thisTileDesiredZ, maxZoom);
+        // We need to compute a valid wrap value for the tile to keep globe compatibility with mercator
+        it.wrap = detailsProvider.getWrap(centerCoord, tileID, it.wrap);
+        // Have we reached the target depth?
+        if (it.zoom >= z) {
+            if (it.zoom < minZoom) {
+                continue;
+            }
+            const dz = nominalZ - it.zoom;
+            const dx = cameraPoint[0] - 0.5 - (x << dz);
+            const dy = cameraPoint[1] - 0.5 - (y << dz);
+            const overscaledZ = options.reparseOverscaled ? Math.max(it.zoom, thisTileDesiredZ) : it.zoom;
+            result.push({
+                tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, it.wrap, it.zoom, x, y),
+                distanceSq: sqrLen([centerPoint[0] - 0.5 - x, centerPoint[1] - 0.5 - y]),
+                // this variable is currently not used, but may be important to reduce the amount of loaded tiles
+                tileDistanceToCamera: Math.sqrt(dx * dx + dy * dy)
+            });
+            continue;
+        }
+        for (let i = 0; i < 4; i++) {
+            const childX = (x << 1) + (i % 2);
+            const childY = (y << 1) + (i >> 1);
+            const childZ = it.zoom + 1;
+            stack.push({ zoom: childZ, x: childX, y: childY, wrap: it.wrap, fullyVisible });
+        }
+    }
+    return result.sort((a, b) => a.distanceSq - b.distanceSq).map(a => a.tileID);
+}
+
+/**
  * @internal
  * `SourceCache` is responsible for
  *
@@ -37802,15 +38540,16 @@ class SourceCache extends Evented {
         return this._tiles[id] && this._tiles[id].hasData() &&
             !this._coveredTiles[id] && (symbolLayer || !this._tiles[id].holdingForFade());
     }
-    reload() {
+    reload(sourceDataChanged) {
         if (this._paused) {
             this._shouldReloadOnResume = true;
             return;
         }
         this._cache.reset();
         for (const i in this._tiles) {
-            if (this._tiles[i].state !== 'errored')
+            if (sourceDataChanged || this._tiles[i].state !== 'errored') {
                 this._reloadTile(i, 'reloading');
+            }
         }
     }
     _reloadTile(id, state) {
@@ -38126,20 +38865,21 @@ class SourceCache extends Evented {
                 .map((unwrapped) => new OverscaledTileID(unwrapped.canonical.z, unwrapped.wrap, unwrapped.canonical.z, unwrapped.canonical.x, unwrapped.canonical.y));
         }
         else {
-            idealTileIDs = transform.coveringTiles({
+            idealTileIDs = coveringTiles(transform, {
                 tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.maxzoom,
                 roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
                 reparseOverscaled: this._source.reparseOverscaled,
-                terrain
+                terrain,
+                calculateTileZoom: this._source.calculateTileZoom
             });
             if (this._source.hasTile) {
                 idealTileIDs = idealTileIDs.filter((coord) => this._source.hasTile(coord));
             }
         }
         // Determine the overzooming/underzooming amounts.
-        const zoom = transform.coveringZoomLevel(this._source);
+        const zoom = coveringZoomLevel(transform, this._source);
         const minCoveringZoom = Math.max(zoom - SourceCache.maxOverzooming, this._source.minzoom);
         const maxCoveringZoom = Math.max(zoom + SourceCache.maxUnderzooming, this._source.minzoom);
         // When sourcecache is used for terrain also load parent tiles to avoid flickering when zooming out
@@ -38393,7 +39133,7 @@ class SourceCache extends Evented {
         // for sources with mutable data, this event fires when the underlying data
         // to a source is changed. (i.e. GeoJSONSource#setData and ImageSource#serCoordinates)
         if (this._sourceLoaded && !this._paused && e.dataType === 'source' && eventSourceDataType === 'content') {
-            this.reload();
+            this.reload(e.sourceDataChanged);
             if (this.transform) {
                 this.update(this.transform, this.terrain);
             }
@@ -39148,7 +39888,7 @@ function updateLineLabels(bucket, painter, isText, pitchedLabelPlaneMatrix, pitc
         const cameraToAnchorDistance = anchorPos.signedDistanceFromCamera;
         const perspectiveRatio = getPerspectiveRatio(painter.transform.cameraToCenterDistance, cameraToAnchorDistance);
         const fontSize = evaluateSizeForFeature(sizeData, partiallyEvaluatedSize, symbol);
-        const pitchScaledFontSize = pitchWithMap ? fontSize / perspectiveRatio : fontSize * perspectiveRatio;
+        const pitchScaledFontSize = pitchWithMap ? (fontSize * painter.transform.getPitchedTextCorrection(symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
         const placeUnflipped = placeGlyphsAlongLine({
             projectionContext,
             pitchedLabelPlaneMatrixInverse,
@@ -39627,7 +40367,7 @@ class CollisionIndex {
         this.gridBottomBoundary = transform.height + 2 * viewportPadding;
         this.perspectiveRatioCutoff = 0.6;
     }
-    placeCollisionBox(collisionBox, overlapMode, textPixelRatio, unwrappedTileID, pitchWithMap, rotateWithMap, translation, collisionGroupPredicate, getElevation, shift, simpleProjectionMatrix) {
+    placeCollisionBox(collisionBox, overlapMode, textPixelRatio, tileID, unwrappedTileID, pitchWithMap, rotateWithMap, translation, collisionGroupPredicate, getElevation, shift, simpleProjectionMatrix) {
         const x = collisionBox.anchorPointX + translation[0];
         const y = collisionBox.anchorPointY + translation[1];
         const projectedPoint = this.projectAndGetPerspectiveRatio(x, y, unwrappedTileID, getElevation, simpleProjectionMatrix);
@@ -39648,7 +40388,7 @@ class CollisionIndex {
             };
         }
         else {
-            projectedBox = this._projectCollisionBox(collisionBox, tileToViewport, unwrappedTileID, pitchWithMap, rotateWithMap, translation, projectedPoint, getElevation, shift, simpleProjectionMatrix);
+            projectedBox = this._projectCollisionBox(collisionBox, tileToViewport, tileID, unwrappedTileID, pitchWithMap, rotateWithMap, translation, projectedPoint, getElevation, shift, simpleProjectionMatrix);
         }
         const [tlX, tlY, brX, brY] = projectedBox.box;
         // Conditions are ordered from the fastest to evaluate to the slowest.
@@ -39676,7 +40416,7 @@ class CollisionIndex {
         const placedCollisionCircles = [];
         const tileUnitAnchorPoint = new Point(symbol.anchorX, symbol.anchorY);
         const perspectiveRatio = this.getPerspectiveRatio(tileUnitAnchorPoint.x, tileUnitAnchorPoint.y, unwrappedTileID, getElevation);
-        const labelPlaneFontSize = pitchWithMap ? fontSize / perspectiveRatio : fontSize * perspectiveRatio;
+        const labelPlaneFontSize = pitchWithMap ? (fontSize * this.transform.getPitchedTextCorrection(symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
         const labelPlaneFontScale = labelPlaneFontSize / ONE_EM;
         const projectionCache = { projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false };
         const lineOffsetX = symbol.lineOffsetX * labelPlaneFontScale;
@@ -39935,7 +40675,7 @@ class CollisionIndex {
     /**
      * Applies all layout+paint properties of the given box in order to find as good approximation of its screen-space bounding box as possible.
      */
-    _projectCollisionBox(collisionBox, tileToViewport, unwrappedTileID, pitchWithMap, rotateWithMap, translation, projectedPoint, getElevation, shift, simpleProjectionMatrix) {
+    _projectCollisionBox(collisionBox, tileToViewport, tileID, unwrappedTileID, pitchWithMap, rotateWithMap, translation, projectedPoint, getElevation, shift, simpleProjectionMatrix) {
         // These vectors are valid both for screen space viewport-rotation-aligned texts and for pitch-align: map texts that are map-rotation-aligned.
         let vecEastX = 1;
         let vecEastY = 0;
@@ -39972,7 +40712,7 @@ class CollisionIndex {
             // Configuration for tile space (map-pitch-aligned) offsets
             basePointX = translatedAnchorX;
             basePointY = translatedAnchorY;
-            const zoomFraction = this.transform.zoom - Math.floor(this.transform.zoom);
+            const zoomFraction = this.transform.zoom - tileID.overscaledZ;
             distanceMultiplier = Math.pow(2, -zoomFraction);
             distanceMultiplier *= this.transform.getPitchedTextCorrection(translatedAnchorX, translatedAnchorY, unwrappedTileID);
             // This next correction can't be applied when variable anchors are in use.
@@ -41444,13 +42184,13 @@ class Placement {
             });
         }
     }
-    attemptAnchorPlacement(textAnchorOffset, textBox, width, height, textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, unwrappedTileID, collisionGroup, textOverlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, iconBox, getElevation, simpleProjectionMatrix) {
+    attemptAnchorPlacement(textAnchorOffset, textBox, width, height, textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, tileID, unwrappedTileID, collisionGroup, textOverlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, iconBox, getElevation, simpleProjectionMatrix) {
         const anchor = TextAnchorEnum[textAnchorOffset.textAnchor];
         const textOffset = [textAnchorOffset.textOffset0, textAnchorOffset.textOffset1];
         const shift = calculateVariableLayoutShift(anchor, width, height, textOffset, textBoxScale);
-        const placedGlyphBoxes = this.collisionIndex.placeCollisionBox(textBox, textOverlapMode, textPixelRatio, unwrappedTileID, pitchWithMap, rotateWithMap, translationText, collisionGroup.predicate, getElevation, shift, simpleProjectionMatrix);
+        const placedGlyphBoxes = this.collisionIndex.placeCollisionBox(textBox, textOverlapMode, textPixelRatio, tileID, unwrappedTileID, pitchWithMap, rotateWithMap, translationText, collisionGroup.predicate, getElevation, shift, simpleProjectionMatrix);
         if (iconBox) {
-            const placedIconBoxes = this.collisionIndex.placeCollisionBox(iconBox, textOverlapMode, textPixelRatio, unwrappedTileID, pitchWithMap, rotateWithMap, translationIcon, collisionGroup.predicate, getElevation, shift, simpleProjectionMatrix);
+            const placedIconBoxes = this.collisionIndex.placeCollisionBox(iconBox, textOverlapMode, textPixelRatio, tileID, unwrappedTileID, pitchWithMap, rotateWithMap, translationIcon, collisionGroup.predicate, getElevation, shift, simpleProjectionMatrix);
             if (!placedIconBoxes.placeable)
                 return;
         }
@@ -41584,7 +42324,7 @@ class Placement {
                 // If start+end indices match, text-variable-anchor is not in play.
                 if (textAnchorOffsetEnd === textAnchorOffsetStart) {
                     const placeBox = (collisionTextBox, orientation) => {
-                        const placedFeature = this.collisionIndex.placeCollisionBox(collisionTextBox, textOverlapMode, textPixelRatio, unwrappedTileID, pitchWithMap, rotateWithMap, translationText, collisionGroup.predicate, getElevation, undefined, simpleProjectionMatrix);
+                        const placedFeature = this.collisionIndex.placeCollisionBox(collisionTextBox, textOverlapMode, textPixelRatio, tileID, unwrappedTileID, pitchWithMap, rotateWithMap, translationText, collisionGroup.predicate, getElevation, undefined, simpleProjectionMatrix);
                         if (placedFeature && placedFeature.placeable) {
                             this.markUsedOrientation(bucket, orientation, symbolInstance);
                             this.placedOrientations[symbolInstance.crossTileID] = orientation;
@@ -41624,7 +42364,7 @@ class Placement {
                                 if (prevAnchor && textAnchorOffset.textAnchor !== prevAnchor) {
                                     continue;
                                 }
-                                const result = this.attemptAnchorPlacement(textAnchorOffset, collisionTextBox, width, height, textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, unwrappedTileID, collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation);
+                                const result = this.attemptAnchorPlacement(textAnchorOffset, collisionTextBox, width, height, textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, tileID, unwrappedTileID, collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation);
                                 if (result) {
                                     placedBox = result.placedGlyphBoxes;
                                     if (placedBox && placedBox.placeable) {
@@ -41645,7 +42385,7 @@ class Placement {
                             // No box was successfully placed
                             // Generate bounds for a fake centered box, so that we can at least display something for collision debug.
                             const placedFakeGlyphBox = this.collisionIndex.placeCollisionBox(textBox, 'always', // Skips expensive collision check with already placed boxes
-                            textPixelRatio, unwrappedTileID, pitchWithMap, rotateWithMap, translationText, collisionGroup.predicate, getElevation, undefined, simpleProjectionMatrix);
+                            textPixelRatio, tileID, unwrappedTileID, pitchWithMap, rotateWithMap, translationText, collisionGroup.predicate, getElevation, undefined, simpleProjectionMatrix);
                             placedBox = {
                                 box: placedFakeGlyphBox.box,
                                 offscreen: false,
@@ -41707,7 +42447,7 @@ class Placement {
             }
             if (collisionArrays.iconBox) {
                 const placeIconFeature = iconBox => {
-                    return this.collisionIndex.placeCollisionBox(iconBox, iconOverlapMode, textPixelRatio, unwrappedTileID, pitchWithMap, rotateWithMap, translationIcon, collisionGroup.predicate, getElevation, (hasIconTextFit && shift) ? shift : undefined, simpleProjectionMatrix);
+                    return this.collisionIndex.placeCollisionBox(iconBox, iconOverlapMode, textPixelRatio, tileID, unwrappedTileID, pitchWithMap, rotateWithMap, translationIcon, collisionGroup.predicate, getElevation, (hasIconTextFit && shift) ? shift : undefined, simpleProjectionMatrix);
                 };
                 if (placedVerticalText && placedVerticalText.placeable && collisionArrays.verticalIconBox) {
                     placedIconBoxes = placeIconFeature(collisionArrays.verticalIconBox);
@@ -42949,6 +43689,9 @@ var debugFrag = 'uniform highp vec4 u_color;uniform sampler2D u_overlay;varying 
 var debugVert = 'attribute vec2 a_pos;varying vec2 v_uv;uniform float u_overlay_scale;void main() {v_uv=a_pos/8192.0;gl_Position=projectTileWithElevation(a_pos*u_overlay_scale,get_elevation(a_pos));}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
+var depthVert = 'attribute vec2 a_pos;void main() {\n#ifdef GLOBE\ngl_Position=projectTileFor3D(a_pos,0.0);\n#else\ngl_Position=u_projection_matrix*vec4(a_pos,0.0,1.0);\n#endif\n}';
+
+// This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
 var fillFrag = '#pragma mapbox: define highp vec4 color\n#pragma mapbox: define lowp float opacity\nvoid main() {\n#pragma mapbox: initialize highp vec4 color\n#pragma mapbox: initialize lowp float opacity\ngl_FragColor=color*opacity;\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
@@ -42973,13 +43716,13 @@ var fillPatternFrag = '#ifdef GL_ES\nprecision highp float;\n#endif\nuniform vec
 var fillPatternVert = 'uniform vec2 u_pixel_coord_upper;uniform vec2 u_pixel_coord_lower;uniform vec3 u_scale;uniform vec2 u_fill_translate;attribute vec2 a_pos;varying vec2 v_pos_a;varying vec2 v_pos_b;\n#pragma mapbox: define lowp float opacity\n#pragma mapbox: define lowp vec4 pattern_from\n#pragma mapbox: define lowp vec4 pattern_to\n#pragma mapbox: define lowp float pixel_ratio_from\n#pragma mapbox: define lowp float pixel_ratio_to\nvoid main() {\n#pragma mapbox: initialize lowp float opacity\n#pragma mapbox: initialize mediump vec4 pattern_from\n#pragma mapbox: initialize mediump vec4 pattern_to\n#pragma mapbox: initialize lowp float pixel_ratio_from\n#pragma mapbox: initialize lowp float pixel_ratio_to\nvec2 pattern_tl_a=pattern_from.xy;vec2 pattern_br_a=pattern_from.zw;vec2 pattern_tl_b=pattern_to.xy;vec2 pattern_br_b=pattern_to.zw;float tileZoomRatio=u_scale.x;float fromScale=u_scale.y;float toScale=u_scale.z;vec2 display_size_a=(pattern_br_a-pattern_tl_a)/pixel_ratio_from;vec2 display_size_b=(pattern_br_b-pattern_tl_b)/pixel_ratio_to;gl_Position=projectTile(a_pos+u_fill_translate);v_pos_a=get_pattern_pos(u_pixel_coord_upper,u_pixel_coord_lower,fromScale*display_size_a,tileZoomRatio,a_pos);v_pos_b=get_pattern_pos(u_pixel_coord_upper,u_pixel_coord_lower,toScale*display_size_b,tileZoomRatio,a_pos);}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var fillExtrusionFrag = 'varying vec4 v_color;\n#ifdef GLOBE\nvarying vec3 v_sphere_pos;uniform vec3 u_camera_pos_globe;uniform highp float u_projection_transition;\n#endif\nvoid main() {gl_FragColor=v_color;\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n#ifdef GLOBE\nvec3 toPlanetCenter=-v_sphere_pos;vec3 toCameraNormalized=normalize(u_camera_pos_globe-v_sphere_pos);float t=dot(toPlanetCenter,toCameraNormalized);vec3 nearest=v_sphere_pos+toCameraNormalized*max(t,0.0);float distance_to_planet_center_squared=dot(nearest,nearest);if (distance_to_planet_center_squared < u_projection_transition) {discard;}\n#endif\n}';
+var fillExtrusionFrag = 'varying vec4 v_color;void main() {gl_FragColor=v_color;\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var fillExtrusionVert = 'uniform vec3 u_lightcolor;uniform lowp vec3 u_lightpos;uniform lowp vec3 u_lightpos_globe;uniform lowp float u_lightintensity;uniform float u_vertical_gradient;uniform lowp float u_opacity;uniform vec2 u_fill_translate;attribute vec2 a_pos;attribute vec4 a_normal_ed;\n#ifdef TERRAIN3D\nattribute vec2 a_centroid;\n#endif\nvarying vec4 v_color;\n#ifdef GLOBE\nvarying vec3 v_sphere_pos;\n#endif\n#pragma mapbox: define highp float base\n#pragma mapbox: define highp float height\n#pragma mapbox: define highp vec4 color\nvoid main() {\n#pragma mapbox: initialize highp float base\n#pragma mapbox: initialize highp float height\n#pragma mapbox: initialize highp vec4 color\nvec3 normal=a_normal_ed.xyz;\n#ifdef TERRAIN3D\nfloat height_terrain3d_offset=get_elevation(a_centroid);float base_terrain3d_offset=height_terrain3d_offset-(base > 0.0 ? 0.0 : 10.0);\n#else\nfloat height_terrain3d_offset=0.0;float base_terrain3d_offset=0.0;\n#endif\nbase=max(0.0,base)+base_terrain3d_offset;height=max(0.0,height)+height_terrain3d_offset;float t=mod(normal.x,2.0);float elevation=t > 0.0 ? height : base;vec2 posInTile=a_pos+u_fill_translate;\n#ifdef GLOBE\nvec3 spherePos=projectToSphere(posInTile);vec3 elevatedPos=spherePos*(1.0+elevation/GLOBE_RADIUS);v_sphere_pos=elevatedPos;gl_Position=interpolateProjectionFor3D(posInTile,spherePos,elevation);\n#else\ngl_Position=u_projection_matrix*vec4(posInTile,elevation,1.0);\n#endif\nfloat colorvalue=color.r*0.2126+color.g*0.7152+color.b*0.0722;v_color=vec4(0.0,0.0,0.0,1.0);vec4 ambientlight=vec4(0.03,0.03,0.03,1.0);color+=ambientlight;vec3 normalForLighting=normal/16384.0;float directional=clamp(dot(normalForLighting,u_lightpos),0.0,1.0);\n#ifdef GLOBE\nmat3 rotMatrix=globeGetRotationMatrix(spherePos);normalForLighting=rotMatrix*normalForLighting;directional=mix(directional,clamp(dot(normalForLighting,u_lightpos_globe),0.0,1.0),u_projection_transition);\n#endif\ndirectional=mix((1.0-u_lightintensity),max((1.0-colorvalue+u_lightintensity),1.0),directional);if (normal.y !=0.0) {directional*=((1.0-u_vertical_gradient)+(u_vertical_gradient*clamp((t+base)*pow(height/150.0,0.5),mix(0.7,0.98,1.0-u_lightintensity),1.0)));}v_color.r+=clamp(color.r*directional*u_lightcolor.r,mix(0.0,0.3,1.0-u_lightcolor.r),1.0);v_color.g+=clamp(color.g*directional*u_lightcolor.g,mix(0.0,0.3,1.0-u_lightcolor.g),1.0);v_color.b+=clamp(color.b*directional*u_lightcolor.b,mix(0.0,0.3,1.0-u_lightcolor.b),1.0);v_color*=u_opacity;}';
+var fillExtrusionVert = 'uniform vec3 u_lightcolor;uniform lowp vec3 u_lightpos;uniform lowp vec3 u_lightpos_globe;uniform lowp float u_lightintensity;uniform float u_vertical_gradient;uniform lowp float u_opacity;uniform vec2 u_fill_translate;attribute vec2 a_pos;attribute vec4 a_normal_ed;\n#ifdef TERRAIN3D\nattribute vec2 a_centroid;\n#endif\nvarying vec4 v_color;\n#pragma mapbox: define highp float base\n#pragma mapbox: define highp float height\n#pragma mapbox: define highp vec4 color\nvoid main() {\n#pragma mapbox: initialize highp float base\n#pragma mapbox: initialize highp float height\n#pragma mapbox: initialize highp vec4 color\nvec3 normal=a_normal_ed.xyz;\n#ifdef TERRAIN3D\nfloat height_terrain3d_offset=get_elevation(a_centroid);float base_terrain3d_offset=height_terrain3d_offset-(base > 0.0 ? 0.0 : 10.0);\n#else\nfloat height_terrain3d_offset=0.0;float base_terrain3d_offset=0.0;\n#endif\nbase=max(0.0,base)+base_terrain3d_offset;height=max(0.0,height)+height_terrain3d_offset;float t=mod(normal.x,2.0);float elevation=t > 0.0 ? height : base;vec2 posInTile=a_pos+u_fill_translate;\n#ifdef GLOBE\nvec3 spherePos=projectToSphere(posInTile);gl_Position=interpolateProjectionFor3D(posInTile,spherePos,elevation);\n#else\ngl_Position=u_projection_matrix*vec4(posInTile,elevation,1.0);\n#endif\nfloat colorvalue=color.r*0.2126+color.g*0.7152+color.b*0.0722;v_color=vec4(0.0,0.0,0.0,1.0);vec4 ambientlight=vec4(0.03,0.03,0.03,1.0);color+=ambientlight;vec3 normalForLighting=normal/16384.0;float directional=clamp(dot(normalForLighting,u_lightpos),0.0,1.0);\n#ifdef GLOBE\nmat3 rotMatrix=globeGetRotationMatrix(spherePos);normalForLighting=rotMatrix*normalForLighting;directional=mix(directional,clamp(dot(normalForLighting,u_lightpos_globe),0.0,1.0),u_projection_transition);\n#endif\ndirectional=mix((1.0-u_lightintensity),max((1.0-colorvalue+u_lightintensity),1.0),directional);if (normal.y !=0.0) {directional*=((1.0-u_vertical_gradient)+(u_vertical_gradient*clamp((t+base)*pow(height/150.0,0.5),mix(0.7,0.98,1.0-u_lightintensity),1.0)));}v_color.r+=clamp(color.r*directional*u_lightcolor.r,mix(0.0,0.3,1.0-u_lightcolor.r),1.0);v_color.g+=clamp(color.g*directional*u_lightcolor.g,mix(0.0,0.3,1.0-u_lightcolor.g),1.0);v_color.b+=clamp(color.b*directional*u_lightcolor.b,mix(0.0,0.3,1.0-u_lightcolor.b),1.0);v_color*=u_opacity;}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var fillExtrusionPatternFrag = 'uniform vec2 u_texsize;uniform float u_fade;\n#ifdef GLOBE\nvarying vec3 v_sphere_pos;uniform vec3 u_camera_pos_globe;\n#endif\nuniform sampler2D u_image;varying vec2 v_pos_a;varying vec2 v_pos_b;varying vec4 v_lighting;\n#pragma mapbox: define lowp float base\n#pragma mapbox: define lowp float height\n#pragma mapbox: define lowp vec4 pattern_from\n#pragma mapbox: define lowp vec4 pattern_to\n#pragma mapbox: define lowp float pixel_ratio_from\n#pragma mapbox: define lowp float pixel_ratio_to\nvoid main() {\n#pragma mapbox: initialize lowp float base\n#pragma mapbox: initialize lowp float height\n#pragma mapbox: initialize mediump vec4 pattern_from\n#pragma mapbox: initialize mediump vec4 pattern_to\n#pragma mapbox: initialize lowp float pixel_ratio_from\n#pragma mapbox: initialize lowp float pixel_ratio_to\nvec2 pattern_tl_a=pattern_from.xy;vec2 pattern_br_a=pattern_from.zw;vec2 pattern_tl_b=pattern_to.xy;vec2 pattern_br_b=pattern_to.zw;vec2 imagecoord=mod(v_pos_a,1.0);vec2 pos=mix(pattern_tl_a/u_texsize,pattern_br_a/u_texsize,imagecoord);vec4 color1=texture2D(u_image,pos);vec2 imagecoord_b=mod(v_pos_b,1.0);vec2 pos2=mix(pattern_tl_b/u_texsize,pattern_br_b/u_texsize,imagecoord_b);vec4 color2=texture2D(u_image,pos2);vec4 mixedColor=mix(color1,color2,u_fade);gl_FragColor=mixedColor*v_lighting;\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n#ifdef GLOBE\nvec3 toPlanetCenter=-v_sphere_pos;vec3 toCameraNormalized=normalize(u_camera_pos_globe-v_sphere_pos);float t=dot(toPlanetCenter,toCameraNormalized);vec3 nearest=v_sphere_pos+toCameraNormalized*max(t,0.0);float distance_to_planet_center_squared=dot(nearest,nearest);if (distance_to_planet_center_squared < u_projection_transition) {discard;}\n#endif\n}';
+var fillExtrusionPatternFrag = 'uniform vec2 u_texsize;uniform float u_fade;uniform sampler2D u_image;varying vec2 v_pos_a;varying vec2 v_pos_b;varying vec4 v_lighting;\n#pragma mapbox: define lowp float base\n#pragma mapbox: define lowp float height\n#pragma mapbox: define lowp vec4 pattern_from\n#pragma mapbox: define lowp vec4 pattern_to\n#pragma mapbox: define lowp float pixel_ratio_from\n#pragma mapbox: define lowp float pixel_ratio_to\nvoid main() {\n#pragma mapbox: initialize lowp float base\n#pragma mapbox: initialize lowp float height\n#pragma mapbox: initialize mediump vec4 pattern_from\n#pragma mapbox: initialize mediump vec4 pattern_to\n#pragma mapbox: initialize lowp float pixel_ratio_from\n#pragma mapbox: initialize lowp float pixel_ratio_to\nvec2 pattern_tl_a=pattern_from.xy;vec2 pattern_br_a=pattern_from.zw;vec2 pattern_tl_b=pattern_to.xy;vec2 pattern_br_b=pattern_to.zw;vec2 imagecoord=mod(v_pos_a,1.0);vec2 pos=mix(pattern_tl_a/u_texsize,pattern_br_a/u_texsize,imagecoord);vec4 color1=texture2D(u_image,pos);vec2 imagecoord_b=mod(v_pos_b,1.0);vec2 pos2=mix(pattern_tl_b/u_texsize,pattern_br_b/u_texsize,imagecoord_b);vec4 color2=texture2D(u_image,pos2);vec4 mixedColor=mix(color1,color2,u_fade);gl_FragColor=mixedColor*v_lighting;\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
 var fillExtrusionPatternVert = 'uniform vec2 u_pixel_coord_upper;uniform vec2 u_pixel_coord_lower;uniform float u_height_factor;uniform vec3 u_scale;uniform float u_vertical_gradient;uniform lowp float u_opacity;uniform vec2 u_fill_translate;uniform vec3 u_lightcolor;uniform lowp vec3 u_lightpos;uniform lowp vec3 u_lightpos_globe;uniform lowp float u_lightintensity;attribute vec2 a_pos;attribute vec4 a_normal_ed;\n#ifdef TERRAIN3D\nattribute vec2 a_centroid;\n#endif\n#ifdef GLOBE\nvarying vec3 v_sphere_pos;\n#endif\nvarying vec2 v_pos_a;varying vec2 v_pos_b;varying vec4 v_lighting;\n#pragma mapbox: define lowp float base\n#pragma mapbox: define lowp float height\n#pragma mapbox: define lowp vec4 pattern_from\n#pragma mapbox: define lowp vec4 pattern_to\n#pragma mapbox: define lowp float pixel_ratio_from\n#pragma mapbox: define lowp float pixel_ratio_to\nvoid main() {\n#pragma mapbox: initialize lowp float base\n#pragma mapbox: initialize lowp float height\n#pragma mapbox: initialize mediump vec4 pattern_from\n#pragma mapbox: initialize mediump vec4 pattern_to\n#pragma mapbox: initialize lowp float pixel_ratio_from\n#pragma mapbox: initialize lowp float pixel_ratio_to\nvec2 pattern_tl_a=pattern_from.xy;vec2 pattern_br_a=pattern_from.zw;vec2 pattern_tl_b=pattern_to.xy;vec2 pattern_br_b=pattern_to.zw;float tileRatio=u_scale.x;float fromScale=u_scale.y;float toScale=u_scale.z;vec3 normal=a_normal_ed.xyz;float edgedistance=a_normal_ed.w;vec2 display_size_a=(pattern_br_a-pattern_tl_a)/pixel_ratio_from;vec2 display_size_b=(pattern_br_b-pattern_tl_b)/pixel_ratio_to;\n#ifdef TERRAIN3D\nfloat height_terrain3d_offset=get_elevation(a_centroid);float base_terrain3d_offset=height_terrain3d_offset-(base > 0.0 ? 0.0 : 10.0);\n#else\nfloat height_terrain3d_offset=0.0;float base_terrain3d_offset=0.0;\n#endif\nbase=max(0.0,base)+base_terrain3d_offset;height=max(0.0,height)+height_terrain3d_offset;float t=mod(normal.x,2.0);float elevation=t > 0.0 ? height : base;vec2 posInTile=a_pos+u_fill_translate;\n#ifdef GLOBE\nvec3 spherePos=projectToSphere(posInTile);vec3 elevatedPos=spherePos*(1.0+elevation/GLOBE_RADIUS);v_sphere_pos=elevatedPos;gl_Position=interpolateProjectionFor3D(posInTile,spherePos,elevation);\n#else\ngl_Position=u_projection_matrix*vec4(posInTile,elevation,1.0);\n#endif\nvec2 pos=normal.x==1.0 && normal.y==0.0 && normal.z==16384.0\n? a_pos\n: vec2(edgedistance,elevation*u_height_factor);v_pos_a=get_pattern_pos(u_pixel_coord_upper,u_pixel_coord_lower,fromScale*display_size_a,tileRatio,pos);v_pos_b=get_pattern_pos(u_pixel_coord_upper,u_pixel_coord_lower,toScale*display_size_b,tileRatio,pos);v_lighting=vec4(0.0,0.0,0.0,1.0);float directional=clamp(dot(normal/16383.0,u_lightpos),0.0,1.0);directional=mix((1.0-u_lightintensity),max((0.5+u_lightintensity),1.0),directional);if (normal.y !=0.0) {directional*=((1.0-u_vertical_gradient)+(u_vertical_gradient*clamp((t+base)*pow(height/150.0,0.5),mix(0.7,0.98,1.0-u_lightintensity),1.0)));}v_lighting.rgb+=clamp(directional*u_lightcolor,mix(vec3(0.0),vec3(0.3),1.0-u_lightcolor),vec3(1.0));v_lighting*=u_opacity;}';
@@ -43036,7 +43779,7 @@ var symbolIconVert = 'attribute vec4 a_pos_offset;attribute vec4 a_data;attribut
 var symbolSDFFrag = '#define SDF_PX 8.0\nuniform bool u_is_halo;uniform sampler2D u_texture;uniform highp float u_gamma_scale;uniform lowp float u_device_pixel_ratio;uniform bool u_is_text;varying vec2 v_data0;varying vec3 v_data1;\n#pragma mapbox: define highp vec4 fill_color\n#pragma mapbox: define highp vec4 halo_color\n#pragma mapbox: define lowp float opacity\n#pragma mapbox: define lowp float halo_width\n#pragma mapbox: define lowp float halo_blur\nvoid main() {\n#pragma mapbox: initialize highp vec4 fill_color\n#pragma mapbox: initialize highp vec4 halo_color\n#pragma mapbox: initialize lowp float opacity\n#pragma mapbox: initialize lowp float halo_width\n#pragma mapbox: initialize lowp float halo_blur\nfloat EDGE_GAMMA=0.105/u_device_pixel_ratio;vec2 tex=v_data0.xy;float gamma_scale=v_data1.x;float size=v_data1.y;float fade_opacity=v_data1[2];float fontScale=u_is_text ? size/24.0 : size;lowp vec4 color=fill_color;highp float gamma=EDGE_GAMMA/(fontScale*u_gamma_scale);lowp float inner_edge=(256.0-64.0)/256.0;if (u_is_halo) {color=halo_color;gamma=(halo_blur*1.19/SDF_PX+EDGE_GAMMA)/(fontScale*u_gamma_scale);inner_edge=inner_edge+gamma*gamma_scale;}lowp float dist=texture2D(u_texture,tex).a;highp float gamma_scaled=gamma*gamma_scale;highp float alpha=smoothstep(inner_edge-gamma_scaled,inner_edge+gamma_scaled,dist);if (u_is_halo) {lowp float halo_edge=(6.0-halo_width/fontScale)/SDF_PX;alpha=min(smoothstep(halo_edge-gamma_scaled,halo_edge+gamma_scaled,dist),1.0-alpha);}gl_FragColor=color*(alpha*opacity*fade_opacity);\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var symbolSDFVert = 'attribute vec4 a_pos_offset;attribute vec4 a_data;attribute vec4 a_pixeloffset;attribute vec3 a_projected_pos;attribute float a_fade_opacity;uniform bool u_is_size_zoom_constant;uniform bool u_is_size_feature_constant;uniform highp float u_size_t;uniform highp float u_size;uniform mat4 u_label_plane_matrix;uniform mat4 u_coord_matrix;uniform bool u_is_text;uniform bool u_pitch_with_map;uniform bool u_is_along_line;uniform bool u_is_variable_anchor;uniform highp float u_pitch;uniform bool u_rotate_symbol;uniform highp float u_aspect_ratio;uniform highp float u_camera_to_center_distance;uniform float u_fade_change;uniform vec2 u_texsize;uniform vec2 u_translation;uniform float u_pitched_scale;varying vec2 v_data0;varying vec3 v_data1;\n#pragma mapbox: define highp vec4 fill_color\n#pragma mapbox: define highp vec4 halo_color\n#pragma mapbox: define lowp float opacity\n#pragma mapbox: define lowp float halo_width\n#pragma mapbox: define lowp float halo_blur\nvoid main() {\n#pragma mapbox: initialize highp vec4 fill_color\n#pragma mapbox: initialize highp vec4 halo_color\n#pragma mapbox: initialize lowp float opacity\n#pragma mapbox: initialize lowp float halo_width\n#pragma mapbox: initialize lowp float halo_blur\nvec2 a_pos=a_pos_offset.xy;vec2 a_offset=a_pos_offset.zw;vec2 a_tex=a_data.xy;vec2 a_size=a_data.zw;float a_size_min=floor(a_size[0]*0.5);vec2 a_pxoffset=a_pixeloffset.xy;float ele=get_elevation(a_pos);highp float segment_angle=-a_projected_pos[2];float size;if (!u_is_size_zoom_constant && !u_is_size_feature_constant) {size=mix(a_size_min,a_size[1],u_size_t)/128.0;} else if (u_is_size_zoom_constant && !u_is_size_feature_constant) {size=a_size_min/128.0;} else {size=u_size;}vec2 translated_a_pos=a_pos+u_translation;vec4 projectedPoint=projectTileWithElevation(translated_a_pos,ele);highp float camera_to_anchor_distance=projectedPoint.w;highp float distance_ratio=u_pitch_with_map ?\ncamera_to_anchor_distance/u_camera_to_center_distance :\nu_camera_to_center_distance/camera_to_anchor_distance;highp float perspective_ratio=clamp(0.5+0.5*distance_ratio,0.0,4.0);size*=perspective_ratio;float fontScale=u_is_text ? size/24.0 : size;highp float symbol_rotation=0.0;if (u_rotate_symbol) {vec4 offsetProjectedPoint=projectTileWithElevation(translated_a_pos+vec2(1,0),ele);vec2 a=projectedPoint.xy/projectedPoint.w;vec2 b=offsetProjectedPoint.xy/offsetProjectedPoint.w;symbol_rotation=atan((b.y-a.y)/u_aspect_ratio,b.x-a.x);}highp float angle_sin=sin(segment_angle+symbol_rotation);highp float angle_cos=cos(segment_angle+symbol_rotation);mat2 rotation_matrix=mat2(angle_cos,-1.0*angle_sin,angle_sin,angle_cos);vec4 projected_pos;if (u_is_along_line || u_is_variable_anchor) {projected_pos=vec4(a_projected_pos.xy,ele,1.0);} else if (u_pitch_with_map) {projected_pos=u_label_plane_matrix*vec4(a_projected_pos.xy+u_translation,ele,1.0);} else {projected_pos=u_label_plane_matrix*projectTileWithElevation(a_projected_pos.xy+u_translation,ele);}float z=float(u_pitch_with_map)*projected_pos.z/projected_pos.w;float projectionScaling=1.0;\n#ifdef GLOBE\nif(u_pitch_with_map && !u_is_along_line) {float anchor_pos_tile_y=(u_coord_matrix*vec4(projected_pos.xy/projected_pos.w,z,1.0)).y;projectionScaling=mix(projectionScaling,1.0/circumferenceRatioAtTileY(anchor_pos_tile_y)*u_pitched_scale,u_projection_transition);}\n#endif\nvec4 finalPos=u_coord_matrix*vec4(projected_pos.xy/projected_pos.w+rotation_matrix*(a_offset/32.0*fontScale+a_pxoffset)*projectionScaling,z,1.0);if(u_pitch_with_map) {finalPos=projectTileWithElevation(finalPos.xy,finalPos.z);}float gamma_scale=finalPos.w;gl_Position=finalPos;vec2 fade_opacity=unpack_opacity(a_fade_opacity);float visibility=calculate_visibility(projectedPoint);float fade_change=fade_opacity[1] > 0.5 ? u_fade_change :-u_fade_change;float interpolated_fade_opacity=max(0.0,min(visibility,fade_opacity[0]+fade_change));v_data0=a_tex/u_texsize;v_data1=vec3(gamma_scale,size,interpolated_fade_opacity);}';
+var symbolSDFVert = 'attribute vec4 a_pos_offset;attribute vec4 a_data;attribute vec4 a_pixeloffset;attribute vec3 a_projected_pos;attribute float a_fade_opacity;uniform bool u_is_size_zoom_constant;uniform bool u_is_size_feature_constant;uniform highp float u_size_t;uniform highp float u_size;uniform mat4 u_label_plane_matrix;uniform mat4 u_coord_matrix;uniform bool u_is_text;uniform bool u_pitch_with_map;uniform bool u_is_along_line;uniform bool u_is_variable_anchor;uniform highp float u_pitch;uniform bool u_rotate_symbol;uniform highp float u_aspect_ratio;uniform highp float u_camera_to_center_distance;uniform float u_fade_change;uniform vec2 u_texsize;uniform vec2 u_translation;uniform float u_pitched_scale;varying vec2 v_data0;varying vec3 v_data1;\n#pragma mapbox: define highp vec4 fill_color\n#pragma mapbox: define highp vec4 halo_color\n#pragma mapbox: define lowp float opacity\n#pragma mapbox: define lowp float halo_width\n#pragma mapbox: define lowp float halo_blur\nvoid main() {\n#pragma mapbox: initialize highp vec4 fill_color\n#pragma mapbox: initialize highp vec4 halo_color\n#pragma mapbox: initialize lowp float opacity\n#pragma mapbox: initialize lowp float halo_width\n#pragma mapbox: initialize lowp float halo_blur\nvec2 a_pos=a_pos_offset.xy;vec2 a_offset=a_pos_offset.zw;vec2 a_tex=a_data.xy;vec2 a_size=a_data.zw;float a_size_min=floor(a_size[0]*0.5);vec2 a_pxoffset=a_pixeloffset.xy;float ele=get_elevation(a_pos);highp float segment_angle=-a_projected_pos[2];float size;if (!u_is_size_zoom_constant && !u_is_size_feature_constant) {size=mix(a_size_min,a_size[1],u_size_t)/128.0;} else if (u_is_size_zoom_constant && !u_is_size_feature_constant) {size=a_size_min/128.0;} else {size=u_size;}vec2 translated_a_pos=a_pos+u_translation;vec4 projectedPoint=projectTileWithElevation(translated_a_pos,ele);highp float camera_to_anchor_distance=projectedPoint.w;highp float distance_ratio=u_pitch_with_map ?\ncamera_to_anchor_distance/u_camera_to_center_distance :\nu_camera_to_center_distance/camera_to_anchor_distance;highp float perspective_ratio=clamp(0.5+0.5*distance_ratio,0.0,4.0);size*=perspective_ratio;float fontScale=u_is_text ? size/24.0 : size;highp float symbol_rotation=0.0;if (u_rotate_symbol) {vec4 offsetProjectedPoint=projectTileWithElevation(translated_a_pos+vec2(1,0),ele);vec2 a=projectedPoint.xy/projectedPoint.w;vec2 b=offsetProjectedPoint.xy/offsetProjectedPoint.w;symbol_rotation=atan((b.y-a.y)/u_aspect_ratio,b.x-a.x);}highp float angle_sin=sin(segment_angle+symbol_rotation);highp float angle_cos=cos(segment_angle+symbol_rotation);mat2 rotation_matrix=mat2(angle_cos,-1.0*angle_sin,angle_sin,angle_cos);vec4 projected_pos;if (u_is_along_line || u_is_variable_anchor) {projected_pos=vec4(a_projected_pos.xy,ele,1.0);} else if (u_pitch_with_map) {projected_pos=u_label_plane_matrix*vec4(a_projected_pos.xy+u_translation,ele,1.0);} else {projected_pos=u_label_plane_matrix*projectTileWithElevation(a_projected_pos.xy+u_translation,ele);}float z=float(u_pitch_with_map)*projected_pos.z/projected_pos.w;float projectionScaling=1.0;\n#ifdef GLOBE\nif(u_pitch_with_map) {float anchor_pos_tile_y=(u_coord_matrix*vec4(projected_pos.xy/projected_pos.w,z,1.0)).y;projectionScaling=mix(projectionScaling,1.0/circumferenceRatioAtTileY(anchor_pos_tile_y)*u_pitched_scale,u_projection_transition);}\n#endif\nvec4 finalPos=u_coord_matrix*vec4(projected_pos.xy/projected_pos.w+rotation_matrix*(a_offset/32.0*fontScale+a_pxoffset)*projectionScaling,z,1.0);if(u_pitch_with_map) {finalPos=projectTileWithElevation(finalPos.xy,finalPos.z);}float gamma_scale=finalPos.w;gl_Position=finalPos;vec2 fade_opacity=unpack_opacity(a_fade_opacity);float visibility=calculate_visibility(projectedPoint);float fade_change=fade_opacity[1] > 0.5 ? u_fade_change :-u_fade_change;float interpolated_fade_opacity=max(0.0,min(visibility,fade_opacity[0]+fade_change));v_data0=a_tex/u_texsize;v_data1=vec3(gamma_scale,size,interpolated_fade_opacity);}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
 var symbolTextAndIconFrag = '#define SDF_PX 8.0\n#define SDF 1.0\n#define ICON 0.0\nuniform bool u_is_halo;uniform sampler2D u_texture;uniform sampler2D u_texture_icon;uniform highp float u_gamma_scale;uniform lowp float u_device_pixel_ratio;varying vec4 v_data0;varying vec4 v_data1;\n#pragma mapbox: define highp vec4 fill_color\n#pragma mapbox: define highp vec4 halo_color\n#pragma mapbox: define lowp float opacity\n#pragma mapbox: define lowp float halo_width\n#pragma mapbox: define lowp float halo_blur\nvoid main() {\n#pragma mapbox: initialize highp vec4 fill_color\n#pragma mapbox: initialize highp vec4 halo_color\n#pragma mapbox: initialize lowp float opacity\n#pragma mapbox: initialize lowp float halo_width\n#pragma mapbox: initialize lowp float halo_blur\nfloat fade_opacity=v_data1[2];if (v_data1.w==ICON) {vec2 tex_icon=v_data0.zw;lowp float alpha=opacity*fade_opacity;gl_FragColor=texture2D(u_texture_icon,tex_icon)*alpha;\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\nreturn;}vec2 tex=v_data0.xy;float EDGE_GAMMA=0.105/u_device_pixel_ratio;float gamma_scale=v_data1.x;float size=v_data1.y;float fontScale=size/24.0;lowp vec4 color=fill_color;highp float gamma=EDGE_GAMMA/(fontScale*u_gamma_scale);lowp float buff=(256.0-64.0)/256.0;if (u_is_halo) {color=halo_color;gamma=(halo_blur*1.19/SDF_PX+EDGE_GAMMA)/(fontScale*u_gamma_scale);buff=(6.0-halo_width/fontScale)/SDF_PX;}lowp float dist=texture2D(u_texture,tex).a;highp float gamma_scaled=gamma*gamma_scale;highp float alpha=smoothstep(buff-gamma_scaled,buff+gamma_scaled,dist);gl_FragColor=color*(alpha*opacity*fade_opacity);\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
@@ -43051,7 +43794,7 @@ var terrainDepthFrag = 'varying float v_depth;const highp vec4 bitSh=vec4(256.*2
 var terrainCoordsFrag = 'precision mediump float;uniform sampler2D u_texture;uniform float u_terrain_coords_id;varying vec2 v_texture_pos;void main() {vec4 rgba=texture2D(u_texture,v_texture_pos);gl_FragColor=vec4(rgba.r,rgba.g,rgba.b,u_terrain_coords_id);}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var terrainFrag = 'uniform sampler2D u_texture;uniform vec4 u_fog_color;uniform vec4 u_horizon_color;uniform float u_fog_ground_blend;uniform float u_fog_ground_blend_opacity;uniform float u_horizon_fog_blend;varying vec2 v_texture_pos;varying float v_fog_depth;const float gamma=2.2;vec4 gammaToLinear(vec4 color) {return pow(color,vec4(gamma));}vec4 linearToGamma(vec4 color) {return pow(color,vec4(1.0/gamma));}void main() {vec4 surface_color=texture2D(u_texture,vec2(v_texture_pos.x,1.0-v_texture_pos.y));if (v_fog_depth > u_fog_ground_blend) {vec4 surface_color_linear=gammaToLinear(surface_color);float blend_color=smoothstep(0.0,1.0,max((v_fog_depth-u_horizon_fog_blend)/(1.0-u_horizon_fog_blend),0.0));vec4 fog_horizon_color_linear=mix(gammaToLinear(u_fog_color),gammaToLinear(u_horizon_color),blend_color);float factor_fog=max(v_fog_depth-u_fog_ground_blend,0.0)/(1.0-u_fog_ground_blend);gl_FragColor=linearToGamma(mix(surface_color_linear,fog_horizon_color_linear,pow(factor_fog,2.0)*u_fog_ground_blend_opacity));} else {gl_FragColor=surface_color;}}';
+var terrainFrag = 'uniform sampler2D u_texture;uniform vec4 u_fog_color;uniform vec4 u_horizon_color;uniform float u_fog_ground_blend;uniform float u_fog_ground_blend_opacity;uniform float u_horizon_fog_blend;uniform bool u_is_globe_mode;varying vec2 v_texture_pos;varying float v_fog_depth;const float gamma=2.2;vec4 gammaToLinear(vec4 color) {return pow(color,vec4(gamma));}vec4 linearToGamma(vec4 color) {return pow(color,vec4(1.0/gamma));}void main() {vec4 surface_color=texture2D(u_texture,vec2(v_texture_pos.x,1.0-v_texture_pos.y));if (!u_is_globe_mode && v_fog_depth > u_fog_ground_blend) {vec4 surface_color_linear=gammaToLinear(surface_color);float blend_color=smoothstep(0.0,1.0,max((v_fog_depth-u_horizon_fog_blend)/(1.0-u_horizon_fog_blend),0.0));vec4 fog_horizon_color_linear=mix(gammaToLinear(u_fog_color),gammaToLinear(u_horizon_color),blend_color);float factor_fog=max(v_fog_depth-u_fog_ground_blend,0.0)/(1.0-u_fog_ground_blend);gl_FragColor=linearToGamma(mix(surface_color_linear,fog_horizon_color_linear,pow(factor_fog,2.0)*u_fog_ground_blend_opacity));} else {gl_FragColor=surface_color;}}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
 var terrainVert = 'attribute vec3 a_pos3d;uniform mat4 u_fog_matrix;uniform float u_ele_delta;varying vec2 v_texture_pos;varying float v_fog_depth;void main() {float ele=get_elevation(a_pos3d.xy);float ele_delta=a_pos3d.z==1.0 ? u_ele_delta : 0.0;v_texture_pos=a_pos3d.xy/8192.0;gl_Position=projectTileFor3D(a_pos3d.xy,get_elevation(a_pos3d.xy)-ele_delta);vec4 pos=u_fog_matrix*vec4(a_pos3d.xy,ele,1.0);v_fog_depth=pos.z/pos.w*0.5+0.5;}';
@@ -43081,7 +43824,7 @@ var atmosphereFrag = 'varying vec3 view_direction;uniform vec3 u_sun_pos;uniform
 var atmosphereVert = 'attribute vec2 a_pos;uniform mat4 u_inv_proj_matrix;varying vec3 view_direction;void main() {view_direction=(u_inv_proj_matrix*vec4(a_pos,0.0,1.0)).xyz;gl_Position=vec4(a_pos,0.0,1.0);}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var skyFrag = 'uniform vec4 u_sky_color;uniform vec4 u_horizon_color;uniform vec2 u_horizon;uniform vec2 u_horizon_normal;uniform float u_sky_horizon_blend;void main() {float x=gl_FragCoord.x;float y=gl_FragCoord.y;float blend=(y-u_horizon.y)*u_horizon_normal.y+(x-u_horizon.x)*u_horizon_normal.x;if (blend > 0.0) {if (blend < u_sky_horizon_blend) {gl_FragColor=mix(u_sky_color,u_horizon_color,pow(1.0-blend/u_sky_horizon_blend,2.0));} else {gl_FragColor=u_sky_color;}}}';
+var skyFrag = 'uniform vec4 u_sky_color;uniform vec4 u_horizon_color;uniform vec2 u_horizon;uniform vec2 u_horizon_normal;uniform float u_sky_horizon_blend;uniform float u_sky_blend;void main() {float x=gl_FragCoord.x;float y=gl_FragCoord.y;float blend=(y-u_horizon.y)*u_horizon_normal.y+(x-u_horizon.x)*u_horizon_normal.x;if (blend > 0.0) {if (blend < u_sky_horizon_blend) {gl_FragColor=mix(u_sky_color,u_horizon_color,pow(1.0-blend/u_sky_horizon_blend,2.0));} else {gl_FragColor=u_sky_color;}}gl_FragColor=mix(gl_FragColor,vec4(vec3(0.0),0.0),u_sky_blend);}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
 var skyVert = 'attribute vec2 a_pos;void main() {gl_Position=vec4(a_pos,1.0,1.0);}';
@@ -43100,6 +43843,7 @@ const shaders = {
     collisionBox: compile(collisionBoxFrag, collisionBoxVert),
     collisionCircle: compile(collisionCircleFrag, collisionCircleVert),
     debug: compile(debugFrag, debugVert),
+    depth: compile(clippingMaskFrag, depthVert),
     fill: compile(fillFrag, fillVert),
     fillOutline: compile(fillOutlineFrag, fillOutlineVert),
     fillOutlinePattern: compile(fillOutlinePatternFrag, fillOutlinePatternVert),
@@ -43121,7 +43865,7 @@ const shaders = {
     terrainCoords: compile(terrainCoordsFrag, terrainVertCoords),
     projectionErrorMeasurement: compile(projectionErrorMeasurementFrag, projectionErrorMeasurementVert),
     atmosphere: compile(atmosphereFrag, atmosphereVert),
-    sky: compile(skyFrag, skyVert)
+    sky: compile(skyFrag, skyVert),
 };
 // Expand #pragmas to #ifdefs.
 function compile(fragmentSource, vertexSource) {
@@ -43306,488 +44050,13 @@ class MercatorProjection {
     }
 }
 
-/**
- * An `EdgeInset` object represents screen space padding applied to the edges of the viewport.
- * This shifts the apparent center or the vanishing point of the map. This is useful for adding floating UI elements
- * on top of the map and having the vanishing point shift as UI elements resize.
- *
- * @group Geography and Geometry
- */
-class EdgeInsets {
-    constructor(top = 0, bottom = 0, left = 0, right = 0) {
-        if (isNaN(top) || top < 0 ||
-            isNaN(bottom) || bottom < 0 ||
-            isNaN(left) || left < 0 ||
-            isNaN(right) || right < 0) {
-            throw new Error('Invalid value for edge-insets, top, bottom, left and right must all be numbers');
-        }
-        this.top = top;
-        this.bottom = bottom;
-        this.left = left;
-        this.right = right;
-    }
-    /**
-     * Interpolates the inset in-place.
-     * This maintains the current inset value for any inset not present in `target`.
-     * @param start - interpolation start
-     * @param target - interpolation target
-     * @param t - interpolation step/weight
-     * @returns the insets
-     */
-    interpolate(start, target, t) {
-        if (target.top != null && start.top != null)
-            this.top = interpolate.number(start.top, target.top, t);
-        if (target.bottom != null && start.bottom != null)
-            this.bottom = interpolate.number(start.bottom, target.bottom, t);
-        if (target.left != null && start.left != null)
-            this.left = interpolate.number(start.left, target.left, t);
-        if (target.right != null && start.right != null)
-            this.right = interpolate.number(start.right, target.right, t);
-        return this;
-    }
-    /**
-     * Utility method that computes the new apprent center or vanishing point after applying insets.
-     * This is in pixels and with the top left being (0.0) and +y being downwards.
-     *
-     * @param width - the width
-     * @param height - the height
-     * @returns the point
-     */
-    getCenter(width, height) {
-        // Clamp insets so they never overflow width/height and always calculate a valid center
-        const x = clamp$1((this.left + width - this.right) / 2, 0, width);
-        const y = clamp$1((this.top + height - this.bottom) / 2, 0, height);
-        return new Point(x, y);
-    }
-    equals(other) {
-        return this.top === other.top &&
-            this.bottom === other.bottom &&
-            this.left === other.left &&
-            this.right === other.right;
-    }
-    clone() {
-        return new EdgeInsets(this.top, this.bottom, this.left, this.right);
-    }
-    /**
-     * Returns the current state as json, useful when you want to have a
-     * read-only representation of the inset.
-     *
-     * @returns state as json
-     */
-    toJSON() {
-        return {
-            top: this.top,
-            bottom: this.bottom,
-            left: this.left,
-            right: this.right
-        };
-    }
-}
-
-const MAX_VALID_LATITUDE = 85.051129;
-/**
- * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
- * interpolating between the two endpoints will cross it.
- * @param center - The LngLat object of the desired center. This object will be mutated.
- */
-function normalizeCenter(tr, center) {
-    if (!tr.renderWorldCopies || tr.lngRange)
-        return;
-    const delta = center.lng - tr.center.lng;
-    center.lng +=
-        delta > 180 ? -360 :
-            delta < -180 ? 360 : 0;
-}
-/**
- * Computes scaling from zoom level.
- */
-function zoomScale(zoom) { return Math.pow(2, zoom); }
-/**
- * Computes zoom level from scaling.
- */
-function scaleZoom(scale) { return Math.log(scale) / Math.LN2; }
-function getTileZoom(zoom) {
-    return Math.max(0, Math.floor(zoom));
-}
-/**
- * @internal
- * This class stores all values that define a transform's state,
- * such as center, zoom, minZoom, etc.
- * This can be used as a helper for implementing the ITransform interface.
- */
-class TransformHelper {
-    constructor(callbacks, minZoom, maxZoom, minPitch, maxPitch, renderWorldCopies) {
-        this._callbacks = callbacks;
-        this._tileSize = 512; // constant
-        this._renderWorldCopies = renderWorldCopies === undefined ? true : !!renderWorldCopies;
-        this._minZoom = minZoom || 0;
-        this._maxZoom = maxZoom || 22;
-        this._minPitch = (minPitch === undefined || minPitch === null) ? 0 : minPitch;
-        this._maxPitch = (maxPitch === undefined || maxPitch === null) ? 60 : maxPitch;
-        this.setMaxBounds();
-        this._width = 0;
-        this._height = 0;
-        this._center = new LngLat(0, 0);
-        this._elevation = 0;
-        this._zoom = 0;
-        this._tileZoom = getTileZoom(this._zoom);
-        this._scale = zoomScale(this._zoom);
-        this._bearingInRadians = 0;
-        this._fovInRadians = 0.6435011087932844;
-        this._pitchInRadians = 0;
-        this._rollInRadians = 0;
-        this._unmodified = true;
-        this._edgeInsets = new EdgeInsets();
-        this._minElevationForCurrentTile = 0;
-    }
-    apply(thatI, constrain) {
-        this._latRange = thatI.latRange;
-        this._lngRange = thatI.lngRange;
-        this._width = thatI.width;
-        this._height = thatI.height;
-        this._center = thatI.center;
-        this._elevation = thatI.elevation;
-        this._minElevationForCurrentTile = thatI.minElevationForCurrentTile;
-        this._zoom = thatI.zoom;
-        this._tileZoom = getTileZoom(this._zoom);
-        this._scale = zoomScale(this._zoom);
-        this._bearingInRadians = thatI.bearingInRadians;
-        this._fovInRadians = thatI.fovInRadians;
-        this._pitchInRadians = thatI.pitchInRadians;
-        this._rollInRadians = thatI.rollInRadians;
-        this._unmodified = thatI.unmodified;
-        this._edgeInsets = new EdgeInsets(thatI.padding.top, thatI.padding.bottom, thatI.padding.left, thatI.padding.right);
-        this._minZoom = thatI.minZoom;
-        this._maxZoom = thatI.maxZoom;
-        this._minPitch = thatI.minPitch;
-        this._maxPitch = thatI.maxPitch;
-        this._renderWorldCopies = thatI.renderWorldCopies;
-        if (constrain) {
-            this._constrain();
-        }
-        this._calcMatrices();
-    }
-    get pixelsToClipSpaceMatrix() { return this._pixelsToClipSpaceMatrix; }
-    get clipSpaceToPixelsMatrix() { return this._clipSpaceToPixelsMatrix; }
-    get minElevationForCurrentTile() { return this._minElevationForCurrentTile; }
-    setMinElevationForCurrentTile(ele) {
-        this._minElevationForCurrentTile = ele;
-    }
-    get tileSize() { return this._tileSize; }
-    get tileZoom() { return this._tileZoom; }
-    get scale() { return this._scale; }
-    /**
-     * Gets the transform's width in pixels. Use {@link resize} to set the transform's size.
-     */
-    get width() { return this._width; }
-    /**
-     * Gets the transform's height in pixels. Use {@link resize} to set the transform's size.
-     */
-    get height() { return this._height; }
-    /**
-     * Gets the transform's bearing in radians.
-     */
-    get bearingInRadians() { return this._bearingInRadians; }
-    get lngRange() { return this._lngRange; }
-    get latRange() { return this._latRange; }
-    get pixelsToGLUnits() { return this._pixelsToGLUnits; }
-    get minZoom() { return this._minZoom; }
-    setMinZoom(zoom) {
-        if (this._minZoom === zoom)
-            return;
-        this._minZoom = zoom;
-        this.setZoom(this.getConstrained(this._center, this.zoom).zoom);
-    }
-    get maxZoom() { return this._maxZoom; }
-    setMaxZoom(zoom) {
-        if (this._maxZoom === zoom)
-            return;
-        this._maxZoom = zoom;
-        this.setZoom(this.getConstrained(this._center, this.zoom).zoom);
-    }
-    get minPitch() { return this._minPitch; }
-    setMinPitch(pitch) {
-        if (this._minPitch === pitch)
-            return;
-        this._minPitch = pitch;
-        this.setPitch(Math.max(this.pitch, pitch));
-    }
-    get maxPitch() { return this._maxPitch; }
-    setMaxPitch(pitch) {
-        if (this._maxPitch === pitch)
-            return;
-        this._maxPitch = pitch;
-        this.setPitch(Math.min(this.pitch, pitch));
-    }
-    get renderWorldCopies() { return this._renderWorldCopies; }
-    setRenderWorldCopies(renderWorldCopies) {
-        if (renderWorldCopies === undefined) {
-            renderWorldCopies = true;
-        }
-        else if (renderWorldCopies === null) {
-            renderWorldCopies = false;
-        }
-        this._renderWorldCopies = renderWorldCopies;
-    }
-    get worldSize() {
-        return this._tileSize * this._scale;
-    }
-    get centerOffset() {
-        return this.centerPoint._sub(this.size._div(2));
-    }
-    /**
-     * Gets the transform's dimensions packed into a Point object.
-     */
-    get size() {
-        return new Point(this._width, this._height);
-    }
-    get bearing() {
-        return this._bearingInRadians / Math.PI * 180;
-    }
-    setBearing(bearing) {
-        const b = wrap(bearing, -180, 180) * Math.PI / 180;
-        if (this._bearingInRadians === b)
-            return;
-        this._unmodified = false;
-        this._bearingInRadians = b;
-        this._calcMatrices();
-        // 2x2 matrix for rotating points
-        this._rotationMatrix = create$9();
-        rotate$4(this._rotationMatrix, this._rotationMatrix, -this._bearingInRadians);
-    }
-    get rotationMatrix() { return this._rotationMatrix; }
-    get pitchInRadians() {
-        return this._pitchInRadians;
-    }
-    get pitch() {
-        return this._pitchInRadians / Math.PI * 180;
-    }
-    setPitch(pitch) {
-        const p = clamp$1(pitch, this.minPitch, this.maxPitch) / 180 * Math.PI;
-        if (this._pitchInRadians === p)
-            return;
-        this._unmodified = false;
-        this._pitchInRadians = p;
-        this._calcMatrices();
-    }
-    get rollInRadians() {
-        return this._rollInRadians;
-    }
-    get roll() {
-        return this._rollInRadians / Math.PI * 180;
-    }
-    setRoll(roll) {
-        const r = roll / 180 * Math.PI;
-        if (this._rollInRadians === r)
-            return;
-        this._unmodified = false;
-        this._rollInRadians = r;
-        this._calcMatrices();
-    }
-    get fovInRadians() {
-        return this._fovInRadians;
-    }
-    get fov() {
-        return this._fovInRadians / Math.PI * 180;
-    }
-    setFov(fov) {
-        fov = Math.max(0.01, Math.min(60, fov));
-        if (this._fovInRadians === fov)
-            return;
-        this._unmodified = false;
-        this._fovInRadians = fov / 180 * Math.PI;
-        this._calcMatrices();
-    }
-    get zoom() { return this._zoom; }
-    setZoom(zoom) {
-        const constrainedZoom = this.getConstrained(this._center, zoom).zoom;
-        if (this._zoom === constrainedZoom)
-            return;
-        this._unmodified = false;
-        this._zoom = constrainedZoom;
-        this._tileZoom = Math.max(0, Math.floor(constrainedZoom));
-        this._scale = zoomScale(constrainedZoom);
-        this._constrain();
-        this._calcMatrices();
-    }
-    get center() { return this._center; }
-    setCenter(center) {
-        if (center.lat === this._center.lat && center.lng === this._center.lng)
-            return;
-        this._unmodified = false;
-        this._center = center;
-        this._constrain();
-        this._calcMatrices();
-    }
-    /**
-     * Elevation at current center point, meters above sea level
-     */
-    get elevation() { return this._elevation; }
-    setElevation(elevation) {
-        if (elevation === this._elevation)
-            return;
-        this._elevation = elevation;
-        this._constrain();
-        this._calcMatrices();
-    }
-    get padding() { return this._edgeInsets.toJSON(); }
-    setPadding(padding) {
-        if (this._edgeInsets.equals(padding))
-            return;
-        this._unmodified = false;
-        // Update edge-insets in-place
-        this._edgeInsets.interpolate(this._edgeInsets, padding, 1);
-        this._calcMatrices();
-    }
-    /**
-     * The center of the screen in pixels with the top-left corner being (0,0)
-     * and +y axis pointing downwards. This accounts for padding.
-     */
-    get centerPoint() {
-        return this._edgeInsets.getCenter(this._width, this._height);
-    }
-    /**
-     * @internal
-     */
-    get pixelsPerMeter() { return this._pixelPerMeter; }
-    get unmodified() { return this._unmodified; }
-    /**
-     * Returns if the padding params match
-     *
-     * @param padding - the padding to check against
-     * @returns true if they are equal, false otherwise
-     */
-    isPaddingEqual(padding) {
-        return this._edgeInsets.equals(padding);
-    }
-    /**
-     * Helper method to update edge-insets in place
-     *
-     * @param start - the starting padding
-     * @param target - the target padding
-     * @param t - the step/weight
-     */
-    interpolatePadding(start, target, t) {
-        this._unmodified = false;
-        this._edgeInsets.interpolate(start, target, t);
-        this._constrain();
-        this._calcMatrices();
-    }
-    /**
-     * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
-     * @param options - The options, most importantly the source's tile size.
-     * @returns An integer zoom level at which all tiles will be visible.
-     */
-    coveringZoomLevel(options) {
-        const z = (options.roundZoom ? Math.round : Math.floor)(this.zoom + scaleZoom(this._tileSize / options.tileSize));
-        // At negative zoom levels load tiles from z0 because negative tile zoom levels don't exist.
-        return Math.max(0, z);
-    }
-    resize(width, height) {
-        this._width = width;
-        this._height = height;
-        this._constrain();
-        this._calcMatrices();
-    }
-    /**
-     * Returns the maximum geographical bounds the map is constrained to, or `null` if none set.
-     * @returns max bounds
-     */
-    getMaxBounds() {
-        if (!this._latRange || this._latRange.length !== 2 ||
-            !this._lngRange || this._lngRange.length !== 2)
-            return null;
-        return new LngLatBounds([this._lngRange[0], this._latRange[0]], [this._lngRange[1], this._latRange[1]]);
-    }
-    /**
-     * Sets or clears the map's geographical constraints.
-     * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
-     */
-    setMaxBounds(bounds) {
-        if (bounds) {
-            this._lngRange = [bounds.getWest(), bounds.getEast()];
-            this._latRange = [bounds.getSouth(), bounds.getNorth()];
-            this._constrain();
-        }
-        else {
-            this._lngRange = null;
-            this._latRange = [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE];
-        }
-    }
-    getConstrained(lngLat, zoom) {
-        return this._callbacks.getConstrained(lngLat, zoom);
-    }
-    /**
-     * When the map is pitched, some of the 3D features that intersect a query will not intersect
-     * the query at the surface of the earth. Instead the feature may be closer and only intersect
-     * the query because it extrudes into the air.
-     * @param queryGeometry - For point queries, the line from the query point to the "camera point",
-     * for other geometries, the envelope of the query geometry and the "camera point"
-     * @returns a geometry that includes all of the original query as well as all possible ares of the
-     * screen where the *base* of a visible extrusion could be.
-     *
-     */
-    getCameraQueryGeometry(cameraPoint, queryGeometry) {
-        if (queryGeometry.length === 1) {
-            return [queryGeometry[0], cameraPoint];
-        }
-        else {
-            let minX = cameraPoint.x;
-            let minY = cameraPoint.y;
-            let maxX = cameraPoint.x;
-            let maxY = cameraPoint.y;
-            for (const p of queryGeometry) {
-                minX = Math.min(minX, p.x);
-                minY = Math.min(minY, p.y);
-                maxX = Math.max(maxX, p.x);
-                maxY = Math.max(maxY, p.y);
-            }
-            return [
-                new Point(minX, minY),
-                new Point(maxX, minY),
-                new Point(maxX, maxY),
-                new Point(minX, maxY),
-                new Point(minX, minY)
-            ];
-        }
-    }
-    /**
-     * @internal
-     * Snaps the transform's center, zoom, etc. into the valid range.
-     */
-    _constrain() {
-        if (!this.center || !this._width || !this._height || this._constraining)
-            return;
-        this._constraining = true;
-        const unmodified = this._unmodified;
-        const { center, zoom } = this.getConstrained(this.center, this.zoom);
-        this.setCenter(center);
-        this.setZoom(zoom);
-        this._unmodified = unmodified;
-        this._constraining = false;
-    }
-    /**
-     * This function is called every time one of the transform's defining properties (center, pitch, etc.) changes.
-     * This function should update the transform's internal data, such as matrices.
-     * Any derived `_calcMatrices` function should also call the base function first. The base function only depends on the `_width` and `_height` fields.
-     */
-    _calcMatrices() {
-        if (this._width && this._height) {
-            this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
-            let m = identity$2(new Float64Array(16));
-            scale$5(m, m, [this._width / 2, -this._height / 2, 1]);
-            translate$2(m, m, [1, -1, 0]);
-            this._clipSpaceToPixelsMatrix = m;
-            m = identity$2(new Float64Array(16));
-            scale$5(m, m, [1, -1, 1]);
-            translate$2(m, m, [-1, -1, 0]);
-            scale$5(m, m, [2 / this._width, 2 / this._height, 1]);
-            this._pixelsToClipSpaceMatrix = m;
-        }
-        this._callbacks.calcMatrices();
-    }
-}
-
+/*
+* The maximum angle to use for the Mercator horizon. This must be less than 90
+* to prevent errors in `MercatorTransform::_calcMatrices()`. It shouldn't be too close
+* to 90, or the distance to the horizon will become very large, unnecessarily increasing
+* the number of tiles needed to render the map.
+*/
+const maxMercatorHorizonAngle = 89.25;
 /**
  * Returns mercator coordinates in range 0..1 for given coordinates inside a specified tile.
  * @param inTileX - X coordinate in tile units - range [0..EXTENT].
@@ -43851,7 +44120,7 @@ function unprojectFromWorldCoordinates(worldSize, point) {
  * @returns Horizon above center in pixels.
  */
 function getMercatorHorizon(transform) {
-    return Math.tan(Math.PI / 2 - transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance * 0.85;
+    return transform.cameraToCenterDistance * Math.min(Math.tan(degreesToRadians(90 - transform.pitch)) * 0.85, Math.tan(degreesToRadians(maxMercatorHorizonAngle - transform.pitch)));
 }
 function getBasicProjectionData(overscaledTileID, tilePosMatrix, ignoreTerrainMatrix) {
     let tileOffsetSize;
@@ -43895,11 +44164,135 @@ function calculateTileMatrix(unwrappedTileID, worldSize) {
     scale$5(worldMatrix, worldMatrix, [scale / EXTENT$1, scale / EXTENT$1, 1]);
     return worldMatrix;
 }
+function cameraMercatorCoordinateFromCenterAndRotation(center, elevation, pitch, bearing, distance) {
+    const centerMercator = MercatorCoordinate.fromLngLat(center, elevation);
+    const mercUnitsPerMeter = mercatorZfromAltitude(1, center.lat);
+    const dMercator = distance * mercUnitsPerMeter;
+    const dzMercator = dMercator * Math.cos(degreesToRadians(pitch));
+    const dhMercator = Math.sqrt(dMercator * dMercator - dzMercator * dzMercator);
+    const dxMercator = dhMercator * Math.sin(degreesToRadians(-bearing));
+    const dyMercator = dhMercator * Math.cos(degreesToRadians(-bearing));
+    return new MercatorCoordinate(centerMercator.x + dxMercator, centerMercator.y + dyMercator, centerMercator.z + dzMercator);
+}
+
+class Aabb {
+    constructor(min_, max_) {
+        this.min = min_;
+        this.max = max_;
+        this.center = scale$4([], add$4([], this.min, this.max), 0.5);
+    }
+    quadrant(index) {
+        const split = [(index % 2) === 0, index < 2];
+        const qMin = clone$5(this.min);
+        const qMax = clone$5(this.max);
+        for (let axis = 0; axis < split.length; axis++) {
+            qMin[axis] = split[axis] ? this.min[axis] : this.center[axis];
+            qMax[axis] = split[axis] ? this.center[axis] : this.max[axis];
+        }
+        // Elevation is always constant, hence quadrant.max.z = this.max.z
+        qMax[2] = this.max[2];
+        return new Aabb(qMin, qMax);
+    }
+    distanceX(point) {
+        const pointOnAabb = Math.max(Math.min(this.max[0], point[0]), this.min[0]);
+        return pointOnAabb - point[0];
+    }
+    distanceY(point) {
+        const pointOnAabb = Math.max(Math.min(this.max[1], point[1]), this.min[1]);
+        return pointOnAabb - point[1];
+    }
+    /**
+     * Performs a frustum-aabb intersection test.
+     */
+    intersectsFrustum(frustum) {
+        // Execute separating axis test between two convex objects to find intersections
+        // Each frustum plane together with 3 major axes define the separating axes
+        let fullyInside = true;
+        for (let p = 0; p < frustum.planes.length; p++) {
+            const planeIntersection = this.intersectsPlane(frustum.planes[p]);
+            if (planeIntersection === 0 /* IntersectionResult.None */) {
+                return 0 /* IntersectionResult.None */;
+            }
+            if (planeIntersection === 1 /* IntersectionResult.Partial */) {
+                fullyInside = false;
+            }
+        }
+        if (fullyInside) {
+            return 2 /* IntersectionResult.Full */;
+        }
+        if (frustum.aabb.min[0] > this.max[0] || frustum.aabb.min[1] > this.max[1] || frustum.aabb.min[2] > this.max[2] ||
+            frustum.aabb.max[0] < this.min[0] || frustum.aabb.max[1] < this.min[1] || frustum.aabb.max[2] < this.min[2]) {
+            return 0 /* IntersectionResult.None */;
+        }
+        return 1 /* IntersectionResult.Partial */;
+    }
+    /**
+     * Performs a halfspace-aabb intersection test.
+     */
+    intersectsPlane(plane) {
+        let distMin = plane[3];
+        let distMax = plane[3];
+        for (let i = 0; i < 3; i++) {
+            if (plane[i] > 0) {
+                distMin += plane[i] * this.min[i];
+                distMax += plane[i] * this.max[i];
+            }
+            else {
+                distMax += plane[i] * this.min[i];
+                distMin += plane[i] * this.max[i];
+            }
+        }
+        if (distMin >= 0) {
+            return 2 /* IntersectionResult.Full */;
+        }
+        if (distMax < 0) {
+            return 0 /* IntersectionResult.None */;
+        }
+        return 1 /* IntersectionResult.Partial */;
+    }
+}
+
+class MercatorCoveringTilesDetailsProvider {
+    distanceToTile2d(pointX, pointY, tileID, aabb) {
+        const distanceX = aabb.distanceX([pointX, pointY]);
+        const distanceY = aabb.distanceY([pointX, pointY]);
+        return Math.hypot(distanceX, distanceY);
+    }
+    /**
+     * Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
+     */
+    getWrap(centerCoord, tileID, parentWrap) {
+        return parentWrap;
+    }
+    /**
+     * Returns the AABB of the specified tile.
+     * @param tileID - Tile x, y and z for zoom.
+     */
+    getTileAABB(tileID, wrap, elevation, options) {
+        var _a, _b;
+        let minElevation = elevation;
+        let maxElevation = elevation;
+        if (options.terrain) {
+            const overscaledTileID = new OverscaledTileID(tileID.z, wrap, tileID.z, tileID.x, tileID.y);
+            const minMax = options.terrain.getMinMaxElevation(overscaledTileID);
+            minElevation = (_a = minMax.minElevation) !== null && _a !== void 0 ? _a : elevation;
+            maxElevation = (_b = minMax.maxElevation) !== null && _b !== void 0 ? _b : elevation;
+        }
+        const numTiles = 1 << tileID.z;
+        return new Aabb([wrap + tileID.x / numTiles, tileID.y / numTiles, minElevation], [wrap + (tileID.x + 1) / numTiles, (tileID.y + 1) / numTiles, maxElevation]);
+    }
+    allowVariableZoom(transform, options) {
+        const zfov = transform.fov * (Math.abs(Math.cos(transform.rollInRadians)) * transform.height + Math.abs(Math.sin(transform.rollInRadians)) * transform.width) / transform.height;
+        const maxConstantZoomPitch = clamp$1(78.5 - zfov / 2, 0.0, 60.0);
+        return (!!options.terrain || transform.pitch > maxConstantZoomPitch || transform.padding.top >= 0.1);
+    }
+}
 
 class Frustum {
-    constructor(points, planes) {
+    constructor(points, planes, aabb) {
         this.points = points;
         this.planes = planes;
+        this.aabb = aabb;
     }
     static fromInvProjectionMatrix(invProj, worldSize = 1, zoom = 0) {
         const clipSpaceCorners = [
@@ -43934,215 +44327,16 @@ class Frustum {
             const d = -dot$5(n, frustumCoords[p[1]]);
             return n.concat(d);
         });
-        return new Frustum(frustumCoords, frustumPlanes);
-    }
-}
-class Aabb {
-    constructor(min_, max_) {
-        this.min = min_;
-        this.max = max_;
-        this.center = scale$4([], add$4([], this.min, this.max), 0.5);
-    }
-    quadrant(index) {
-        const split = [(index % 2) === 0, index < 2];
-        const qMin = clone$5(this.min);
-        const qMax = clone$5(this.max);
-        for (let axis = 0; axis < split.length; axis++) {
-            qMin[axis] = split[axis] ? this.min[axis] : this.center[axis];
-            qMax[axis] = split[axis] ? this.center[axis] : this.max[axis];
-        }
-        // Elevation is always constant, hence quadrant.max.z = this.max.z
-        qMax[2] = this.max[2];
-        return new Aabb(qMin, qMax);
-    }
-    distanceX(point) {
-        const pointOnAabb = Math.max(Math.min(this.max[0], point[0]), this.min[0]);
-        return pointOnAabb - point[0];
-    }
-    distanceY(point) {
-        const pointOnAabb = Math.max(Math.min(this.max[1], point[1]), this.min[1]);
-        return pointOnAabb - point[1];
-    }
-    /**
-     * Performs a frustum-aabb intersection test. Returns 0 if there's no intersection,
-     * 1 if shapes are intersecting and 2 if the aabb if fully inside the frustum.
-     */
-    intersectsFrustum(frustum) {
-        // Execute separating axis test between two convex objects to find intersections
-        // Each frustum plane together with 3 major axes define the separating axes
-        const aabbPoints = [
-            [this.min[0], this.min[1], this.min[2], 1],
-            [this.max[0], this.min[1], this.min[2], 1],
-            [this.max[0], this.max[1], this.min[2], 1],
-            [this.min[0], this.max[1], this.min[2], 1],
-            [this.min[0], this.min[1], this.max[2], 1],
-            [this.max[0], this.min[1], this.max[2], 1],
-            [this.max[0], this.max[1], this.max[2], 1],
-            [this.min[0], this.max[1], this.max[2], 1]
-        ];
-        let fullyInside = true;
-        for (let p = 0; p < frustum.planes.length; p++) {
-            const plane = frustum.planes[p];
-            let pointsInside = 0;
-            for (let i = 0; i < aabbPoints.length; i++) {
-                if (dot$4(plane, aabbPoints[i]) >= 0) {
-                    pointsInside++;
-                }
-            }
-            if (pointsInside === 0)
-                return 0 /* IntersectionResult.None */;
-            if (pointsInside !== aabbPoints.length)
-                fullyInside = false;
-        }
-        if (fullyInside)
-            return 2 /* IntersectionResult.Full */;
-        for (let axis = 0; axis < 3; axis++) {
-            let projMin = Number.MAX_VALUE;
-            let projMax = -Number.MAX_VALUE;
-            for (let p = 0; p < frustum.points.length; p++) {
-                const projectedPoint = frustum.points[p][axis] - this.min[axis];
-                projMin = Math.min(projMin, projectedPoint);
-                projMax = Math.max(projMax, projectedPoint);
-            }
-            if (projMax < 0 || projMin > this.max[axis] - this.min[axis])
-                return 0 /* IntersectionResult.None */;
-        }
-        return 1 /* IntersectionResult.Partial */;
-    }
-    /**
-     * Performs a halfspace-aabb intersection test. Returns 0 if there's no intersection,
-     * 1 if shapes are intersecting and 2 if the aabb if fully inside the plane's positive halfspace.
-     */
-    intersectsPlane(plane) {
-        const aabbPoints = [
-            [this.min[0], this.min[1], this.min[2], 1],
-            [this.max[0], this.min[1], this.min[2], 1],
-            [this.max[0], this.max[1], this.min[2], 1],
-            [this.min[0], this.max[1], this.min[2], 1],
-            [this.min[0], this.min[1], this.max[2], 1],
-            [this.max[0], this.min[1], this.max[2], 1],
-            [this.max[0], this.max[1], this.max[2], 1],
-            [this.min[0], this.max[1], this.max[2], 1]
-        ];
-        let pointsInside = 0;
-        for (let i = 0; i < aabbPoints.length; i++) {
-            if (dot$4(plane, aabbPoints[i]) >= 0) {
-                pointsInside++;
+        const min = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
+        const max = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
+        for (const p of frustumCoords) {
+            for (let i = 0; i < 3; i++) {
+                min[i] = Math.min(min[i], p[i]);
+                max[i] = Math.max(max[i], p[i]);
             }
         }
-        if (pointsInside === 0) {
-            return 0 /* IntersectionResult.None */;
-        }
-        else if (pointsInside < aabbPoints.length) {
-            return 1 /* IntersectionResult.Partial */;
-        }
-        else {
-            return 2 /* IntersectionResult.Full */;
-        }
+        return new Frustum(frustumCoords, frustumPlanes, new Aabb(min, max));
     }
-}
-
-/**
- * Returns a list of tiles that optimally covers the screen.
- * Correctly handles LOD when moving over the antimeridian.
- * @param transform - The mercator transform instance.
- * @param options - Additional coveringTiles options.
- * @param invViewProjMatrix - Inverse view projection matrix, for computing camera frustum.
- * @returns A list of tile coordinates, ordered by ascending distance from camera.
- */
-function mercatorCoveringTiles(transform, options, invViewProjMatrix) {
-    var _a, _b;
-    let z = transform.coveringZoomLevel(options);
-    const actualZ = z;
-    if (options.minzoom !== undefined && z < options.minzoom)
-        return [];
-    if (options.maxzoom !== undefined && z > options.maxzoom)
-        z = options.maxzoom;
-    const cameraCoord = transform.screenPointToMercatorCoordinate(transform.getCameraPoint());
-    const centerCoord = MercatorCoordinate.fromLngLat(transform.center);
-    const numTiles = Math.pow(2, z);
-    const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
-    const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
-    const cameraFrustum = Frustum.fromInvProjectionMatrix(invViewProjMatrix, transform.worldSize, z);
-    // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
-    let minZoom = options.minzoom || 0;
-    // Use 0.1 as an epsilon to avoid for explicit == 0.0 floating point checks
-    if (!options.terrain && transform.pitch <= 60.0 && transform.padding.top < 0.1)
-        minZoom = z;
-    // There should always be a certain number of maximum zoom level tiles surrounding the center location in 2D or in front of the camera in 3D
-    const radiusOfMaxLvlLodInTiles = options.terrain ? 2 / Math.min(transform.tileSize, options.tileSize) * transform.tileSize : 3;
-    const newRootTile = (wrap) => {
-        return {
-            aabb: new Aabb([wrap * numTiles, 0, 0], [(wrap + 1) * numTiles, numTiles, 0]),
-            zoom: 0,
-            x: 0,
-            y: 0,
-            wrap,
-            fullyVisible: false
-        };
-    };
-    // Do a depth-first traversal to find visible tiles and proper levels of detail
-    const stack = [];
-    const result = [];
-    const maxZoom = z;
-    const overscaledZ = options.reparseOverscaled ? actualZ : z;
-    if (transform.renderWorldCopies) {
-        // Render copy of the globe thrice on both sides
-        for (let i = 1; i <= 3; i++) {
-            stack.push(newRootTile(-i));
-            stack.push(newRootTile(i));
-        }
-    }
-    stack.push(newRootTile(0));
-    while (stack.length > 0) {
-        const it = stack.pop();
-        const x = it.x;
-        const y = it.y;
-        let fullyVisible = it.fullyVisible;
-        // Visibility of a tile is not required if any of its ancestor if fully inside the frustum
-        if (!fullyVisible) {
-            const intersectResult = it.aabb.intersectsFrustum(cameraFrustum);
-            if (intersectResult === 0 /* IntersectionResult.None */)
-                continue;
-            fullyVisible = intersectResult === 2 /* IntersectionResult.Full */;
-        }
-        const refPoint = options.terrain ? cameraPoint : centerPoint;
-        const distanceX = it.aabb.distanceX(refPoint);
-        const distanceY = it.aabb.distanceY(refPoint);
-        const longestDim = Math.max(Math.abs(distanceX), Math.abs(distanceY));
-        // We're using distance based heuristics to determine if a tile should be split into quadrants or not.
-        // radiusOfMaxLvlLodInTiles defines that there's always a certain number of maxLevel tiles next to the map center.
-        // Using the fact that a parent node in quadtree is twice the size of its children (per dimension)
-        // we can define distance thresholds for each relative level:
-        // f(k) = offset + 2 + 4 + 8 + 16 + ... + 2^k. This is the same as "offset+2^(k+1)-2"
-        const distToSplit = radiusOfMaxLvlLodInTiles + (1 << (maxZoom - it.zoom)) - 2;
-        // Have we reached the target depth or is the tile too far away to be any split further?
-        if (it.zoom === maxZoom || (longestDim > distToSplit && it.zoom >= minZoom)) {
-            const dz = maxZoom - it.zoom, dx = cameraPoint[0] - 0.5 - (x << dz), dy = cameraPoint[1] - 0.5 - (y << dz);
-            result.push({
-                tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, it.wrap, it.zoom, x, y),
-                distanceSq: sqrLen([centerPoint[0] - 0.5 - x, centerPoint[1] - 0.5 - y]),
-                // this variable is currently not used, but may be important to reduce the amount of loaded tiles
-                tileDistanceToCamera: Math.sqrt(dx * dx + dy * dy)
-            });
-            continue;
-        }
-        for (let i = 0; i < 4; i++) {
-            const childX = (x << 1) + (i % 2);
-            const childY = (y << 1) + (i >> 1);
-            const childZ = it.zoom + 1;
-            let quadrant = it.aabb.quadrant(i);
-            if (options.terrain) {
-                const tileID = new OverscaledTileID(childZ, it.wrap, childZ, childX, childY);
-                const minMax = options.terrain.getMinMaxElevation(tileID);
-                const minElevation = (_a = minMax.minElevation) !== null && _a !== void 0 ? _a : transform.elevation;
-                const maxElevation = (_b = minMax.maxElevation) !== null && _b !== void 0 ? _b : transform.elevation;
-                quadrant = new Aabb([quadrant.min[0], quadrant.min[1], minElevation], [quadrant.max[0], quadrant.max[1], maxElevation]);
-            }
-            stack.push({ aabb: quadrant, zoom: childZ, x: childX, y: childY, wrap: it.wrap, fullyVisible });
-        }
-    }
-    return result.sort((a, b) => a.distanceSq - b.distanceSq).map(a => a.tileID);
 }
 
 class MercatorTransform {
@@ -44220,9 +44414,6 @@ class MercatorTransform {
     }
     isPaddingEqual(padding) {
         return this._helper.isPaddingEqual(padding);
-    }
-    coveringZoomLevel(options) {
-        return this._helper.coveringZoomLevel(options);
     }
     resize(width, height) {
         this._helper.resize(width, height);
@@ -44323,6 +44514,7 @@ class MercatorTransform {
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
         }, minZoom, maxZoom, minPitch, maxPitch, renderWorldCopies);
         this._clearMatrixCaches();
+        this._coveringTilesDetailsProvider = new MercatorCoveringTilesDetailsProvider();
     }
     clone() {
         const clone = new MercatorTransform();
@@ -44361,36 +44553,39 @@ class MercatorTransform {
         }
         return result;
     }
-    coveringTiles(options) {
-        return mercatorCoveringTiles(this, options, this._invViewProjMatrix);
+    getCameraFrustum() {
+        return Frustum.fromInvProjectionMatrix(this._invViewProjMatrix, this.worldSize);
     }
-    recalculateZoom(terrain) {
-        const origElevation = this.elevation;
-        const origAltitude = Math.cos(this.pitchInRadians) * this._cameraToCenterDistance / this._helper._pixelPerMeter;
+    getClippingPlane() {
+        return null;
+    }
+    getCoveringTilesDetailsProvider() {
+        return this._coveringTilesDetailsProvider;
+    }
+    recalculateZoomAndCenter(terrain) {
         // find position the camera is looking on
         const center = this.screenPointToLocation(this.centerPoint, terrain);
-        const elevation = terrain.getElevationForLngLatZoom(center, this._helper._tileZoom);
+        const elevation = terrain ? terrain.getElevationForLngLatZoom(center, this._helper._tileZoom) : 0;
         const deltaElevation = this.elevation - elevation;
         if (!deltaElevation)
             return;
-        // The camera's altitude off the ground + the ground's elevation = a constant:
-        // this means the camera stays at the same total height.
-        const requiredAltitude = origAltitude + origElevation - elevation;
-        // Since altitude = Math.cos(this._pitchInRadians) * this.cameraToCenterDistance / pixelPerMeter:
-        const requiredPixelPerMeter = Math.cos(this.pitchInRadians) * this._cameraToCenterDistance / requiredAltitude;
-        // Since pixelPerMeter = mercatorZfromAltitude(1, center.lat) * worldSize:
-        const requiredWorldSize = requiredPixelPerMeter / mercatorZfromAltitude(1, center.lat);
-        // Since worldSize = this.tileSize * scale:
-        const requiredScale = requiredWorldSize / this.tileSize;
-        const zoom = scaleZoom(requiredScale);
-        // update matrices
+        // Find the current camera position
+        const originalPixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
+        const cameraToCenterDistanceMeters = this._cameraToCenterDistance / originalPixelPerMeter;
+        const origCenterMercator = MercatorCoordinate.fromLngLat(this.center, this.elevation);
+        const cameraMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
+        // update elevation to the new terrain intercept elevation and recalculate the center point
         this._helper._elevation = elevation;
-        this._helper._center = center;
-        this.setZoom(zoom);
+        const centerInfo = this.calculateCenterFromCameraLngLatAlt(cameraMercator.toLngLat(), altitudeFromMercatorZ(cameraMercator.z, origCenterMercator.y), this.bearing, this.pitch);
+        // update matrices
+        this._helper._elevation = centerInfo.elevation;
+        this._helper._center = centerInfo.center;
+        this.setZoom(centerInfo.zoom);
     }
     setLocationAtPoint(lnglat, point) {
-        const a = this.screenPointToMercatorCoordinate(point);
-        const b = this.screenPointToMercatorCoordinate(this.centerPoint);
+        const z = mercatorZfromAltitude(this.elevation, this.center.lat);
+        const a = this.screenPointToMercatorCoordinateAtZ(point, z);
+        const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, z);
         const loc = locationToMercatorCoordinate(lnglat);
         const newCenter = new MercatorCoordinate(loc.x - (a.x - b.x), loc.y - (a.y - b.y));
         this.setCenter(mercatorCoordinateToLocation(newCenter));
@@ -44414,8 +44609,11 @@ class MercatorTransform {
                 return coordinate;
             }
         }
+        return this.screenPointToMercatorCoordinateAtZ(p);
+    }
+    screenPointToMercatorCoordinateAtZ(p, mercatorZ) {
         // calculate point-coordinate on flat earth
-        const targetZ = 0;
+        const targetZ = mercatorZ ? mercatorZ : 0;
         // since we don't know the correct projected z value for the point,
         // unproject two points to get a line and then find the point on that
         // line with z=0
@@ -44432,7 +44630,7 @@ class MercatorTransform {
         const z0 = coord0[2] / w0;
         const z1 = coord1[2] / w1;
         const t = z0 === z1 ? 0 : (targetZ - z0) / (z1 - z0);
-        return new MercatorCoordinate(interpolate.number(x0, x1, t) / this.worldSize, interpolate.number(y0, y1, t) / this.worldSize);
+        return new MercatorCoordinate(interpolate.number(x0, x1, t) / this.worldSize, interpolate.number(y0, y1, t) / this.worldSize, targetZ);
     }
     /**
      * Given a coordinate, return the screen point that corresponds to it
@@ -44570,20 +44768,66 @@ class MercatorTransform {
         }
         return result;
     }
+    calculateCenterFromCameraLngLatAlt(lnglat, alt, bearing, pitch) {
+        const cameraBearing = bearing !== undefined ? bearing : this.bearing;
+        const cameraPitch = pitch = pitch !== undefined ? pitch : this.pitch;
+        const camMercator = MercatorCoordinate.fromLngLat(lnglat, alt);
+        const dzNormalized = -Math.cos(degreesToRadians(cameraPitch));
+        const dhNormalized = Math.sin(degreesToRadians(cameraPitch));
+        const dxNormalized = dhNormalized * Math.sin(degreesToRadians(cameraBearing));
+        const dyNormalized = -dhNormalized * Math.cos(degreesToRadians(cameraBearing));
+        let elevation = this.elevation;
+        const altitudeAGL = alt - elevation;
+        let distanceToCenterMeters;
+        if (dzNormalized * altitudeAGL >= 0.0 || Math.abs(dzNormalized) < 0.1) {
+            distanceToCenterMeters = 10000;
+            elevation = alt + distanceToCenterMeters * dzNormalized;
+        }
+        else {
+            distanceToCenterMeters = -altitudeAGL / dzNormalized;
+        }
+        // The mercator transform scale changes with latitude. At high latitudes, there are more "Merc units" per meter
+        // than at the equator. We treat the center point as our fundamental quantity. This means we want to convert
+        // elevation to Mercator Z using the scale factor at the center point (not the camera point). Since the center point is
+        // initially unknown, we compute it using the scale factor at the camera point. This gives us a better estimate of the
+        // center point scale factor, which we use to recompute the center point. We repeat until the error is very small.
+        // This typically takes about 5 iterations.
+        let metersPerMercUnit = altitudeFromMercatorZ(1, camMercator.y);
+        let centerMercator;
+        let dMercator;
+        let iter = 0;
+        const maxIter = 10;
+        do {
+            iter += 1;
+            if (iter > maxIter) {
+                break;
+            }
+            dMercator = distanceToCenterMeters / metersPerMercUnit;
+            const dx = dxNormalized * dMercator;
+            const dy = dyNormalized * dMercator;
+            centerMercator = new MercatorCoordinate(camMercator.x + dx, camMercator.y + dy);
+            metersPerMercUnit = 1 / centerMercator.meterInMercatorCoordinateUnits();
+        } while (Math.abs(distanceToCenterMeters - dMercator * metersPerMercUnit) > 1.0e-12);
+        const center = centerMercator.toLngLat();
+        const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / dMercator / this.tileSize);
+        return { center, elevation, zoom };
+    }
     _calcMatrices() {
         if (!this._helper._height)
             return;
-        const halfFov = this._helper._fovInRadians / 2;
+        const halfFov = this.fovInRadians / 2;
         const offset = this.centerOffset;
         const point = projectToWorldCoordinates(this.worldSize, this.center);
         const x = point.x, y = point.y;
         this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._helper._height;
         this._helper._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
         // Calculate the camera to sea-level distance in pixel in respect of terrain
-        const cameraToSeaLevelDistance = this._cameraToCenterDistance + this._helper._elevation * this._helper._pixelPerMeter / Math.cos(this.pitchInRadians);
+        const limitedPitchRadians = degreesToRadians(Math.min(this.pitch, maxMercatorHorizonAngle));
+        const cameraToSeaLevelDistance = Math.max(this._cameraToCenterDistance / 2, this._cameraToCenterDistance + this._helper._elevation * this._helper._pixelPerMeter / Math.cos(limitedPitchRadians));
         // In case of negative minimum elevation (e.g. the dead see, under the sea maps) use a lower plane for calculation
-        const minElevation = Math.min(this.elevation, this.minElevationForCurrentTile);
-        const cameraToLowestPointDistance = cameraToSeaLevelDistance - minElevation * this._helper._pixelPerMeter / Math.cos(this.pitchInRadians);
+        const minRenderDistanceBelowCameraInMeters = 100;
+        const minElevation = Math.min(this.elevation, this.minElevationForCurrentTile, this.getCameraAltitude() - minRenderDistanceBelowCameraInMeters);
+        const cameraToLowestPointDistance = cameraToSeaLevelDistance - minElevation * this._helper._pixelPerMeter / Math.cos(limitedPitchRadians);
         const lowestPlane = minElevation < 0 ? cameraToLowestPointDistance : cameraToSeaLevelDistance;
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
@@ -44596,12 +44840,13 @@ class MercatorTransform {
         // Find the distance from the center point to the horizon
         const horizon = getMercatorHorizon(this);
         const horizonAngle = Math.atan(horizon / this._cameraToCenterDistance);
-        const fovCenterToHorizon = 2 * horizonAngle * (0.5 + offset.y / (horizon * 2));
+        const minFovCenterToHorizonRadians = degreesToRadians(90 - maxMercatorHorizonAngle);
+        const fovCenterToHorizon = horizonAngle > minFovCenterToHorizonRadians ? 2 * horizonAngle * (0.5 + offset.y / (horizon * 2)) : minFovCenterToHorizonRadians;
         const topHalfSurfaceDistanceHorizon = Math.sin(fovCenterToHorizon) * lowestPlane / Math.sin(clamp$1(Math.PI - groundAngle - fovCenterToHorizon, 0.01, Math.PI - 0.01));
         // Calculate z distance of the farthest fragment that should be rendered.
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
         const topHalfMinDistance = Math.min(topHalfSurfaceDistance, topHalfSurfaceDistanceHorizon);
-        this._farZ = (Math.cos(Math.PI / 2 - this.pitchInRadians) * topHalfMinDistance + lowestPlane) * 1.01;
+        this._farZ = (Math.cos(Math.PI / 2 - limitedPitchRadians) * topHalfMinDistance + lowestPlane) * 1.01;
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)
         // - clipping starts appearing sooner when the camera is close to 3d features (bad)
@@ -44693,12 +44938,19 @@ class MercatorTransform {
     }
     getCameraPoint() {
         const pitch = this.pitchInRadians;
-        const yOffset = Math.tan(pitch) * (this._cameraToCenterDistance || 1);
-        return this.centerPoint.add(new Point(0, yOffset));
+        const offset = Math.tan(pitch) * (this._cameraToCenterDistance || 1);
+        return this.centerPoint.add(new Point(offset * Math.sin(this.rollInRadians), offset * Math.cos(this.rollInRadians)));
     }
     getCameraAltitude() {
         const altitude = Math.cos(this.pitchInRadians) * this._cameraToCenterDistance / this._helper._pixelPerMeter;
         return altitude + this.elevation;
+    }
+    getCameraLngLat() {
+        const cameraToCenterDistancePixels = 0.5 / Math.tan(this.fovInRadians / 2) * this.height;
+        const pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
+        const cameraToCenterDistanceMeters = cameraToCenterDistancePixels / pixelPerMeter;
+        const camMercator = cameraMercatorCoordinateFromCenterAndRotation(this.center, this.elevation, this.pitch, this.bearing, cameraToCenterDistanceMeters);
+        return camMercator.toLngLat();
     }
     lngLatToCameraDepth(lngLat, elevation) {
         const coord = locationToMercatorCoordinate(lngLat);
@@ -44709,7 +44961,8 @@ class MercatorTransform {
     isRenderingDirty() {
         return false;
     }
-    getProjectionData(overscaledTileID, aligned, ignoreTerrainMatrix) {
+    getProjectionData(params) {
+        const { overscaledTileID, aligned, ignoreTerrainMatrix } = params;
         const matrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID, aligned) : null;
         return getBasicProjectionData(overscaledTileID, matrix, ignoreTerrainMatrix);
     }
@@ -44771,7 +45024,7 @@ class MercatorTransform {
     }
     getProjectionDataForCustomLayer() {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const projectionData = this.getProjectionData(tileID, false, true);
+        const projectionData = this.getProjectionData({ overscaledTileID: tileID, ignoreTerrainMatrix: true });
         const tileMatrix = calculateTileMatrix(tileID, this.worldSize);
         multiply$5(tileMatrix, this._viewProjMatrix, tileMatrix);
         projectionData.tileMercatorCoords = [0, 0, 1, 1];
@@ -44780,13 +45033,10 @@ class MercatorTransform {
         // Since custom layers are expected to supply mercator coordinates [0..1], we need to rescale
         // both matrices by EXTENT. We also need to rescale Z.
         const scale = [EXTENT$1, EXTENT$1, this.worldSize / this._helper.pixelsPerMeter];
-        const translate = [0, 0, this.elevation];
         const fallbackMatrixScaled = createMat4f64();
-        translate$2(fallbackMatrixScaled, tileMatrix, translate);
-        scale$5(fallbackMatrixScaled, fallbackMatrixScaled, scale);
+        scale$5(fallbackMatrixScaled, tileMatrix, scale);
         const projectionMatrixScaled = createMat4f64();
-        translate$2(projectionMatrixScaled, tileMatrix, translate);
-        scale$5(projectionMatrixScaled, projectionMatrixScaled, scale);
+        scale$5(projectionMatrixScaled, tileMatrix, scale);
         projectionData.fallbackMatrix = fallbackMatrixScaled;
         projectionData.mainMatrix = projectionMatrixScaled;
         return projectionData;
@@ -44851,6 +45101,12 @@ class MercatorCameraHelper {
             tr.setZoom(tr.zoom + deltas.zoomDelta);
     }
     handleMapControlsPan(deltas, tr, preZoomAroundLoc) {
+        // If we are rotating about the center point, there is no need to update the transform center. Doing so causes
+        // a small amount of drift of the center point, especially when pitch is close to 90 degrees.
+        // In this case, return early.
+        if (deltas.around.distSqr(tr.centerPoint) < 1.0e-2) {
+            return;
+        }
         tr.setLocationAtPoint(preZoomAroundLoc, deltas.around);
     }
     cameraForBoxAndBearing(options, padding, bounds, bearing, tr) {
@@ -45252,6 +45508,10 @@ class ProjectionErrorMeasurement {
     }
 }
 
+/**
+ * The size of border region for stencil masks, in internal tile coordinates.
+ * Used for globe rendering.
+ */
 const EXTENT_STENCIL_BORDER = EXTENT$1 / 128;
 /**
  * @internal
@@ -45378,10 +45638,6 @@ function createTileMesh(options, forceIndicesSize) {
 }
 
 const globeConstants = {
-    /**
-     * The size of border region for stencil masks, in internal tile coordinates.
-     * Used for globe rendering.
-     */
     globeTransitionTimeSeconds: 0.5,
     maxGlobeZoom: 12.0,
     errorTransitionTimeSeconds: 0.5
@@ -45706,6 +45962,51 @@ function interpolateLngLatForGlobe(start, deltaLng, deltaLat, t) {
     }
 }
 
+class AabbCache {
+    constructor(aabbFactory) {
+        this._cachePrevious = new Map();
+        this._cache = new Map();
+        this._hadAnyChanges = false;
+        this._aabbFactory = aabbFactory;
+    }
+    /**
+     * Prepares AABB cache for next frame. Call at the beginning of a frame.
+     * Any tile accesses in the last frame is kept in the cache, other tiles are deleted.
+     * @returns
+     */
+    newFrame() {
+        if (!this._hadAnyChanges) {
+            // If no new boxes were added this frame, no need to conserve memory, do not clear caches.
+            return;
+        }
+        const oldCache = this._cachePrevious;
+        this._cachePrevious = this._cache;
+        this._cache = oldCache;
+        this._cache.clear();
+        this._hadAnyChanges = false;
+    }
+    /**
+     * Returns the AABB of the specified tile, fetching it from cache or creating it using the factory function if needed.
+     * @param tileID - Tile x, y and z for zoom.
+     */
+    getTileAABB(tileID, wrap, elevation, options) {
+        const key = `${tileID.z}_${tileID.x}_${tileID.y}`;
+        const cached = this._cache.get(key);
+        if (cached) {
+            return cached;
+        }
+        const cachedPrevious = this._cachePrevious.get(key);
+        if (cachedPrevious) {
+            this._cache.set(key, cachedPrevious);
+            return cachedPrevious;
+        }
+        const aabb = this._aabbFactory(tileID, wrap, elevation, options);
+        this._cache.set(key, aabb);
+        this._hadAnyChanges = true;
+        return aabb;
+    }
+}
+
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
  * World is assumed to have size 1, distance returned is to the nearer tile edge.
@@ -45734,213 +46035,133 @@ function distanceToTileWrapX(pointX, pointY, tileCornerX, tileCornerY, tileSize)
     }
     return Math.max(distanceX, distanceToTileSimple(pointY, tileCornerY, tileSize));
 }
-/**
- * Returns the distance of a point to a square tile. If the point is inside the tile, returns 0.
- * Assumes the world to be of size 1.
- * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,
- * when crossing the poles Y is mirrored and X is shifted by half world size.
- */
-function distanceToTile(pointX, pointY, tileCornerX, tileCornerY, tileSize) {
-    const worldSize = 1.0;
-    const halfWorld = 0.5 * worldSize;
-    let smallestDistance = 2.0 * worldSize;
-    // Original tile
-    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX, tileCornerY, tileSize));
-    // Up
-    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, -tileCornerY - tileSize, tileSize));
-    // Down
-    smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, worldSize + worldSize - tileCornerY - tileSize, tileSize));
-    return smallestDistance;
-}
-function shouldSplitTile(centerCoord, cameraCoord, tileX, tileY, tileSize, radiusOfMaxLvlLodInTiles) {
-    // Determine whether the tile needs any further splitting.
-    // At each level, we want at least `radiusOfMaxLvlLodInTiles` tiles loaded in each axis from the map center point.
-    // For radiusOfMaxLvlLodInTiles=1, this would result in something like this:
-    // z=4 |--------------||--------------||--------------|
-    // z=5         |------||------||------|
-    // z=6             |--||--||--|
-    //                       ^map center
-    // ...where "|--|" symbolizes a tile viewed sideways.
-    // This logic might be slightly different from what mercator_transform.ts does, but should result in very similar (if not the same) set of tiles being loaded.
-    const centerDist = distanceToTile(centerCoord.x, centerCoord.y, tileX, tileY, tileSize);
-    const cameraDist = distanceToTile(cameraCoord.x, cameraCoord.y, tileX, tileY, tileSize);
-    return Math.min(centerDist, cameraDist) * 2 <= radiusOfMaxLvlLodInTiles * tileSize; // Multiply distance by 2, because the subdivided tiles would be half the size
-}
-// Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
-function getWrap(centerCoord, tileX, tileSize) {
-    const distanceCurrent = distanceToTileSimple(centerCoord.x, tileX, tileSize);
-    const distanceLeft = distanceToTileSimple(centerCoord.x, tileX - 1.0, tileSize);
-    const distanceRight = distanceToTileSimple(centerCoord.x, tileX + 1.0, tileSize);
-    const distanceSmallest = Math.min(distanceCurrent, distanceLeft, distanceRight);
-    if (distanceSmallest === distanceRight) {
-        return 1;
+class GlobeCoveringTilesDetailsProvider {
+    constructor() {
+        this._aabbCache = new AabbCache(this._computeTileAABB);
     }
-    if (distanceSmallest === distanceLeft) {
-        return -1;
+    /**
+     * Prepares the internal AABB cache for the next frame.
+     * @returns
+     */
+    newFrame() {
+        this._aabbCache.newFrame();
     }
-    return 0;
-}
-/**
- * Returns the AABB of the specified tile. The AABB is in the coordinate space where the globe is a unit sphere.
- * @param tileID - Tile x, y and z for zoom.
- */
-function getTileAABB(tileID) {
-    // We can get away with only checking the 4 tile corners for AABB construction, because for any tile of zoom level 2 or higher
-    // it holds that the extremes (minimal or maximal value) of X, Y or Z coordinates must lie in one of the tile corners.
-    //
-    // To see why this holds, consider the formula for computing X,Y and Z from angular coordinates.
-    // It goes something like this:
-    //
-    // X = sin(lng) * cos(lat)
-    // Y = sin(lat)
-    // Z = cos(lng) * cos(lat)
-    //
-    // Note that a tile always covers a continuous range of lng and lat values,
-    // and that tiles that border the mercator north/south edge are assumed to extend all the way to the poles.
-    //
-    // We will consider each coordinate separately and show that an extreme must always lie in a tile corner for every axis, and must not lie inside the tile.
-    //
-    // For Y, it is clear that the only way for an extreme to not lie on an edge of the lat range is for the range to contain lat=90° or lat=-90° without either being the tile edge.
-    // This cannot happen for any tile, these latitudes will always:
-    // - either lie outside the tile entirely, thus Y will be monotonically increasing or decreasing across the entire tile, thus the extreme must lie at a corner/edge
-    // - or be the tile edge itself, thus the extreme will lie at the tile edge
-    //
-    // For X, considering only longitude, the tile would also have to contain lng=90° or lng=-90° (with neither being the tile edge) for the extreme to not lie on a tile edge.
-    // This can only happen at zoom levels 0 and 1, which are handled separately.
-    // But X is also scaled by cos(lat)! However, this can only cause an extreme to lie inside the tile if the tile crosses lat=0°, which cannot happen for zoom levels other than 0.
-    //
-    // For Z, similarly to X, the extremes must lie at lng=0° or lng=180°, but for zoom levels other than 0 these cannot lie inside the tile. Scaling by cos(lat) has the same effect as with the X axis.
-    //
-    // So checking the 4 tile corners only fails for tiles with zoom level <2, and these are handled separately with hardcoded AABBs:
-    // - zoom level 0 tile is the entire sphere
-    // - zoom level 1 tiles are "quarters of a sphere"
-    if (tileID.z <= 0) {
-        // Tile covers the entire sphere.
-        return new Aabb([-1, -1, -1], [1, 1, 1]);
+    /**
+     * Returns the distance of a point to a square tile. If the point is inside the tile, returns 0.
+     * Assumes the world to be of size 1.
+     * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,
+     * when crossing the poles Y is mirrored and X is shifted by half world size.
+     */
+    distanceToTile2d(pointX, pointY, tileID, _aabb) {
+        const scale = 1 << tileID.z;
+        const tileMercatorSize = 1.0 / scale;
+        const tileCornerX = tileID.x / scale; // In range 0..1
+        const tileCornerY = tileID.y / scale; // In range 0..1
+        const worldSize = 1.0;
+        const halfWorld = 0.5 * worldSize;
+        let smallestDistance = 2.0 * worldSize;
+        // Original tile
+        smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX, tileCornerY, tileMercatorSize));
+        // Up
+        smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, -tileCornerY - tileMercatorSize, tileMercatorSize));
+        // Down
+        smallestDistance = Math.min(smallestDistance, distanceToTileWrapX(pointX, pointY, tileCornerX + halfWorld, worldSize + worldSize - tileCornerY - tileMercatorSize, tileMercatorSize));
+        return smallestDistance;
     }
-    else if (tileID.z === 1) {
-        // Tile covers a quarter of the sphere.
-        // X is 1 at lng=E90°
-        // Y is 1 at **north** pole
-        // Z is 1 at null island
-        return new Aabb([tileID.x === 0 ? -1 : 0, tileID.y === 0 ? 0 : -1, -1], [tileID.x === 0 ? 0 : 1, tileID.y === 0 ? 1 : 0, 1]);
+    /**
+     * Returns the wrap value for a given tile, computed so that tiles will remain loaded when crossing the antimeridian.
+     */
+    getWrap(centerCoord, tileID, _parentWrap) {
+        const scale = 1 << tileID.z;
+        const tileMercatorSize = 1.0 / scale;
+        const tileX = tileID.x / scale; // In range 0..1
+        const distanceCurrent = distanceToTileSimple(centerCoord.x, tileX, tileMercatorSize);
+        const distanceLeft = distanceToTileSimple(centerCoord.x, tileX - 1.0, tileMercatorSize);
+        const distanceRight = distanceToTileSimple(centerCoord.x, tileX + 1.0, tileMercatorSize);
+        const distanceSmallest = Math.min(distanceCurrent, distanceLeft, distanceRight);
+        if (distanceSmallest === distanceRight) {
+            return 1;
+        }
+        if (distanceSmallest === distanceLeft) {
+            return -1;
+        }
+        return 0;
     }
-    else {
-        // Compute AABB using the 4 corners.
-        const corners = [
-            projectTileCoordinatesToSphere(0, 0, tileID.x, tileID.y, tileID.z),
-            projectTileCoordinatesToSphere(EXTENT$1, 0, tileID.x, tileID.y, tileID.z),
-            projectTileCoordinatesToSphere(EXTENT$1, EXTENT$1, tileID.x, tileID.y, tileID.z),
-            projectTileCoordinatesToSphere(0, EXTENT$1, tileID.x, tileID.y, tileID.z),
-        ];
-        const min = [1, 1, 1];
-        const max = [-1, -1, -1];
-        for (const c of corners) {
-            for (let i = 0; i < 3; i++) {
-                min[i] = Math.min(min[i], c[i]);
-                max[i] = Math.max(max[i], c[i]);
+    allowVariableZoom(transform, options) {
+        return coveringZoomLevel(transform, options) > 4;
+    }
+    getTileAABB(tileID, wrap, elevation, options) {
+        return this._aabbCache.getTileAABB(tileID, wrap, elevation, options);
+    }
+    _computeTileAABB(tileID, _wrap, _elevation, _options) {
+        // We can get away with only checking the 4 tile corners for AABB construction, because for any tile of zoom level 2 or higher
+        // it holds that the extremes (minimal or maximal value) of X, Y or Z coordinates must lie in one of the tile corners.
+        //
+        // To see why this holds, consider the formula for computing X,Y and Z from angular coordinates.
+        // It goes something like this:
+        //
+        // X = sin(lng) * cos(lat)
+        // Y = sin(lat)
+        // Z = cos(lng) * cos(lat)
+        //
+        // Note that a tile always covers a continuous range of lng and lat values,
+        // and that tiles that border the mercator north/south edge are assumed to extend all the way to the poles.
+        //
+        // We will consider each coordinate separately and show that an extreme must always lie in a tile corner for every axis, and must not lie inside the tile.
+        //
+        // For Y, it is clear that the only way for an extreme to not lie on an edge of the lat range is for the range to contain lat=90° or lat=-90° without either being the tile edge.
+        // This cannot happen for any tile, these latitudes will always:
+        // - either lie outside the tile entirely, thus Y will be monotonically increasing or decreasing across the entire tile, thus the extreme must lie at a corner/edge
+        // - or be the tile edge itself, thus the extreme will lie at the tile edge
+        //
+        // For X, considering only longitude, the tile would also have to contain lng=90° or lng=-90° (with neither being the tile edge) for the extreme to not lie on a tile edge.
+        // This can only happen at zoom levels 0 and 1, which are handled separately.
+        // But X is also scaled by cos(lat)! However, this can only cause an extreme to lie inside the tile if the tile crosses lat=0°, which cannot happen for zoom levels other than 0.
+        //
+        // For Z, similarly to X, the extremes must lie at lng=0° or lng=180°, but for zoom levels other than 0 these cannot lie inside the tile. Scaling by cos(lat) has the same effect as with the X axis.
+        //
+        // So checking the 4 tile corners only fails for tiles with zoom level <2, and these are handled separately with hardcoded AABBs:
+        // - zoom level 0 tile is the entire sphere
+        // - zoom level 1 tiles are "quarters of a sphere"
+        if (tileID.z <= 0) {
+            // Tile covers the entire sphere.
+            return new Aabb([-1, -1, -1], [1, 1, 1]);
+        }
+        else if (tileID.z === 1) {
+            // Tile covers a quarter of the sphere.
+            // X is 1 at lng=E90°
+            // Y is 1 at **north** pole
+            // Z is 1 at null island
+            return new Aabb([tileID.x === 0 ? -1 : 0, tileID.y === 0 ? 0 : -1, -1], [tileID.x === 0 ? 0 : 1, tileID.y === 0 ? 1 : 0, 1]);
+        }
+        else {
+            // Compute AABB using the 4 corners.
+            const corners = [
+                projectTileCoordinatesToSphere(0, 0, tileID.x, tileID.y, tileID.z),
+                projectTileCoordinatesToSphere(EXTENT$1, 0, tileID.x, tileID.y, tileID.z),
+                projectTileCoordinatesToSphere(EXTENT$1, EXTENT$1, tileID.x, tileID.y, tileID.z),
+                projectTileCoordinatesToSphere(0, EXTENT$1, tileID.x, tileID.y, tileID.z),
+            ];
+            const min = [1, 1, 1];
+            const max = [-1, -1, -1];
+            for (const c of corners) {
+                for (let i = 0; i < 3; i++) {
+                    min[i] = Math.min(min[i], c[i]);
+                    max[i] = Math.max(max[i], c[i]);
+                }
             }
-        }
-        // Special handling of poles - we need to extend the tile AABB
-        // to include the pole for tiles that border mercator north/south edge.
-        if (tileID.y === 0 || (tileID.y === (1 << tileID.z) - 1)) {
-            const pole = [0, tileID.y === 0 ? 1 : -1, 0];
-            for (let i = 0; i < 3; i++) {
-                min[i] = Math.min(min[i], pole[i]);
-                max[i] = Math.max(max[i], pole[i]);
+            // Special handling of poles - we need to extend the tile AABB
+            // to include the pole for tiles that border mercator north/south edge.
+            if (tileID.y === 0 || (tileID.y === (1 << tileID.z) - 1)) {
+                const pole = [0, tileID.y === 0 ? 1 : -1, 0];
+                for (let i = 0; i < 3; i++) {
+                    min[i] = Math.min(min[i], pole[i]);
+                    max[i] = Math.max(max[i], pole[i]);
+                }
             }
-        }
-        return new Aabb(min, max);
-    }
-}
-/**
- * A simple/heuristic function that returns whether the tile is visible under the current transform.
- * @returns 0 is not visible, 1 if partially visible, 2 if fully visible.
- */
-function isTileVisible(frustum, plane, x, y, z) {
-    const tileID = { x, y, z };
-    const aabb = getTileAABB(tileID);
-    const frustumTest = aabb.intersectsFrustum(frustum);
-    const planeTest = aabb.intersectsPlane(plane);
-    if (frustumTest === 0 /* IntersectionResult.None */ || planeTest === 0 /* IntersectionResult.None */) {
-        return 0 /* IntersectionResult.None */;
-    }
-    if (frustumTest === 2 /* IntersectionResult.Full */ && planeTest === 2 /* IntersectionResult.Full */) {
-        return 2 /* IntersectionResult.Full */;
-    }
-    return 1 /* IntersectionResult.Partial */;
-}
-/**
- * Returns a list of tiles that optimally covers the screen. Adapted for globe projection.
- * Correctly handles LOD when moving over the antimeridian.
- * @param transform - The globe transform instance.
- * @param options - Additional coveringTiles options.
- * @returns A list of tile coordinates, ordered by ascending distance from camera.
- */
-function globeCoveringTiles(frustum, plane, cameraCoord, centerCoord, coveringZoom, options) {
-    let z = coveringZoom;
-    const actualZ = z;
-    if (options.minzoom !== undefined && z < options.minzoom) {
-        return [];
-    }
-    if (options.maxzoom !== undefined && z > options.maxzoom) {
-        z = options.maxzoom;
-    }
-    const numTiles = Math.pow(2, z);
-    const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
-    const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
-    const radiusOfMaxLvlLodInTiles = 3; // Matches the value in the mercator variant of coveringTiles
-    // Do a depth-first traversal to find visible tiles and proper levels of detail
-    const stack = [];
-    const result = [];
-    const maxZoom = z;
-    const overscaledZ = options.reparseOverscaled ? actualZ : z;
-    stack.push({
-        zoom: 0,
-        x: 0,
-        y: 0,
-        fullyVisible: false
-    });
-    while (stack.length > 0) {
-        const it = stack.pop();
-        const x = it.x;
-        const y = it.y;
-        let fullyVisible = it.fullyVisible;
-        // Visibility of a tile is not required if any of its ancestor if fully visible
-        if (!fullyVisible) {
-            const intersectResult = isTileVisible(frustum, plane, it.x, it.y, it.zoom);
-            if (intersectResult === 0 /* IntersectionResult.None */)
-                continue;
-            fullyVisible = intersectResult === 2 /* IntersectionResult.Full */;
-        }
-        const scale = 1 << (Math.max(it.zoom, 0));
-        const tileSize = 1.0 / scale;
-        const tileX = x / scale; // In range 0..1
-        const tileY = y / scale; // In range 0..1
-        const split = shouldSplitTile(centerCoord, cameraCoord, tileX, tileY, tileSize, radiusOfMaxLvlLodInTiles);
-        // Have we reached the target depth or is the tile too far away to be any split further?
-        if (it.zoom === maxZoom || !split) {
-            const dz = maxZoom - it.zoom;
-            const dx = cameraPoint[0] - 0.5 - (x << dz);
-            const dy = cameraPoint[1] - 0.5 - (y << dz);
-            // We need to compute a valid wrap value for the tile to keep compatibility with mercator
-            const wrap = getWrap(centerCoord, tileX, tileSize);
-            result.push({
-                tileID: new OverscaledTileID(it.zoom === maxZoom ? overscaledZ : it.zoom, wrap, it.zoom, x, y),
-                distanceSq: sqrLen([centerPoint[0] - 0.5 - dx, centerPoint[1] - 0.5 - dy]),
-                // this variable is currently not used, but may be important to reduce the amount of loaded tiles
-                tileDistanceToCamera: Math.sqrt(dx * dx + dy * dy)
-            });
-            continue;
-        }
-        for (let i = 0; i < 4; i++) {
-            const childX = (x << 1) + (i % 2);
-            const childY = (y << 1) + (i >> 1);
-            const childZ = it.zoom + 1;
-            stack.push({ zoom: childZ, x: childX, y: childY, fullyVisible });
+            return new Aabb(min, max);
         }
     }
-    return result.sort((a, b) => a.distanceSq - b.distanceSq).map(a => a.tileID);
 }
 
 class GlobeTransform {
@@ -45983,8 +46204,7 @@ class GlobeTransform {
     setMaxPitch(pitch) {
         this._helper.setMaxPitch(pitch);
     }
-    setRenderWorldCopies(renderWorldCopies) {
-        this._helper.setRenderWorldCopies(renderWorldCopies);
+    setRenderWorldCopies(_renderWorldCopies) {
     }
     setBearing(bearing) {
         this._helper.setBearing(bearing);
@@ -46018,9 +46238,6 @@ class GlobeTransform {
     }
     isPaddingEqual(padding) {
         return this._helper.isPaddingEqual(padding);
-    }
-    coveringZoomLevel(options) {
-        return this._helper.coveringZoomLevel(options);
     }
     resize(width, height) {
         this._helper.resize(width, height);
@@ -46113,7 +46330,7 @@ class GlobeTransform {
         return this._helper.unmodified;
     }
     get renderWorldCopies() {
-        return this._helper.renderWorldCopies;
+        return false;
     }
     /**
      * True when globe render path should be used instead of the old but simpler mercator rendering.
@@ -46169,6 +46386,7 @@ class GlobeTransform {
         this._globeness = globeProjectionEnabled ? 1 : 0; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
         this._projectionInstance = globeProjection;
         this._mercatorTransform = new MercatorTransform();
+        this._coveringTilesDetailsProvider = new GlobeCoveringTilesDetailsProvider();
     }
     clone() {
         const clone = new GlobeTransform(null, this._globeProjectionAllowed);
@@ -46239,6 +46457,7 @@ class GlobeTransform {
         // Everything below this comment must happen AFTER globeness update
         this._updateErrorCorrectionValue();
         this._calcMatrices();
+        this._coveringTilesDetailsProvider.newFrame();
         if (oldGlobeRendering === this.isGlobeRendering) {
             return {
                 forcePlacementUpdate: false,
@@ -46298,14 +46517,15 @@ class GlobeTransform {
         // Globe transition
         return (this._lastUpdateTimeSeconds - this._lastGlobeChangeTimeSeconds) < globeConstants.globeTransitionTimeSeconds;
     }
-    getProjectionData(overscaledTileID, aligned, ignoreTerrainMatrix) {
-        const data = this._mercatorTransform.getProjectionData(overscaledTileID, aligned, ignoreTerrainMatrix);
+    getProjectionData(params) {
+        const { overscaledTileID, aligned, ignoreTerrainMatrix, ignoreGlobeMatrix } = params;
+        const data = this._mercatorTransform.getProjectionData({ overscaledTileID, aligned, ignoreTerrainMatrix });
         // Set 'projectionMatrix' to actual globe transform
         if (this.isGlobeRendering) {
             data.mainMatrix = this._globeViewProjMatrix;
         }
         data.clippingPlane = this._cachedClippingPlane;
-        data.projectionTransition = this._globeness;
+        data.projectionTransition = ignoreGlobeMatrix ? 0 : this._globeness;
         return data;
     }
     _computeClippingPlane(globeRadiusPixels) {
@@ -46500,17 +46720,17 @@ class GlobeTransform {
         // Globe has no wrap.
         return [new UnwrappedTileID(0, tileID)];
     }
-    coveringTiles(options) {
-        if (!this.isGlobeRendering) {
-            return this._mercatorTransform.coveringTiles(options);
-        }
-        const coveringZ = this.coveringZoomLevel(options);
-        const cameraCoord = this.screenPointToMercatorCoordinate(this.getCameraPoint());
-        const centerCoord = MercatorCoordinate.fromLngLat(this.center);
-        return globeCoveringTiles(this._cachedFrustum, this._cachedClippingPlane, cameraCoord, centerCoord, coveringZ, options);
+    getCameraFrustum() {
+        return this.isGlobeRendering ? this._cachedFrustum : this._mercatorTransform.getCameraFrustum();
     }
-    recalculateZoom(terrain) {
-        this._mercatorTransform.recalculateZoom(terrain);
+    getClippingPlane() {
+        return this.isGlobeRendering ? this._cachedClippingPlane : this._mercatorTransform.getClippingPlane();
+    }
+    getCoveringTilesDetailsProvider() {
+        return this.isGlobeRendering ? this._coveringTilesDetailsProvider : this._mercatorTransform.getCoveringTilesDetailsProvider();
+    }
+    recalculateZoomAndCenter(terrain) {
+        this._mercatorTransform.recalculateZoomAndCenter(terrain);
         this.apply(this._mercatorTransform);
     }
     maxPitchScaleFactor() {
@@ -46522,6 +46742,9 @@ class GlobeTransform {
     }
     getCameraAltitude() {
         return this._mercatorTransform.getCameraAltitude();
+    }
+    getCameraLngLat() {
+        return this._mercatorTransform.getCameraLngLat();
     }
     lngLatToCameraDepth(lngLat, elevation) {
         if (!this.isGlobeRendering) {
@@ -46616,6 +46839,9 @@ class GlobeTransform {
             center: new LngLat(lngLat.lng, constrainedLat),
             zoom: constrainedZoom
         };
+    }
+    calculateCenterFromCameraLngLatAlt(ll, alt, bearing, pitch) {
+        return this._mercatorTransform.calculateCenterFromCameraLngLatAlt(ll, alt, bearing, pitch);
     }
     /**
      * Note: automatically adjusts zoom to keep planet size consistent
@@ -46922,7 +47148,7 @@ class GlobeTransform {
         return m;
     }
     getProjectionDataForCustomLayer() {
-        const projectionData = this.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
+        const projectionData = this.getProjectionData({ overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0) });
         projectionData.tileMercatorCoords = [0, 0, 1, 1];
         // Even though we requested projection data for the mercator base tile which covers the entire mercator range,
         // the shader projection machinery still expects inputs to be in tile units range [0..EXTENT].
@@ -47798,6 +48024,7 @@ class Style extends Evented {
                 case 'setZoom':
                 case 'setBearing':
                 case 'setPitch':
+                case 'setRoll':
                     continue;
                 case 'addLayer':
                     operations.push(() => this.addLayer.apply(this, op.args));
@@ -48440,7 +48667,8 @@ class Style extends Evented {
         this.light.updateTransitions(parameters);
     }
     getProjection() {
-        return this.stylesheet.projection;
+        var _a;
+        return (_a = this.stylesheet) === null || _a === void 0 ? void 0 : _a.projection;
     }
     setProjection(projection) {
         this._checkLoaded();
@@ -48880,7 +49108,8 @@ const terrainUniforms = (context, locations) => ({
     'u_fog_ground_blend': new Uniform1f(context, locations.u_fog_ground_blend),
     'u_fog_ground_blend_opacity': new Uniform1f(context, locations.u_fog_ground_blend_opacity),
     'u_horizon_color': new UniformColor(context, locations.u_horizon_color),
-    'u_horizon_fog_blend': new Uniform1f(context, locations.u_horizon_fog_blend)
+    'u_horizon_fog_blend': new Uniform1f(context, locations.u_horizon_fog_blend),
+    'u_is_globe_mode': new Uniform1f(context, locations.u_is_globe_mode)
 });
 const terrainDepthUniforms = (context, locations) => ({
     'u_ele_delta': new Uniform1f(context, locations.u_ele_delta)
@@ -48890,15 +49119,17 @@ const terrainCoordsUniforms = (context, locations) => ({
     'u_terrain_coords_id': new Uniform1f(context, locations.u_terrain_coords_id),
     'u_ele_delta': new Uniform1f(context, locations.u_ele_delta)
 });
-const terrainUniformValues = (eleDelta, fogMatrix, sky, pitch) => ({
+const terrainUniformValues = (eleDelta, fogMatrix, sky, pitch, isGlobeMode) => ({
     'u_texture': 0,
     'u_ele_delta': eleDelta,
     'u_fog_matrix': fogMatrix,
     'u_fog_color': sky ? sky.properties.get('fog-color') : Color.white,
     'u_fog_ground_blend': sky ? sky.properties.get('fog-ground-blend') : 1,
-    'u_fog_ground_blend_opacity': sky ? sky.calculateFogBlendOpacity(pitch) : 0,
+    // Set opacity to 0 when in globe mode to disable fog
+    'u_fog_ground_blend_opacity': isGlobeMode ? 0 : (sky ? sky.calculateFogBlendOpacity(pitch) : 0),
     'u_horizon_color': sky ? sky.properties.get('horizon-color') : Color.white,
-    'u_horizon_fog_blend': sky ? sky.properties.get('horizon-fog-blend') : 1
+    'u_horizon_fog_blend': sky ? sky.properties.get('horizon-fog-blend') : 1,
+    'u_is_globe_mode': isGlobeMode ? 1 : 0
 });
 const terrainDepthUniformValues = (eleDelta) => ({
     'u_ele_delta': eleDelta
@@ -49127,7 +49358,6 @@ const fillExtrusionUniforms = (context, locations) => ({
     'u_vertical_gradient': new Uniform1f(context, locations.u_vertical_gradient),
     'u_opacity': new Uniform1f(context, locations.u_opacity),
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
-    'u_camera_pos_globe': new Uniform3f(context, locations.u_camera_pos_globe)
 });
 const fillExtrusionPatternUniforms = (context, locations) => ({
     'u_lightpos': new Uniform3f(context, locations.u_lightpos),
@@ -49138,7 +49368,6 @@ const fillExtrusionPatternUniforms = (context, locations) => ({
     'u_height_factor': new Uniform1f(context, locations.u_height_factor),
     'u_opacity': new Uniform1f(context, locations.u_opacity),
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
-    'u_camera_pos_globe': new Uniform3f(context, locations.u_camera_pos_globe),
     // pattern uniforms
     'u_image': new Uniform1i(context, locations.u_image),
     'u_texsize': new Uniform2f(context, locations.u_texsize),
@@ -49147,7 +49376,7 @@ const fillExtrusionPatternUniforms = (context, locations) => ({
     'u_scale': new Uniform3f(context, locations.u_scale),
     'u_fade': new Uniform1f(context, locations.u_fade)
 });
-const fillExtrusionUniformValues = (painter, shouldUseVerticalGradient, opacity, translate, cameraPosGlobe) => {
+const fillExtrusionUniformValues = (painter, shouldUseVerticalGradient, opacity, translate) => {
     const light = painter.style.light;
     const _lp = light.properties.get('position');
     const lightPos = [_lp.x, _lp.y, _lp.z];
@@ -49166,11 +49395,10 @@ const fillExtrusionUniformValues = (painter, shouldUseVerticalGradient, opacity,
         'u_vertical_gradient': +shouldUseVerticalGradient,
         'u_opacity': opacity,
         'u_fill_translate': translate,
-        'u_camera_pos_globe': cameraPosGlobe,
     };
 };
-const fillExtrusionPatternUniformValues = (painter, shouldUseVerticalGradient, opacity, translate, cameraPosGlobe, coord, crossfade, tile) => {
-    return extend(fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate, cameraPosGlobe), patternUniformValues(crossfade, painter, tile), {
+const fillExtrusionPatternUniformValues = (painter, shouldUseVerticalGradient, opacity, translate, coord, crossfade, tile) => {
+    return extend(fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate), patternUniformValues(crossfade, painter, tile), {
         'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 8
     });
 };
@@ -49688,11 +49916,14 @@ const skyUniforms = (context, locations) => ({
     'u_horizon': new Uniform2f(context, locations.u_horizon),
     'u_horizon_normal': new Uniform2f(context, locations.u_horizon_normal),
     'u_sky_horizon_blend': new Uniform1f(context, locations.u_sky_horizon_blend),
+    'u_sky_blend': new Uniform1f(context, locations.u_sky_blend),
 });
 const skyUniformValues = (sky, transform, pixelRatio) => {
     const cosRoll = Math.cos(transform.rollInRadians);
     const sinRoll = Math.sin(transform.rollInRadians);
     const mercatorHorizon = getMercatorHorizon(transform);
+    const projectionData = transform.getProjectionData({ overscaledTileID: null });
+    const skyBlend = projectionData.projectionTransition;
     return {
         'u_sky_color': sky.properties.get('sky-color'),
         'u_horizon_color': sky.properties.get('horizon-color'),
@@ -49700,6 +49931,7 @@ const skyUniformValues = (sky, transform, pixelRatio) => {
             (transform.height / 2 + mercatorHorizon * cosRoll) * pixelRatio],
         'u_horizon_normal': [-sinRoll, cosRoll],
         'u_sky_horizon_blend': (sky.properties.get('sky-horizon-blend') * transform.height / 2) * pixelRatio,
+        'u_sky_blend': skyBlend,
     };
 };
 
@@ -49715,6 +49947,7 @@ const programUniforms = {
     collisionBox: collisionUniforms,
     collisionCircle: collisionCircleUniforms,
     debug: debugUniforms,
+    depth: emptyUniforms,
     clippingMask: emptyUniforms,
     heatmap: heatmapUniforms,
     heatmapTexture: heatmapTextureUniforms,
@@ -50654,7 +50887,7 @@ function drawCollisionDebug(painter, sourceCache, layer, coords, isText) {
         if (!buffers) {
             continue;
         }
-        program.draw(context, gl.LINES, DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled, collisionUniformValues(painter.transform), painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord), transform.getProjectionData(coord), layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer, buffers.segments, null, painter.transform.zoom, null, null, buffers.collisionVertexBuffer);
+        program.draw(context, gl.LINES, DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled, collisionUniformValues(painter.transform), painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord), transform.getProjectionData({ overscaledTileID: coord }), layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer, buffers.segments, null, painter.transform.zoom, null, null, buffers.collisionVertexBuffer);
     }
     if (!isText || !tileBatches.length) {
         return;
@@ -50893,7 +51126,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
     const rotateInShader = rotateWithMap && !pitchWithMap && !alongLine;
     const hasSortKey = !layer.layout.get('symbol-sort-key').isConstant();
     let sortFeaturesByKey = false;
-    const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);
+    const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const hasVariablePlacement = layer._unevaluatedLayout.hasValue('text-variable-anchor') || layer._unevaluatedLayout.hasValue('text-variable-anchor-offset');
     const tileRenderState = [];
     const pitchedTextRescaling = transform.getCircleRadiusCorrection();
@@ -50944,7 +51177,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
         invert$2(pitchedLabelPlaneMatrixInverse, pitchedLabelPlaneMatrix);
         const glCoordMatrixForShader = getGlCoordMatrix(pitchWithMap, rotateWithMap, painter.transform, s);
         const translation = translatePosition(transform, tile, translate, translateAnchor);
-        const projectionData = transform.getProjectionData(coord);
+        const projectionData = transform.getProjectionData({ overscaledTileID: coord });
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&
             hasVariableAnchors &&
@@ -51049,7 +51282,7 @@ function drawCircles(painter, sourceCache, layer, coords) {
     const context = painter.context;
     const gl = context.gl;
     const transform = painter.transform;
-    const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);
+    const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     // Turn off stencil testing to allow circles to be drawn across boundaries,
     // so that large circles are not clipped to tiles
     const stencilMode = StencilMode.disabled;
@@ -51072,7 +51305,7 @@ function drawCircles(painter, sourceCache, layer, coords) {
         const indexBuffer = bucket.indexBuffer;
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
         const uniformValues = circleUniformValues(painter, tile, layer, translateForUniforms, radiusCorrectionFactor);
-        const projectionData = transform.getProjectionData(coord);
+        const projectionData = transform.getProjectionData({ overscaledTileID: coord });
         const state = {
             programConfiguration,
             program,
@@ -51165,7 +51398,7 @@ function prepareHeatmapFlat(painter, sourceCache, layer, coords) {
             continue;
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram('heatmap', programConfiguration);
-        const projectionData = transform.getProjectionData(coord);
+        const projectionData = transform.getProjectionData({ overscaledTileID: coord });
         const radiusCorrectionFactor = transform.getCircleRadiusCorrection();
         program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.backCCW, heatmapUniformValues(tile, transform.zoom, layer.paint.get('heatmap-intensity'), radiusCorrectionFactor), null, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments, layer.paint, transform.zoom, programConfiguration);
     }
@@ -51189,6 +51422,7 @@ function renderHeatmapFlat(painter, layer) {
     painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES, DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled, heatmapTextureUniformValues(painter, layer, 0, 1), null, null, layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer, painter.viewportSegments, layer.paint, painter.transform.zoom);
 }
 function prepareHeatmapTerrain(painter, tile, layer, coord) {
+    const isGlobe = painter.style.projection.name === 'globe';
     const context = painter.context;
     const gl = context.gl;
     const stencilMode = StencilMode.disabled;
@@ -51207,12 +51441,13 @@ function prepareHeatmapTerrain(painter, tile, layer, coord) {
     context.viewport.set([0, 0, tile.tileSize, tile.tileSize]);
     context.clear({ color: Color.transparent });
     const programConfiguration = bucket.programConfigurations.get(layer.id);
-    const program = painter.useProgram('heatmap', programConfiguration, true);
-    const projectionData = painter.transform.getProjectionData(tile.tileID);
+    const program = painter.useProgram('heatmap', programConfiguration, !isGlobe);
+    const projectionData = painter.transform.getProjectionData({ overscaledTileID: tile.tileID });
     const terrainData = painter.style.map.terrain.getTerrainData(coord);
     program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled, heatmapUniformValues(tile, painter.transform.zoom, layer.paint.get('heatmap-intensity'), 1.0), terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments, layer.paint, painter.transform.zoom, programConfiguration);
 }
 function renderHeatmapTerrain(painter, layer, coord) {
+    const isGlobe = painter.style.projection.name === 'globe';
     const context = painter.context;
     const gl = context.gl;
     const transform = painter.transform;
@@ -51229,7 +51464,7 @@ function renderHeatmapTerrain(painter, layer, coord) {
     gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
     context.activeTexture.set(gl.TEXTURE1);
     colorRampTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
-    const projectionData = transform.getProjectionData(coord, false, true);
+    const projectionData = transform.getProjectionData({ overscaledTileID: coord, ignoreTerrainMatrix: !isGlobe });
     painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES, DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled, heatmapTextureUniformValues(painter, layer, 0, 1), null, projectionData, layer.id, painter.rasterBoundsBuffer, painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments, layer.paint, transform.zoom);
     // destroy the FBO after rendering
     fbo.destroy();
@@ -51282,8 +51517,9 @@ function drawLine(painter, sourceCache, layer, coords) {
     const width = layer.paint.get('line-width');
     if (opacity.constantOr(1) === 0 || width.constantOr(1) === 0)
         return;
-    const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);
+    const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
+    const globeWithTerrain = !!painter.style.map.terrain && painter.style.projection.name === 'globe';
     const dasharray = layer.paint.get('line-dasharray');
     const patternProperty = layer.paint.get('line-pattern');
     const image = patternProperty.constantOr(1);
@@ -51316,7 +51552,10 @@ function drawLine(painter, sourceCache, layer, coords) {
             if (posTo && posFrom)
                 programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
-        const projectionData = transform.getProjectionData(coord);
+        const projectionData = transform.getProjectionData({
+            overscaledTileID: coord,
+            ignoreGlobeMatrix: globeWithTerrain
+        });
         const pixelRatio = transform.getPixelScale();
         const uniformValues = image ? linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade) :
             dasharray ? lineSDFUniformValues(painter, tile, layer, pixelRatio, dasharray, crossfade) :
@@ -51366,7 +51605,9 @@ function drawLine(painter, sourceCache, layer, coords) {
             context.activeTexture.set(gl.TEXTURE0);
             gradientTexture.bind(layer.stepInterpolant ? gl.NEAREST : gl.LINEAR, gl.CLAMP_TO_EDGE);
         }
-        program.draw(context, gl.TRIANGLES, depthMode, painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments, layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
+        const [stencilModes] = painter.stencilConfigForOverlap(coords);
+        const stencil = globeWithTerrain ? stencilModes[coord.overscaledZ] : painter.stencilModeForClipping(coord);
+        program.draw(context, gl.TRIANGLES, depthMode, stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments, layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
         firstTile = false;
         // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic
     }
@@ -51422,7 +51663,7 @@ function drawFill(painter, sourceCache, layer, coords) {
             opacity.constantOr(0) === 1) ? 'opaque' : 'translucent';
     // Draw fill
     if (painter.renderPass === pass) {
-        const depthMode = painter.depthModeForSublayer(1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
+        const depthMode = painter.getDepthModeForSublayer(1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
         drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, false);
     }
     // Draw stroke
@@ -51435,7 +51676,7 @@ function drawFill(painter, sourceCache, layer, coords) {
         // or stroke color is translucent. If we wouldn't clip to outside
         // the current shape, some pixels from the outline stroke overlapped
         // the (non-antialiased) fill.
-        const depthMode = painter.depthModeForSublayer(layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
+        const depthMode = painter.getDepthModeForSublayer(layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
         drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, true);
     }
 }
@@ -51474,7 +51715,11 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
             programConfiguration.updatePaintBuffers(crossfade);
         }
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
-        const projectionData = transform.getProjectionData(coord);
+        const globeWithTerrain = painter.style.map.terrain && painter.style.projection.name === 'globe';
+        const projectionData = transform.getProjectionData({
+            overscaledTileID: coord,
+            ignoreGlobeMatrix: globeWithTerrain
+        });
         const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;
@@ -51509,7 +51754,19 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
         // This doesn't seem to be an issue for transparent fill layers (or they don't get used enough to be noticeable),
         // which is a good thing, since there is no easy solution for this problem for transparency, other than
         // greatly increasing subdivision granularity for both fill layers and stencil masks, at least at tile edges.
-        const stencil = (painter.renderPass === 'translucent') ? painter.stencilModeForClipping(coord) : StencilMode.disabled;
+        let stencil;
+        if (painter.renderPass === 'translucent') {
+            if (globeWithTerrain) {
+                const [stencilModes] = painter.stencilConfigForOverlap(coords);
+                stencil = stencilModes[coord.overscaledZ];
+            }
+            else {
+                stencil = painter.stencilModeForClipping(coord);
+            }
+        }
+        else {
+            stencil = StencilMode.disabled;
+        }
         program.draw(painter.context, drawMode, depthMode, stencil, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, indexBuffer, segments, layer.paint, painter.transform.zoom, programConfiguration);
     }
 }
@@ -51546,7 +51803,6 @@ function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMo
     const opacity = layer.paint.get('fill-extrusion-opacity');
     const constantPattern = patternProperty.constantOr(null);
     const transform = painter.transform;
-    const globeCameraPosition = transform.cameraPosition;
     for (const coord of coords) {
         const tile = source.getTile(coord);
         const bucket = tile.getBucket(layer);
@@ -51560,13 +51816,13 @@ function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMo
             tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
             programConfiguration.updatePaintBuffers(crossfade);
         }
-        const projectionData = transform.getProjectionData(coord);
+        const projectionData = transform.getProjectionData({ overscaledTileID: coord });
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
         const translate = translatePosition(transform, tile, layer.paint.get('fill-extrusion-translate'), layer.paint.get('fill-extrusion-translate-anchor'));
         const shouldUseVerticalGradient = layer.paint.get('fill-extrusion-vertical-gradient');
         const uniformValues = image ?
-            fillExtrusionPatternUniformValues(painter, shouldUseVerticalGradient, opacity, translate, globeCameraPosition, coord, crossfade, tile) :
-            fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate, globeCameraPosition);
+            fillExtrusionPatternUniformValues(painter, shouldUseVerticalGradient, opacity, translate, coord, crossfade, tile) :
+            fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate);
         program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments, layer.paint, painter.transform.zoom, programConfiguration, painter.style.map.terrain && bucket.centroidVertexBuffer);
     }
 }
@@ -51577,7 +51833,7 @@ function drawHillshade(painter, sourceCache, layer, tileIDs) {
     const context = painter.context;
     const projection = painter.style.projection;
     const useSubdivision = projection.useSubdivision;
-    const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);
+    const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
     if (painter.renderPass === 'offscreen') {
         // Prepare tiles
@@ -51601,6 +51857,7 @@ function drawHillshade(painter, sourceCache, layer, tileIDs) {
     }
 }
 function renderHillshade(painter, sourceCache, layer, coords, stencilModes, depthMode, colorMode, useBorder) {
+    var _a;
     const projection = painter.style.projection;
     const context = painter.context;
     const transform = painter.transform;
@@ -51614,10 +51871,15 @@ function renderHillshade(painter, sourceCache, layer, coords, stencilModes, dept
             continue;
         }
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+        const terrainData = (_a = painter.style.map.terrain) === null || _a === void 0 ? void 0 : _a.getTerrainData(coord);
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
-        const projectionData = transform.getProjectionData(coord, align);
+        const globeWithTerrain = painter.style.map.terrain && painter.style.projection.name === 'globe';
+        const projectionData = transform.getProjectionData({
+            overscaledTileID: coord,
+            aligned: align,
+            ignoreGlobeMatrix: globeWithTerrain
+        });
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW, hillshadeUniformValues(painter, tile, layer), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }
@@ -51671,7 +51933,7 @@ const cornerCoords = [
     new Point(EXTENT$1, EXTENT$1),
     new Point(0, EXTENT$1),
 ];
-function drawRaster(painter, sourceCache, layer, tileIDs) {
+function drawRaster(painter, sourceCache, layer, tileIDs, isRenderingToTexture = false) {
     if (painter.renderPass !== 'translucent')
         return;
     if (layer.paint.get('raster-opacity') === 0)
@@ -51692,21 +51954,21 @@ function drawRaster(painter, sourceCache, layer, tileIDs) {
     // Stencil mask and two-pass is not used for ImageSource sources regardless of projection.
     if (source instanceof ImageSource) {
         // Image source - no stencil is used
-        drawTiles(painter, sourceCache, layer, tileIDs, null, false, false, source.tileCoords, source.flippedWindingOrder);
+        drawTiles(painter, sourceCache, layer, tileIDs, null, false, false, source.tileCoords, source.flippedWindingOrder, isRenderingToTexture);
     }
     else if (useSubdivision) {
         // Two-pass rendering
         const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
-        drawTiles(painter, sourceCache, layer, coords, stencilBorderless, false, true, cornerCoords); // draw without borders
-        drawTiles(painter, sourceCache, layer, coords, stencilBorders, true, true, cornerCoords); // draw with borders
+        drawTiles(painter, sourceCache, layer, coords, stencilBorderless, false, true, cornerCoords, false, isRenderingToTexture); // draw without borders
+        drawTiles(painter, sourceCache, layer, coords, stencilBorders, true, true, cornerCoords, false, isRenderingToTexture); // draw with borders
     }
     else {
         // Simple rendering
         const [stencil, coords] = painter.stencilConfigForOverlap(tileIDs);
-        drawTiles(painter, sourceCache, layer, coords, stencil, false, true, cornerCoords);
+        drawTiles(painter, sourceCache, layer, coords, stencil, false, true, cornerCoords, false, isRenderingToTexture);
     }
 }
-function drawTiles(painter, sourceCache, layer, coords, stencilModes, useBorder, allowPoles, corners, flipCullfaceMode = false) {
+function drawTiles(painter, sourceCache, layer, coords, stencilModes, useBorder, allowPoles, corners, flipCullfaceMode = false, isRenderingToTexture = false) {
     const minTileZ = coords[coords.length - 1].overscaledZ;
     const context = painter.context;
     const gl = context.gl;
@@ -51719,7 +51981,7 @@ function drawTiles(painter, sourceCache, layer, coords, stencilModes, useBorder,
     for (const coord of coords) {
         // Set the lower zoom level to sublayer 0, and higher zoom levels to higher sublayers
         // Use gl.LESS to prevent double drawing in areas where tiles overlap.
-        const depthMode = painter.depthModeForSublayer(coord.overscaledZ - minTileZ, layer.paint.get('raster-opacity') === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
+        const depthMode = painter.getDepthModeForSublayer(coord.overscaledZ - minTileZ, layer.paint.get('raster-opacity') === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
         const tile = sourceCache.getTile(coord);
         tile.registerFadeDuration(layer.paint.get('raster-fade-duration'));
         const parentTile = sourceCache.findLoadedParent(coord, 0);
@@ -51746,7 +52008,7 @@ function drawTiles(painter, sourceCache, layer, coords, stencilModes, useBorder,
             gl.texParameterf(gl.TEXTURE_2D, context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, context.extTextureFilterAnisotropicMax);
         }
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
-        const projectionData = transform.getProjectionData(coord, align);
+        const projectionData = transform.getProjectionData({ overscaledTileID: coord, aligned: align, ignoreGlobeMatrix: isRenderingToTexture });
         const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer, corners);
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');
         const stencilMode = stencilModes ? stencilModes[coord.overscaledZ] : StencilMode.disabled;
@@ -51760,7 +52022,7 @@ function getFadeValues(tile, parentTile, sourceCache, layer, transform, terrain)
         const sinceTile = (now - tile.timeAdded) / fadeDuration;
         const sinceParent = parentTile ? (now - parentTile.timeAdded) / fadeDuration : -1;
         const source = sourceCache.getSource();
-        const idealZ = transform.coveringZoomLevel({
+        const idealZ = coveringZoomLevel(transform, {
             tileSize: source.tileSize,
             roundZoom: source.roundZoom
         });
@@ -51805,23 +52067,27 @@ function drawBackground(painter, sourceCache, layer, coords) {
     const transform = painter.transform;
     const tileSize = transform.tileSize;
     const image = layer.paint.get('background-pattern');
+    const globeWithTerrain = painter.style.map.terrain && painter.style.projection.name === 'globe';
     if (painter.isPatternMissing(image))
         return;
     const pass = (!image && color.a === 1 && opacity === 1 && painter.opaquePassEnabledForLayer()) ? 'opaque' : 'translucent';
     if (painter.renderPass !== pass)
         return;
     const stencilMode = StencilMode.disabled;
-    const depthMode = painter.depthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
+    const depthMode = painter.getDepthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
     const program = painter.useProgram(image ? 'backgroundPattern' : 'background');
-    const tileIDs = coords ? coords : transform.coveringTiles({ tileSize, terrain: painter.style.map.terrain });
+    const tileIDs = coords ? coords : coveringTiles(transform, { tileSize, terrain: painter.style.map.terrain });
     if (image) {
         context.activeTexture.set(gl.TEXTURE0);
         painter.imageManager.bind(painter.context);
     }
     const crossfade = layer.getCrossfadeParameters();
     for (const tileID of tileIDs) {
-        const projectionData = transform.getProjectionData(tileID);
+        const projectionData = transform.getProjectionData({
+            overscaledTileID: tileID,
+            ignoreGlobeMatrix: globeWithTerrain
+        });
         const uniformValues = image ?
             backgroundPatternUniformValues(opacity, painter, image, { tileID, tileSize }, crossfade) :
             backgroundUniformValues(opacity, color);
@@ -51906,7 +52172,7 @@ function drawDebugTile(painter, sourceCache, coord) {
     }
     const tileLabel = `${tileIdText} ${tileSizeKb}kB`;
     drawTextToOverlay(painter, tileLabel);
-    const projectionData = painter.transform.getProjectionData(coord);
+    const projectionData = painter.transform.getProjectionData({ overscaledTileID: coord });
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, ColorMode.alphaBlended, CullFaceMode.disabled, debugUniformValues(Color.transparent, scaleRatio), null, projectionData, id, painter.debugBuffer, painter.quadTriangleIndexBuffer, painter.debugSegments);
     program.draw(context, gl.LINE_STRIP, depthMode, stencilMode, colorMode, CullFaceMode.disabled, debugUniformValues(Color.red), terrainData, projectionData, id, painter.debugBuffer, painter.tileBorderIndexBuffer, painter.debugSegments);
 }
@@ -51974,6 +52240,7 @@ function drawCustom(painter, sourceCache, layer) {
         },
         defaultProjectionData: projectionData,
     };
+    const renderingMode = implementation.renderingMode ? implementation.renderingMode : '2d';
     if (painter.renderPass === 'offscreen') {
         const prerender = implementation.prerender;
         if (prerender) {
@@ -51988,9 +52255,9 @@ function drawCustom(painter, sourceCache, layer) {
         painter.setCustomLayerDefaults();
         context.setColorMode(painter.colorModeForRenderPass());
         context.setStencilMode(StencilMode.disabled);
-        const depthMode = implementation.renderingMode === '3d' ?
-            new DepthMode(painter.context.gl.LEQUAL, DepthMode.ReadWrite, painter.depthRangeFor3D) :
-            painter.depthModeForSublayer(0, DepthMode.ReadOnly);
+        const depthMode = renderingMode === '3d' ?
+            painter.getDepthModeFor3D() :
+            painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
         context.setDepthMode(depthMode);
         implementation.render(context.gl, customLayerArgs);
         context.setDirty();
@@ -52018,7 +52285,7 @@ function drawDepth(painter, terrain) {
     context.clear({ color: Color.transparent, depth: 1 });
     for (const tile of tiles) {
         const terrainData = terrain.getTerrainData(tile.tileID);
-        const projectionData = tr.getProjectionData(tile.tileID, false, true);
+        const projectionData = tr.getProjectionData({ overscaledTileID: tile.tileID, ignoreTerrainMatrix: true });
         const uniformValues = terrainDepthUniformValues(terrain.getMeshFrameDelta(tr.zoom));
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
@@ -52050,7 +52317,7 @@ function drawCoords(painter, terrain) {
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, coords.texture);
         const uniformValues = terrainCoordsUniformValues(255 - terrain.coordsIndex.length, terrain.getMeshFrameDelta(tr.zoom));
-        const projectionData = tr.getProjectionData(tile.tileID, false, true);
+        const projectionData = tr.getProjectionData({ overscaledTileID: tile.tileID, ignoreTerrainMatrix: true });
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
         terrain.coordsIndex.push(tile.tileID.key);
     }
@@ -52058,11 +52325,12 @@ function drawCoords(painter, terrain) {
     context.viewport.set([0, 0, painter.width, painter.height]);
 }
 function drawTerrain(painter, terrain, tiles) {
+    var _a;
     const context = painter.context;
     const gl = context.gl;
     const tr = painter.transform;
     const colorMode = painter.colorModeForRenderPass();
-    const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, painter.depthRangeFor3D);
+    const depthMode = painter.getDepthModeFor3D();
     const program = painter.useProgram('terrain');
     const mesh = terrain.getTerrainMesh();
     context.bindFramebuffer.set(null);
@@ -52074,8 +52342,8 @@ function drawTerrain(painter, terrain, tiles) {
         gl.bindTexture(gl.TEXTURE_2D, texture.texture);
         const eleDelta = terrain.getMeshFrameDelta(tr.zoom);
         const fogMatrix = tr.calculateFogMatrix(tile.tileID.toUnwrapped());
-        const uniformValues = terrainUniformValues(eleDelta, fogMatrix, painter.style.sky, tr.pitch);
-        const projectionData = tr.getProjectionData(tile.tileID, false, true);
+        const uniformValues = terrainUniformValues(eleDelta, fogMatrix, painter.style.sky, tr.pitch, ((_a = painter.style.projection) === null || _a === void 0 ? void 0 : _a.name) === 'globe');
+        const projectionData = tr.getProjectionData({ overscaledTileID: tile.tileID, ignoreTerrainMatrix: true });
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }
@@ -52127,7 +52395,7 @@ function drawAtmosphere(painter, sky, light) {
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadOnly, [0, 1]);
     const transform = painter.transform;
     const sunPos = getSunPos(light, painter.transform);
-    const projectionData = transform.getProjectionData(null);
+    const projectionData = transform.getProjectionData({ overscaledTileID: null });
     const atmosphereBlend = sky.properties.get('atmosphere-blend') * projectionData.projectionTransition;
     if (atmosphereBlend === 0) {
         // Don't draw anything if atmosphere is fully transparent
@@ -52299,10 +52567,30 @@ class Painter {
             const stencilRef = tileStencilRefs[tileID.key];
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
-            const projectionData = transform.getProjectionData(tileID);
+            const projectionData = transform.getProjectionData({ overscaledTileID: tileID });
             program.draw(context, gl.TRIANGLES, DepthMode.disabled, 
             // Tests will always pass, and ref value will be written to stencil buffer.
             new StencilMode({ func: gl.ALWAYS, mask: 0 }, stencilRef, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE), ColorMode.disabled, renderToTexture ? CullFaceMode.disabled : CullFaceMode.backCCW, null, terrainData, projectionData, '$clipping', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+        }
+    }
+    /**
+     * Fills the depth buffer with the geometry of all supplied tiles.
+     * Does not change the color buffer or the stencil buffer.
+     */
+    _renderTilesDepthBuffer() {
+        const context = this.context;
+        const gl = context.gl;
+        const projection = this.style.projection;
+        const transform = this.transform;
+        const program = this.useProgram('depth');
+        const depthMode = this.getDepthModeFor3D();
+        const tileIDs = coveringTiles(transform, { tileSize: transform.tileSize });
+        // tiles are usually supplied in ascending order of z, then y, then x
+        for (const tileID of tileIDs) {
+            const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
+            const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true, true, 'raster');
+            const projectionData = transform.getProjectionData({ overscaledTileID: tileID });
+            program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, ColorMode.disabled, CullFaceMode.backCCW, null, terrainData, projectionData, '$clipping', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
         }
     }
     stencilModeFor3D() {
@@ -52390,11 +52678,14 @@ class Painter {
             return ColorMode.alphaBlended;
         }
     }
-    depthModeForSublayer(n, mask, func) {
+    getDepthModeForSublayer(n, mask, func) {
         if (!this.opaquePassEnabledForLayer())
             return DepthMode.disabled;
         const depth = 1 - ((1 + this.currentLayer) * this.numSublayers + n) * this.depthEpsilon;
         return new DepthMode(func || this.context.gl.LEQUAL, mask, [depth, depth]);
+    }
+    getDepthModeFor3D() {
+        return new DepthMode(this.context.gl.LEQUAL, DepthMode.ReadWrite, this.depthRangeFor3D);
     }
     /*
      * The opaque pass and 3D layers both use the depth buffer.
@@ -52487,11 +52778,20 @@ class Painter {
         // Translucent pass ===============================================
         // Draw all other layers bottom-to-top.
         this.renderPass = 'translucent';
+        let globeDepthRendered = false;
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const sourceCache = sourceCaches[layer.source];
             if (this.renderToTexture && this.renderToTexture.renderLayer(layer))
                 continue;
+            if (!this.opaquePassEnabledForLayer() && !globeDepthRendered) {
+                globeDepthRendered = true;
+                // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
+                // There should be no need for explicitly writing tile depths when terrain is enabled.
+                if (this.style.projection.name === 'globe' && !this.style.map.terrain) {
+                    this._renderTilesDepthBuffer();
+                }
+            }
             // For symbol layers in the translucent pass, we add extra tiles to the renderable set
             // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render
             // separate clipping masks
@@ -52540,7 +52840,7 @@ class Painter {
         drawDepth(this, this.style.map.terrain);
         drawCoords(this, this.style.map.terrain);
     }
-    renderLayer(painter, sourceCache, layer, coords) {
+    renderLayer(painter, sourceCache, layer, coords, isRenderingToTexture = false) {
         if (layer.isHidden(this.transform.zoom))
             return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length)
@@ -52569,7 +52869,7 @@ class Painter {
                 drawHillshade(painter, sourceCache, layer, coords);
                 break;
             case 'raster':
-                drawRaster(painter, sourceCache, layer, coords);
+                drawRaster(painter, sourceCache, layer, coords, isRenderingToTexture);
                 break;
             case 'background':
                 drawBackground(painter, sourceCache, layer, coords);
@@ -55404,7 +55704,11 @@ class HandlerManager {
         if (this._map.cameraHelper.useGlobeControls && !tr.isPointOnMapSurface(around)) {
             around = tr.centerPoint;
         }
-        const preZoomAroundLoc = tr.screenPointToLocation(panDelta ? around.sub(panDelta) : around);
+        // If we are rotating about the center point, avoid numerical issues near the horizon by using the transform's
+        // center directly, instead of computing it from the screen point
+        const preZoomAroundLoc = around.distSqr(tr.centerPoint) < 1.0e-2 ?
+            tr.center :
+            tr.screenPointToLocation(panDelta ? around.sub(panDelta) : around);
         if (!terrain) {
             // Apply zoom, bearing, pitch, roll
             this._map.cameraHelper.handleMapControlsRollPitchBearingZoom(deltasForHelper, tr);
@@ -55484,7 +55788,9 @@ class HandlerManager {
             this._map._elevationFreeze = false;
             this._terrainMovement = false;
             const tr = this._map._getTransformForUpdate();
-            tr.recalculateZoom(this._map.terrain);
+            if (this._map.getCenterClampedToGround()) {
+                tr.recalculateZoomAndCenter(this._map.terrain);
+            }
             this._map._applyUpdatedTransform(tr);
         }
         if (allowEndAnimation && finishedMoving) {
@@ -55587,6 +55893,44 @@ class Camera extends Evented {
      */
     setCenter(center, eventData) {
         return this.jumpTo({ center }, eventData);
+    }
+    /**
+     * Returns the elevation of the map's center point.
+     *
+     * @returns The elevation of the map's center point, in meters above sea level.
+     */
+    getCenterElevation() { return this.transform.elevation; }
+    /**
+     * Sets the elevation of the map's center point, in meters above sea level. Equivalent to `jumpTo({elevation: elevation})`.
+     *
+     * Triggers the following events: `movestart` and `moveend`.
+     *
+     * @param elevation - The elevation to set, in meters above sea level.
+     * @param eventData - Additional properties to be added to event objects of events triggered by this method.
+     */
+    setCenterElevation(elevation, eventData) {
+        this.jumpTo({ elevation }, eventData);
+        return this;
+    }
+    /**
+     * Returns the value of `centerClampedToGround`.
+     *
+     * If true, the elevation of the center point will automatically be set to the terrain elevation
+     * (or zero if terrain is not enabled). If false, the elevation of the center point will default
+     * to sea level and will not automatically update. Defaults to true. Needs to be set to false to
+     * keep the camera above ground when pitch \> 90 degrees.
+     */
+    getCenterClampedToGround() { return this._centerClampedToGround; }
+    /**
+     * Sets the value of `centerClampedToGround`.
+     *
+     * If true, the elevation of the center point will automatically be set to the terrain elevation
+     * (or zero if terrain is not enabled). If false, the elevation of the center point will default
+     * to sea level and will not automatically update. Defaults to true. Needs to be set to false to
+     * keep the camera above ground when pitch \> 90 degrees.
+     */
+    setCenterClampedToGround(centerClampedToGround) {
+        this._centerClampedToGround = centerClampedToGround;
     }
     /**
      * Pans the map by the specified offset.
@@ -55706,6 +56050,40 @@ class Camera extends Evented {
      */
     zoomOut(options, eventData) {
         this.zoomTo(this.getZoom() - 1, options, eventData);
+        return this;
+    }
+    /**
+     * Returns the map's current vertical field of view, in degrees.
+     *
+     * @returns The map's current vertical field of view.
+     * @defaultValue 36.87
+     * @example
+     * ```ts
+     * const verticalFieldOfView = map.getVerticalFieldOfView();
+     * ```
+     */
+    getVerticalFieldOfView() { return this.transform.fov; }
+    /**
+     * Sets the map's vertical field of view, in degrees.
+     *
+     * Triggers the following events: `movestart`, `move`, and `moveend`.
+     *
+     * @param fov - The vertical field of view to set, in degrees (0-180).
+     * @param eventData - Additional properties to be added to event objects of events triggered by this method.
+     * @defaultValue 36.87
+     * @example
+     * Change vertical field of view to 30 degrees
+     * ```ts
+     * map.setVerticalFieldOfView(30);
+     * ```
+     */
+    setVerticalFieldOfView(fov, eventData) {
+        if (fov != this.transform.fov) {
+            this.transform.setFov(fov);
+            this.fire(new Event('movestart', eventData))
+                .fire(new Event('move', eventData))
+                .fire(new Event('moveend', eventData));
+        }
         return this;
     }
     /**
@@ -56017,6 +56395,9 @@ class Camera extends Evented {
         const oldZoom = tr.zoom;
         this.cameraHelper.handleJumpToCenterZoom(tr, options);
         const zoomChanged = tr.zoom !== oldZoom;
+        if ('elevation' in options && tr.elevation !== +options.elevation) {
+            tr.setElevation(+options.elevation);
+        }
         if ('bearing' in options && tr.bearing !== +options.bearing) {
             bearingChanged = true;
             tr.setBearing(+options.bearing);
@@ -56058,20 +56439,30 @@ class Camera extends Evented {
         return this.fire(new Event('moveend', eventData));
     }
     /**
-     * Calculates pitch, zoom and bearing for looking at `newCenter` with the camera position being `newCenter`
-     * and returns them as {@link CameraOptions}.
+     * Given a camera 'from' position and a position to look at (`to`), calculates zoom and camera rotation and returns them as {@link CameraOptions}.
      * @param from - The camera to look from
      * @param altitudeFrom - The altitude of the camera to look from
      * @param to - The center to look at
      * @param altitudeTo - Optional altitude of the center to look at. If none given the ground height will be used.
      * @returns the calculated camera options
+     * @example
+     * ```ts
+     * // Calculate options to look from (1°, 0°, 1000m) to (1°, 1°, 0m)
+     * const cameraLngLat = new LngLat(1, 0);
+     * const cameraAltitude = 1000;
+     * const targetLngLat = new LngLat(1, 1);
+     * const targetAltitude = 0;
+     * const cameraOptions = map.calculateCameraOptionsFromTo(cameraLngLat, cameraAltitude, targetLngLat, targetAltitude);
+     * // Apply calculated options
+     * map.jumpTo(cameraOptions);
+     * ```
      */
     calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo = 0) {
-        const fromMerc = MercatorCoordinate.fromLngLat(from, altitudeFrom);
-        const toMerc = MercatorCoordinate.fromLngLat(to, altitudeTo);
-        const dx = toMerc.x - fromMerc.x;
-        const dy = toMerc.y - fromMerc.y;
-        const dz = toMerc.z - fromMerc.z;
+        const fromMercator = MercatorCoordinate.fromLngLat(from, altitudeFrom);
+        const toMercator = MercatorCoordinate.fromLngLat(to, altitudeTo);
+        const dx = toMercator.x - fromMercator.x;
+        const dy = toMercator.y - fromMercator.y;
+        const dz = toMercator.z - fromMercator.z;
         const distance3D = Math.hypot(dx, dy, dz);
         if (distance3D === 0)
             throw new Error('Can\'t calculate camera options with same From and To');
@@ -56081,10 +56472,43 @@ class Camera extends Evented {
         let pitch = (Math.acos(groundDistance / distance3D) * 180) / Math.PI;
         pitch = dz < 0 ? 90 - pitch : 90 + pitch;
         return {
-            center: toMerc.toLngLat(),
+            center: toMercator.toLngLat(),
+            elevation: altitudeTo,
             zoom,
             pitch,
             bearing
+        };
+    }
+    /**
+     * Given a camera position and rotation, calculates zoom and center point and returns them as {@link CameraOptions}.
+     * @param cameraLngLat - The lng, lat of the camera to look from
+     * @param cameraAlt - The altitude of the camera to look from, in meters above sea level
+     * @param bearing - Bearing of the camera, in degrees
+     * @param pitch - Pitch of the camera, in degrees
+     * @param roll - Roll of the camera, in degrees
+     * @returns the calculated camera options
+     * @example
+     * ```ts
+     * // Calculate options to look from camera position(1°, 0°, 1000m) with bearing = 90°, pitch = 30°, and roll = 45°
+     * const cameraLngLat = new LngLat(1, 0);
+     * const cameraAltitude = 1000;
+     * const bearing = 90;
+     * const pitch = 30;
+     * const roll = 45;
+     * const cameraOptions = map.calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat, cameraAltitude, bearing, pitch, roll);
+     * // Apply calculated options
+     * map.jumpTo(cameraOptions);
+     * ```
+     */
+    calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat, cameraAlt, bearing, pitch, roll) {
+        const centerInfo = this.transform.calculateCenterFromCameraLngLatAlt(cameraLngLat, cameraAlt, bearing, pitch);
+        return {
+            center: centerInfo.center,
+            elevation: centerInfo.elevation,
+            zoom: centerInfo.zoom,
+            bearing,
+            pitch,
+            roll
         };
     }
     /**
@@ -56202,7 +56626,9 @@ class Camera extends Evented {
     }
     _finalizeElevation() {
         this._elevationFreeze = false;
-        this.transform.recalculateZoom(this.terrain);
+        if (this.getCenterClampedToGround()) {
+            this.transform.recalculateZoomAndCenter(this.terrain);
+        }
     }
     /**
      * @internal
@@ -56233,9 +56659,12 @@ class Camera extends Evented {
      * @param tr - The transform to check.
      */
     _elevateCameraIfInsideTerrain(tr) {
-        const cameraLngLat = tr.screenPointToLocation(tr.getCameraPoint());
+        if (!this.terrain && tr.elevation >= 0 && tr.pitch <= 90) {
+            return {};
+        }
+        const cameraLngLat = tr.getCameraLngLat();
         const cameraAltitude = tr.getCameraAltitude();
-        const minAltitude = this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom);
+        const minAltitude = this.terrain ? this.terrain.getElevationForLngLatZoom(cameraLngLat, tr.zoom) : 0;
         if (cameraAltitude < minAltitude) {
             const newCamera = this.calculateCameraOptionsFromTo(cameraLngLat, minAltitude, tr.center, tr.elevation);
             return {
@@ -56254,9 +56683,7 @@ class Camera extends Evented {
      */
     _applyUpdatedTransform(tr) {
         const modifiers = [];
-        if (this.terrain) {
-            modifiers.push(tr => this._elevateCameraIfInsideTerrain(tr));
-        }
+        modifiers.push(tr => this._elevateCameraIfInsideTerrain(tr));
         if (this.transformCameraUpdate) {
             modifiers.push(tr => this.transformCameraUpdate(tr));
         }
@@ -56269,6 +56696,8 @@ class Camera extends Evented {
             const { center, zoom, roll, pitch, bearing, elevation } = modifier(nextTransform);
             if (center)
                 nextTransform.setCenter(center);
+            if (elevation !== undefined)
+                nextTransform.setElevation(elevation);
             if (zoom !== undefined)
                 nextTransform.setZoom(zoom);
             if (roll !== undefined)
@@ -56277,8 +56706,6 @@ class Camera extends Evented {
                 nextTransform.setPitch(pitch);
             if (bearing !== undefined)
                 nextTransform.setBearing(bearing);
-            if (elevation !== undefined)
-                nextTransform.setElevation(elevation);
             finalTransform.apply(nextTransform);
         }
         this.transform.apply(finalTransform);
@@ -56367,7 +56794,7 @@ class Camera extends Evented {
     flyTo(options, eventData) {
         // Fall through to jumpTo if user has set prefers-reduced-motion
         if (!options.essential && browser.prefersReducedMotion) {
-            const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch', 'roll']);
+            const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch', 'roll', 'elevation']);
             return this.jumpTo(coercedOptions, eventData);
         }
         // This method implements an “optimal path” animation, as detailed in:
@@ -56570,8 +56997,7 @@ class Camera extends Evented {
         if (!this.terrain) {
             return null;
         }
-        const elevation = this.terrain.getElevationForLngLatZoom(LngLat.convert(lngLatLike), this.transform.tileZoom);
-        return elevation - this.transform.elevation;
+        return this.terrain.getElevationForLngLatZoom(LngLat.convert(lngLatLike), this.transform.tileZoom);
     }
 }
 
@@ -56960,10 +57386,10 @@ class TerrainSourceCache extends Evented {
         this._sourceTileCache = {};
         this.minzoom = 0;
         this.maxzoom = 22;
-        this.tileSize = 512;
         this.deltaZoom = 1;
+        this.tileSize = sourceCache._source.tileSize * 2 ** this.deltaZoom;
         sourceCache.usedForTerrain = true;
-        sourceCache.tileSize = this.tileSize * 2 ** this.deltaZoom;
+        sourceCache.tileSize = this.tileSize;
     }
     destruct() {
         this.sourceCache.usedForTerrain = false;
@@ -56980,12 +57406,13 @@ class TerrainSourceCache extends Evented {
         // create internal render-to-texture tiles for the current scene.
         this._renderableTilesKeys = [];
         const keys = {};
-        for (const tileID of transform.coveringTiles({
+        for (const tileID of coveringTiles(transform, {
             tileSize: this.tileSize,
             minzoom: this.minzoom,
             maxzoom: this.maxzoom,
             reparseOverscaled: false,
-            terrain
+            terrain,
+            calculateTileZoom: this.sourceCache._source.calculateTileZoom
         })) {
             keys[tileID.key] = true;
             this._renderableTilesKeys.push(tileID.key);
@@ -57555,35 +57982,35 @@ class RenderToTexture {
         this._rttTiles = [];
         this._renderableTiles = this.terrain.sourceCache.getRenderableTiles();
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
-        this._coordsDescendingInv = {};
+        this._coordsAscending = {};
         for (const id in style.sourceCaches) {
-            this._coordsDescendingInv[id] = {};
+            this._coordsAscending[id] = {};
             const tileIDs = style.sourceCaches[id].getVisibleCoordinates();
             for (const tileID of tileIDs) {
                 const keys = this.terrain.sourceCache.getTerrainCoords(tileID);
                 for (const key in keys) {
-                    if (!this._coordsDescendingInv[id][key])
-                        this._coordsDescendingInv[id][key] = [];
-                    this._coordsDescendingInv[id][key].push(keys[key]);
+                    if (!this._coordsAscending[id][key])
+                        this._coordsAscending[id][key] = [];
+                    this._coordsAscending[id][key].push(keys[key]);
                 }
             }
         }
-        this._coordsDescendingInvStr = {};
+        this._coordsAscendingStr = {};
         for (const id of style._order) {
             const layer = style._layers[id], source = layer.source;
             if (LAYERS[layer.type]) {
-                if (!this._coordsDescendingInvStr[source]) {
-                    this._coordsDescendingInvStr[source] = {};
-                    for (const key in this._coordsDescendingInv[source])
-                        this._coordsDescendingInvStr[source][key] = this._coordsDescendingInv[source][key].map(c => c.key).sort().join();
+                if (!this._coordsAscendingStr[source]) {
+                    this._coordsAscendingStr[source] = {};
+                    for (const key in this._coordsAscending[source])
+                        this._coordsAscendingStr[source][key] = this._coordsAscending[source][key].map(c => c.key).sort().join();
                 }
             }
         }
         // check tiles to render
         for (const tile of this._renderableTiles) {
-            for (const source in this._coordsDescendingInvStr) {
+            for (const source in this._coordsAscendingStr) {
                 // rerender if there are more coords to render than in the last rendering
-                const coords = this._coordsDescendingInvStr[source][tile.tileID.key];
+                const coords = this._coordsAscendingStr[source][tile.tileID.key];
                 if (coords && coords !== tile.rttCoords[source])
                     tile.rtt = [];
             }
@@ -57648,12 +58075,12 @@ class RenderToTexture {
                 painter.currentStencilSource = undefined;
                 for (let l = 0; l < layers.length; l++) {
                     const layer = painter.style._layers[layers[l]];
-                    const coords = layer.source ? this._coordsDescendingInv[layer.source][tile.tileID.key] : [tile.tileID];
+                    const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
                     painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
                     painter._renderTileClippingMasks(layer, coords, true);
-                    painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords);
+                    painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords, true);
                     if (layer.source)
-                        tile.rttCoords[layer.source] = this._coordsDescendingInvStr[layer.source][tile.tileID.key];
+                        tile.rttCoords[layer.source] = this._coordsAscendingStr[layer.source][tile.tileID.key];
                 }
             }
             drawTerrain(this.painter, this.terrain, this._rttTiles);
@@ -57684,6 +58111,8 @@ const defaultLocale = {
     'ScaleControl.Kilometers': 'km',
     'ScaleControl.Miles': 'mi',
     'ScaleControl.NauticalMiles': 'nm',
+    'GlobeControl.Enable': 'Enable globe',
+    'GlobeControl.Disable': 'Disable globe',
     'TerrainControl.Enable': 'Enable terrain',
     'TerrainControl.Disable': 'Disable terrain',
     'CooperativeGesturesHandler.WindowsHelpText': 'Use Ctrl + scroll to zoom the map',
@@ -57698,7 +58127,7 @@ const defaultMaxZoom = 22;
 const defaultMinPitch = 0;
 const defaultMaxPitch = 60;
 // use this variable to check maxPitch for validity
-const maxPitchThreshold = 85;
+const maxPitchThreshold = 180;
 const defaultOptions$4 = {
     hash: false,
     interactive: true,
@@ -57723,6 +58152,7 @@ const defaultOptions$4 = {
     cooperativeGestures: false,
     trackResize: true,
     center: [0, 0],
+    elevation: 0,
     zoom: 0,
     bearing: 0,
     pitch: 0,
@@ -57741,7 +58171,8 @@ const defaultOptions$4 = {
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
-    cancelPendingTileRequestsWhileZooming: true
+    cancelPendingTileRequestsWhileZooming: true,
+    centerClampedToGround: true
 };
 /**
  * The `Map` object represents the map on your page. It exposes methods
@@ -57849,6 +58280,7 @@ let Map$1 = class Map extends Camera {
         this._antialias = resolvedOptions.antialias === true;
         this._trackResize = resolvedOptions.trackResize === true;
         this._bearingSnap = resolvedOptions.bearingSnap;
+        this._centerClampedToGround = resolvedOptions.centerClampedToGround;
         this._refreshExpiredTiles = resolvedOptions.refreshExpiredTiles === true;
         this._fadeDuration = resolvedOptions.fadeDuration;
         this._crossSourceCollisions = resolvedOptions.crossSourceCollisions === true;
@@ -57911,6 +58343,7 @@ let Map$1 = class Map extends Camera {
         if (!this._hash || !this._hash._onHashChange()) {
             this.jumpTo({
                 center: resolvedOptions.center,
+                elevation: resolvedOptions.elevation,
                 zoom: resolvedOptions.zoom,
                 bearing: resolvedOptions.bearing,
                 pitch: resolvedOptions.pitch,
@@ -58261,7 +58694,7 @@ let Map$1 = class Map extends Camera {
      *
      * A {@link ErrorEvent} event will be fired if minPitch is out of bounds.
      *
-     * @param minPitch - The minimum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     * @param minPitch - The minimum pitch to set (0-180). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
      */
     setMinPitch(minPitch) {
@@ -58292,7 +58725,7 @@ let Map$1 = class Map extends Camera {
      *
      * A {@link ErrorEvent} event will be fired if maxPitch is out of bounds.
      *
-     * @param maxPitch - The maximum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     * @param maxPitch - The maximum pitch to set (0-180). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
      */
     setMaxPitch(maxPitch) {
@@ -58932,7 +59365,9 @@ let Map$1 = class Map extends Camera {
                 this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
             this.transform.setMinElevationForCurrentTile(0);
-            this.transform.setElevation(0);
+            if (this._centerClampedToGround) {
+                this.transform.setElevation(0);
+            }
         }
         else {
             // add terrain
@@ -58960,7 +59395,9 @@ let Map$1 = class Map extends Camera {
                 else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
                         this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
-                        this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
+                        if (this._centerClampedToGround) {
+                            this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
+                        }
                     }
                     this.terrain.sourceCache.freeRtt(e.tile.tileID);
                 }
@@ -59978,13 +60415,15 @@ let Map$1 = class Map extends Camera {
         if (this.terrain) {
             this.terrain.sourceCache.update(this.transform, this.terrain);
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
-            if (!this._elevationFreeze) {
+            if (!this._elevationFreeze && this._centerClampedToGround) {
                 this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             }
         }
         else {
             this.transform.setMinElevationForCurrentTile(0);
-            this.transform.setElevation(0);
+            if (this._centerClampedToGround) {
+                this.transform.setElevation(0);
+            }
         }
         this._placementDirty = this.style && this.style._updatePlacement(this.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
         if (transformUpdateResult.fireProjectionEvent) {
@@ -60522,11 +60961,11 @@ function checkGeolocationSupport() {
         // insecure origin
         try {
             const permissions = yield window.navigator.permissions.query({ name: 'geolocation' });
-            supportsGeolocation = permissions.state !== 'denied'; // eslint-disable-line require-atomic-updates
+            supportsGeolocation = permissions.state !== 'denied';
         }
         catch (_a) {
             // Fix for iOS16 which rejects query but still supports geolocation
-            supportsGeolocation = !!window.navigator.geolocation; // eslint-disable-line require-atomic-updates
+            supportsGeolocation = !!window.navigator.geolocation;
         }
         return supportsGeolocation;
     });
@@ -62222,6 +62661,67 @@ class TerrainControl {
     }
 }
 
+/**
+ * A `GlobeControl` control contains a button for toggling the map projection between "mercator" and "globe".
+ *
+ * @group Markers and Controls
+ *
+ * @example
+ * ```ts
+ * let map = new Map()
+ *     .addControl(new GlobeControl());
+ * ```
+ *
+ * @see [Display a globe with a fill extrusion layer](https://maplibre.org/maplibre-gl-js/docs/examples/globe-fill-extrusion/)
+ */
+class GlobeControl {
+    constructor() {
+        this._toggleProjection = () => {
+            var _a;
+            const currentProjection = (_a = this._map.getProjection()) === null || _a === void 0 ? void 0 : _a.type;
+            if (currentProjection === 'mercator' || !currentProjection) {
+                this._map.setProjection({ type: 'globe' });
+            }
+            else {
+                this._map.setProjection({ type: 'mercator' });
+            }
+            this._updateGlobeIcon();
+        };
+        this._updateGlobeIcon = () => {
+            var _a;
+            this._globeButton.classList.remove('maplibregl-ctrl-globe');
+            this._globeButton.classList.remove('maplibregl-ctrl-globe-enabled');
+            if (((_a = this._map.getProjection()) === null || _a === void 0 ? void 0 : _a.type) === 'globe') {
+                this._globeButton.classList.add('maplibregl-ctrl-globe-enabled');
+                this._globeButton.title = this._map._getUIString('GlobeControl.Disable');
+            }
+            else {
+                this._globeButton.classList.add('maplibregl-ctrl-globe');
+                this._globeButton.title = this._map._getUIString('GlobeControl.Enable');
+            }
+        };
+    }
+    /** {@inheritDoc IControl.onAdd} */
+    onAdd(map) {
+        this._map = map;
+        this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
+        this._globeButton = DOM.create('button', 'maplibregl-ctrl-globe', this._container);
+        DOM.create('span', 'maplibregl-ctrl-icon', this._globeButton).setAttribute('aria-hidden', 'true');
+        this._globeButton.type = 'button';
+        this._globeButton.addEventListener('click', this._toggleProjection);
+        this._updateGlobeIcon();
+        this._map.on('styledata', this._updateGlobeIcon);
+        return this._container;
+    }
+    /** {@inheritDoc IControl.onRemove} */
+    onRemove() {
+        DOM.remove(this._container);
+        this._map.off('styledata', this._updateGlobeIcon);
+        this._globeButton.removeEventListener('click', this._toggleProjection);
+        this._map = undefined;
+    }
+}
+
 const defaultOptions = {
     closeButton: true,
     closeOnClick: true,
@@ -62929,6 +63429,7 @@ exports.Evented = Evented;
 exports.FullscreenControl = FullscreenControl;
 exports.GeoJSONSource = GeoJSONSource;
 exports.GeolocateControl = GeolocateControl;
+exports.GlobeControl = GlobeControl;
 exports.Hash = Hash;
 exports.ImageSource = ImageSource;
 exports.KeyboardHandler = KeyboardHandler;
