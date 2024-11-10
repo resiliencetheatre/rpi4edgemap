@@ -231,12 +231,22 @@ function updateReticulumBlock() {
     document.getElementById("reticulumlist").innerHTML = "";
     var reticulumLoop=0;
     var reticulumListContent = "";
-    // Δ
+
     reticulumListContent = "<table width=90%><tr ><td style='border-bottom: 1px solid #0F0;' >Callsign</td><td style='border-bottom: 1px solid #0F0;' >Age</td><td style='border-bottom: 1px solid #0F0;'>Link</td><td style='border-bottom: 1px solid #0F0;'>SNR</td><td style='border-bottom: 1px solid #0F0;'>RSSI</td><td style='border-bottom: 1px solid #0F0;'>Qual</td> </tr>";
     for ( reticulumLoop = 0; reticulumLoop < reticulumNodesOnSystem.getSize(); reticulumLoop++) { 
+        // Show nodes ages under 30 minutes
         if ( reticulumNodesOnSystem.age[reticulumLoop] < 30 ) {
-            smallerHash = "<span style='font-size:10px;'>" + reticulumNodesOnSystem.hash[reticulumLoop] + "</span>";
-            reticulumListContent += "<tr><td title='"+reticulumNodesOnSystem.hash[reticulumLoop]+"'>" + reticulumNodesOnSystem.members[reticulumLoop] + "</td><td>" + reticulumNodesOnSystem.age[reticulumLoop] + "</td><td>" + reticulumNodesOnSystem.link[reticulumLoop]  + "</td><td>"+reticulumNodesOnSystem.snr[reticulumLoop]+"</td><td>"+reticulumNodesOnSystem.rssi[reticulumLoop]+"</td><td>"+reticulumNodesOnSystem.q[reticulumLoop]+"</td></tr>";
+            // Test some background color set to indicate aging nodes
+            if ( reticulumNodesOnSystem.age[reticulumLoop] < 2 ) {
+                reticulumListContent += "<tr><td title='"+reticulumNodesOnSystem.hash[reticulumLoop]+"'>" + reticulumNodesOnSystem.members[reticulumLoop] + "</td><td>" + reticulumNodesOnSystem.age[reticulumLoop] + "</td><td>" + reticulumNodesOnSystem.link[reticulumLoop]  + "</td><td>"+reticulumNodesOnSystem.snr[reticulumLoop]+"</td><td>"+reticulumNodesOnSystem.rssi[reticulumLoop]+"</td><td>"+reticulumNodesOnSystem.q[reticulumLoop]+"</td></tr>";
+            } else {
+                if ( reticulumNodesOnSystem.age[reticulumLoop] < 10 ) {
+                    opacity = reticulumNodesOnSystem.age[reticulumLoop] / 10
+                } else {
+                    opacity = 1
+                }
+                reticulumListContent += "<tr style='background-color: rgba(255, 49, 49, "+opacity+");;'><td title='"+reticulumNodesOnSystem.hash[reticulumLoop]+"'>" + reticulumNodesOnSystem.members[reticulumLoop] + "</td><td>" + reticulumNodesOnSystem.age[reticulumLoop] + "</td><td>" + reticulumNodesOnSystem.link[reticulumLoop]  + "</td><td>"+reticulumNodesOnSystem.snr[reticulumLoop]+"</td><td>"+reticulumNodesOnSystem.rssi[reticulumLoop]+"</td><td>"+reticulumNodesOnSystem.q[reticulumLoop]+"</td></tr>";
+            }
         }
     }
     reticulumListContent += "</table>";
