@@ -8,13 +8,6 @@ build.
 We need to update following buildroot provided packages to successful 
 compile image. You can use following .mk files to upgrade these packages.
 
-# python-cython 3.0.11
-rm  [buildroot_directory]/package/python-cython/python-cython.hash
-cp python-cython.mk [buildroot_directory]/package/python-cython
-
-# python-yarl 1.15.5
-rm [buildroot_directory]/package/python-yarl/python-yarl.hash
-cp python-yarl.mk [buildroot_directory]/package/python-yarl
 
 # espflash 3.2.0
 rm [buildroot_directory]/package/espflash/espflash.hash

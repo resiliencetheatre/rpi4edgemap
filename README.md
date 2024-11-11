@@ -171,10 +171,17 @@ cd ~/build-directory/
 git clone https://github.com/resiliencetheatre/rpi4edgemap.git
 git clone https://git.buildroot.net/buildroot
 cd buildroot/
+# We checkout verified version on master branch
+git checkout aead102d3f198314aa3019a2c1198ab6cbc1b04c
 ```
 
+You can use latest master or checkout version `aead102d3f198314aa3019a2c1198ab6cbc1b04c` as above,
+which I've tested (Nov 11th, 2024). Please note that buildroot version, kernel and other system
+components needs to be in 'sync' and this is an art in embedded design.
+
+
 Modify buildroot standard `rpi-firmware` package file and change 
-firmware version tag to match kernel version (6.11.4) we're using. 
+firmware version tag to match kernel version (6.11.7) we're using. 
 
 ```
 # package/rpi-firmware/rpi-firmware.mk
@@ -188,27 +195,6 @@ cd ~/build-directory/buildroot
 rm package/rpi-firmware/rpi-firmware.hash
 ```
 
-We need to update `python-cython` and `python-yarl` versions, so discard buildroot provided
-hash files and copy .mk files from `~/build-directory/rpi4edgemap/buildroot-extras/` to
-package directories:
-
-```
-# python-cython
-rm  ~/build-directory/buildroot/package/python-cython/python-cython.hash
-cp ~/build-directory/rpi4edgemap/buildroot-extras/python-cython.mk ~/build-directory/buildroot/package/python-cython
-
-# python-yarl
-rm ~/build-directory/buildroot/package/python-yarl/python-yarl.hash
-cp ~/build-directory/rpi4edgemap/buildroot-extras/python-yarl.mk ~/build-directory/buildroot/package/python-yarl
-
-# espflash (optional, if you require to flash LoRA radios from Edgemap)
-rm ~/build-directory/buildroot/package/espflash/espflash.hash
-cp espflash.mk ~/build-directory/buildroot/package/espflash/
-
-# libcodec2  (optional)
-rm ~/build-directory/buildroot/package/libcodec2/libcodec2.hash
-cp libcodec2.mk ~/build-directory/buildroot/package/libcodec2/libcodec2.hash
-```
 
 Export BR2_EXTERNAL variable, make defconfig and start build with make:
 
@@ -280,8 +266,27 @@ delay on audio opening. Download [this patch](https://gist.github.com/resilience
 ## codec2 binaries
 
 If you wish to have codec2 binaries on your edgemap device, use provided `buildroot-extras/libcodec2.mk` file
-to have them copied to target on build. Replace original `libcodec2.mk` file in `~/build-directory/buildroot/package/libcodec2/` 
-with provided `~/build-directory/rpi4edgemap/buildroot-extras/libcodec2.mk` file.
+and copy it over to buildroot provided one:
+
+```
+# libcodec2  (optional)
+rm ~/build-directory/buildroot/package/libcodec2/libcodec2.hash
+cd ~/build-directory/rpi4edgemap/buildroot-extras/
+cp libcodec2.mk ~/build-directory/buildroot/package/libcodec2/libcodec2.hash
+```
+
+## espflash
+
+You can optionally update espflash if you require to update LoRA radios from Edgemap,
+so discard buildroot provided hash files and copy .mk file from
+ `~/build-directory/rpi4edgemap/buildroot-extras/` to package directory:
+
+```
+# espflash (optional, if you require to flash LoRA radios from Edgemap)
+rm ~/build-directory/buildroot/package/espflash/espflash.hash
+cd ~/build-directory/rpi4edgemap/buildroot-extras/
+cp espflash.mk ~/build-directory/buildroot/package/espflash/
+```
 
 # Configuration
 

@@ -1,5 +1,0 @@
-config BR2_PACKAGE_PYTHON_PROPCACHE
-	bool "python-propcache"
-	help
-	
-	  Accelerated property cache
