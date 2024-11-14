@@ -172,13 +172,12 @@ git clone https://github.com/resiliencetheatre/rpi4edgemap.git
 git clone https://git.buildroot.net/buildroot
 cd buildroot/
 # We checkout verified version on master branch
-git checkout aead102d3f198314aa3019a2c1198ab6cbc1b04c
+git checkout 66f66bbdb50a65ed27660bbe4f9c1598f94b0c42
 ```
 
-You can use latest master or checkout version `aead102d3f198314aa3019a2c1198ab6cbc1b04c` as above,
-which I've tested (Nov 11th, 2024). Please note that buildroot version, kernel and other system
+You can use latest master or checkout version `66f66bbdb50a65ed27660bbe4f9c1598f94b0c42` as above,
+which I've tested (Nov 14th, 2024). Please note that buildroot version, kernel and other system
 components needs to be in 'sync' and this is an art in embedded design.
-
 
 Modify buildroot standard `rpi-firmware` package file and change 
 firmware version tag to match kernel version (6.11.7) we're using. 
@@ -195,6 +194,16 @@ cd ~/build-directory/buildroot
 rm package/rpi-firmware/rpi-firmware.hash
 ```
 
+Protobufs 28.1
+
+This version uses protobufs 28.1 (for python-meshtastic) which is not yet
+in buildroot master branch and you need to [patch](https://patchwork.ozlabs.org/project/buildroot/patch/20241107191634.378670-2-james.hilliard1@gmail.com/)
+your buildroot manually before building the image. 
+
+```
+cd ~/build-directory/buildroot
+patch --directory=. --strip=1 < ../rpi4edgemap/buildroot-extras/v5-2-4-package-python--protobuf-bump-to-version-28.1.diff
+```
 
 Export BR2_EXTERNAL variable, make defconfig and start build with make:
 
@@ -204,8 +213,6 @@ cd ~/build-directory/buildroot
 make rpi4_edgemap_6.11_defconfig
 make
 ```
-
-Current build tested with master branch of buildroot: `4a9a4c3cd5f416b44b8ab6c3c7cdfc3cc991a5de`.
 
 After build is completed, you find image file for MicroSD card at:
 
@@ -273,19 +280,6 @@ and copy it over to buildroot provided one:
 rm ~/build-directory/buildroot/package/libcodec2/libcodec2.hash
 cd ~/build-directory/rpi4edgemap/buildroot-extras/
 cp libcodec2.mk ~/build-directory/buildroot/package/libcodec2/libcodec2.hash
-```
-
-## espflash
-
-You can optionally update espflash if you require to update LoRA radios from Edgemap,
-so discard buildroot provided hash files and copy .mk file from
- `~/build-directory/rpi4edgemap/buildroot-extras/` to package directory:
-
-```
-# espflash (optional, if you require to flash LoRA radios from Edgemap)
-rm ~/build-directory/buildroot/package/espflash/espflash.hash
-cd ~/build-directory/rpi4edgemap/buildroot-extras/
-cp espflash.mk ~/build-directory/buildroot/package/espflash/
 ```
 
 # Configuration
