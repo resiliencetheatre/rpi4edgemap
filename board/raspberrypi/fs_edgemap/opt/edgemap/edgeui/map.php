@@ -4,13 +4,8 @@
     <meta charset="utf-8" />
     <title>EdgeMap</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-    
     <script src="js/maplibre-gl.js"></script>
     <link href="js/maplibre-gl.css" rel="stylesheet" />
-    
-    
-    
-    
     <script src="protomaps-js/pmtiles.js"></script>
     <script src="js/milsymbol.js"></script>
     <script src="js/feather.js"></script>
@@ -41,8 +36,29 @@
    
 <body  style="background-color:#000000" >
     
-
+    <div id="platform_status" class="space-holder" >
+        <table style="border:0px solid; padding: 5px;">
+            <tr><td style="padding-right: 15px;">Comms:</td><td>Active</td></tr>
+            <tr><td>RF:</td><td>Active</td></tr>
+            <tr><td>Crypto:</td><td>Plain</td></tr>
+        </table>
+    </div>
     
+    <div id="platform_logo" class="space-logo" >
+        <img src="img/edgemap-map-logo.png" width=100px>
+    </div>
+    
+    <div id="platform_help" class="space-holder-left-bottom" >
+        <table >
+            
+            <tr><td>Close dialog</td><td align="center">ESC</td></tr>
+            <tr><td>Messages</td><td align="center">m</td></tr>
+            <tr><td>Meshtastic radios</td><td align="center">r</td></tr>
+            <tr><td>Reticulum radios</td><td align="center">R</td></tr>
+            <tr><td>Terrain</td><td align="center">h</td></tr>
+            <tr><td>Coordinate search</td><td align="center">f</td></tr>
+        </table>
+    </div>
 
 
 
@@ -404,7 +420,7 @@
       style: "styles/style.json"
     });
     
-    const edgemapUiVersion = "v0.74";
+    const edgemapUiVersion = "v0.75";
     var intialZoomLevel=1;
 	var symbolSize = 30;
     
@@ -464,8 +480,9 @@
                 infoBackgroundFrame: "#000000"
                 });
     var milSymHighrateMarker = milSymbolHighrate.asDOM();
-    
+    //
     // localGpsMarker (development)
+    //
     var localGpsMarker;
 	var localGpsMarkerCreated=false;
     var milSymbolLocalGps = new ms.Symbol("SFGPUCR-----", { size:20,
@@ -479,14 +496,15 @@
                 infoBackground: "#CCFFCCD0"
                 });
     var milSymbolLocalGpsMarker = milSymbolLocalGps.asDOM();
-    
     // Local GPS fix status
     var localGpsFixStatus = 0;
-
     // Geolocate to trackMessage markers
     const trackMessageMarkers = []; 
     var lastKnownCoordinates;
-        
+    
+    // Development variable for enabling / disabling reticulum
+    var reticulumFeatureEnabled = 0
+    
     //
     // Other peers
     //
@@ -646,12 +664,9 @@
 			}
     };
     
-
-    // 
-    // WORK IN PROGRESS
     //
-    
     // Websocket for highrate marker
+    //
     document.getElementById('highRateSocketStatus').style="display:none;";
     document.getElementById('highRateSocketStatusRed').style="display:block;";
     
@@ -691,194 +706,190 @@
 		};
     
     
-    
-    
     // ================
     // == RETICULUM ==
     // ================
-    
-    //
-    // reticulumMsgSocket (8990)
-    //
-    if ( wsProtocol == "ws://" )
-        reticulumMsgSocket = new WebSocket(wsProtocol+wsHost+':7990');
-    if ( wsProtocol == "wss://" )
-        reticulumMsgSocket = new WebSocket(wsProtocol+wsHost+':8990');
+    if ( reticulumFeatureEnabled ) {    
+        //
+        // reticulumMsgSocket (8990)
+        //
+        if ( wsProtocol == "ws://" )
+            reticulumMsgSocket = new WebSocket(wsProtocol+wsHost+':7990');
+        if ( wsProtocol == "wss://" )
+            reticulumMsgSocket = new WebSocket(wsProtocol+wsHost+':8990');
 
-    //
-    // reticulumMsgSocket connect (8990)
-    //
-    reticulumMsgSocket.onopen = function(event) {
-        document.getElementById('reticulumMsgSocketStatus').style="display:block; padding-left: 5px; padding-top:5px;"; 
-        document.getElementById('reticulumMsgSocketStatusRed').style="display:none;";
-        reticulumMsgSocketConnected = true;
-    };
-    //
-    // reticulumMsgSocket disconnect (8990)
-    //
-    reticulumMsgSocket.onclose = function(event) {
-        document.getElementById('reticulumMsgSocketStatus').style="display:none;";
-        document.getElementById('reticulumMsgSocketStatusRed').style="display:block; padding-left: 5px; padding-top:5px;"; 
-        notifyMessage("Message channel disconnected! Try reloading page.", 5000);
-        reticulumMsgSocketConnected=false;
-    };
-    
-    //
-    // reticulumMsgSocket incoming (8990)
-    //
-    reticulumMsgSocket.onmessage = function(event) {
-        var incomingMessage = event.data;
-        var trimmedString = incomingMessage.substring(0, 200);
-        const msgArray=trimmedString.split("|");
-        const msgFrom =  msgArray[0];
-        const msgType =  msgArray[1];
-        const msgLocation =  msgArray[2];
-        const msgMessage =  msgArray[3];
-        
-        if ( getElementItem('#myCallSign').value === msgFrom) {
-            console.log("My own message detected, discarding.");
-            return;
-        }
-        // Handle reticulum delivery note
-        // delivery_message = "|delivery_note||+" + peer_callsign
-        if ( msgType === "msg_delivery_ok" ) {
-            console.log("Delivered: ", msgMessage)
-            document.getElementById("delivery_status").innerHTML += "<span style='color:#0F0;'> "+msgMessage+"</span>";  
-        }
-        if ( msgType === "msg_delivery_timeout" ) {
-            console.log("Message delivery timeout: ", msgMessage)
-            document.getElementById("delivery_status").innerHTML += "<span style='color:#F00;'> "+msgMessage+"</span>"; 
-        }
-        if ( msgType === "msg_send_start" ) {
-            console.log("About to send message: ", msgMessage, " nodes")
-            document.getElementById("delivery_status").innerHTML = "Sending (" + msgMessage + "):";
-            fadeIn(deliveryStatusDiv,400);
-        }
-        if ( msgType === "msg_delivery_complete" ) {
-            console.log("Send is complete: ", msgMessage, " ")
-            document.getElementById("delivery_status").innerHTML = "<div class='vertical-center'><h2>Complete! ( " + msgMessage + " seconds ) </h2></div>";
-            fadeOut(deliveryStatusDiv,5000);
-        }
-        
-        // 
-        // meshpipe join (from meshtastic network)
         //
-        if ( msgType === "meshpipe" ) {
-           notifyMessage( "Node start: " + msgMessage, 5000);                   
-        }
+        // reticulumMsgSocket connect (8990)
+        //
+        reticulumMsgSocket.onopen = function(event) {
+            document.getElementById('reticulumMsgSocketStatus').style="display:block; padding-left: 5px; padding-top:5px;"; 
+            document.getElementById('reticulumMsgSocketStatusRed').style="display:none;";
+            reticulumMsgSocketConnected = true;
+        };
+        //
+        // reticulumMsgSocket disconnect (8990)
+        //
+        reticulumMsgSocket.onclose = function(event) {
+            document.getElementById('reticulumMsgSocketStatus').style="display:none;";
+            document.getElementById('reticulumMsgSocketStatusRed').style="display:block; padding-left: 5px; padding-top:5px;"; 
+            notifyMessage("Message channel disconnected! Try reloading page.", 5000);
+            reticulumMsgSocketConnected=false;
+        };
         
         //
-        // Join message demo
+        // reticulumMsgSocket incoming (8990)
         //
-        /*
-        if ( msgType === "joinMessage" ) {
+        reticulumMsgSocket.onmessage = function(event) {
+            var incomingMessage = event.data;
+            var trimmedString = incomingMessage.substring(0, 200);
+            const msgArray=trimmedString.split("|");
+            const msgFrom =  msgArray[0];
+            const msgType =  msgArray[1];
+            const msgLocation =  msgArray[2];
+            const msgMessage =  msgArray[3];
             
-            if ( !peersOnMap.present(msgFrom) ) {
-                notifyMessage( msgFrom +" " +msgMessage, 5000);    
+            if ( getElementItem('#myCallSign').value === msgFrom) {
+                console.log("My own message detected, discarding.");
+                return;
             }
-            // Add (or update) peer with callsign and timestamp
-            peersOnMap.add( msgFrom, Math.round(+new Date()/1000) );
-            updatePeerListBlock(); 
-        }*/
-
-        if ( msgArray.length == 4 ) 
-        {
-            //
-            // Geolocated peer marker
-            //
-            if ( msgType === "trackMarker" ) {
-                const location = msgLocation;
-                const locationNumbers = location.replace(/[\])}[{(]/g, '');
-                const locationArray = locationNumbers.split(",");
-                createTrackMarkerFromMessage(locationArray[0], locationArray[1],msgFrom,msgMessage);
+            // Handle reticulum delivery note
+            // delivery_message = "|delivery_note||+" + peer_callsign
+            if ( msgType === "msg_delivery_ok" ) {
+                console.log("Delivered: ", msgMessage)
+                document.getElementById("delivery_status").innerHTML += "<span style='color:#0F0;'> "+msgMessage+"</span>";  
             }
-            //
-            // Shared 'drag marker'
-            //
-            if ( msgType === "dragMarker" ) {                        
-                const location = msgLocation;
-                const locationNumbers = location.replace(/[\])}[{(]/g, '');
-                const locationArray = locationNumbers.split(",");
-                dragMarker.setLngLat([ locationArray[0], locationArray[1] ]);
-                dragMarkerPopup.setText(msgFrom + " " + msgMessage);
-                
-                if ( msgMessage.includes("dragged") ) {
-                    if ( !dragMarkerPopup.isOpen() ) {
-                        dragMarkerPopup.addTo(map);
-                    }
-                } 
-                 if ( msgMessage.includes("released") )  {
-                    if ( dragMarkerPopup.isOpen() ) {
-                        dragMarkerPopup.remove();
-                    }
-                } 
+            if ( msgType === "msg_delivery_timeout" ) {
+                console.log("Message delivery timeout: ", msgMessage)
+                document.getElementById("delivery_status").innerHTML += "<span style='color:#F00;'> "+msgMessage+"</span>"; 
             }
-            //
-            // Messaging 'drop in' marker
-            //
-            if ( msgType === "dropMarker" ) {
-                const location = msgLocation;
-                const locationNumbers = location.replace(/[\])}[{(]/g, '');
-                const locationArray = locationNumbers.split(",");
-                const markerText = "<b>" + msgFrom + "</b>:" + msgMessage + "<br>" + locationArray[1]+","+locationArray[0];		
-                createMarkerFromMessage(mapPinMarkerCount, locationArray[0], locationArray[1],markerText );
-                mapPinMarkerCount++;                        
+            if ( msgType === "msg_send_start" ) {
+                console.log("About to send message: ", msgMessage, " nodes")
+                document.getElementById("delivery_status").innerHTML = "Sending (" + msgMessage + "):";
+                fadeIn(deliveryStatusDiv,400);
             }
-            //
-            // Sensor marker: [FROM]|sensorMarker|[LAT,LON]|[markedId],[markerStatus],[symbol code]
-            //
-            if ( msgType == "sensorMarker" ) {
-                const location = msgLocation;
-                const locationNumbers = location.replace(/[\])}[{(]/g, '');
-                const locationArray = locationNumbers.split(",");   
-                const sensorDataArray = msgMessage.split(",");
-                const sensorId = sensorDataArray[0];
-                const sensorStatus = sensorDataArray[1];
-                const sensorSymbol = sensorDataArray[2];
-                createSensorMarker(locationArray[0], locationArray[1],sensorId,sensorStatus,sensorSymbol);
+            if ( msgType === "msg_delivery_complete" ) {
+                console.log("Send is complete: ", msgMessage, " ")
+                document.getElementById("delivery_status").innerHTML = "<div class='vertical-center'><h2>Complete! ( " + msgMessage + " seconds ) </h2></div>";
+                fadeOut(deliveryStatusDiv,5000);
             }
-            //
-            // Image marker: [FROM]|imageMarker|[LAT,LON]|[FILENAME]
             // 
-            // Based on: https://stackoverflow.com/questions/47798971/several-modal-images-on-page
+            // meshpipe join (from meshtastic network)
             //
-            if ( msgType == "imageMarker" ) {
-                const location = msgLocation;
-                const locationNumbers = location.replace(/[\])}[{(]/g, '');
-                const locationArray = locationNumbers.split(",");   
-                createImageMarker(msgFrom,locationArray[0], locationArray[1],msgMessage.slice(0,-2));
-                    var modal = document.getElementById('myModal');
-                    var images = document.getElementsByClassName('myImages');
-                    var modalImg = document.getElementById("img01");
-                    var captionText = document.getElementById("caption");
-                    for (var i = 0; i < images.length; i++) {
-                      var img = images[i];
-                      img.onclick = function(evt) {
-                        modal.style.display = "block";
-                        modalImg.src = this.alt; 
-                        captionText.innerHTML = "Full size image";
-                      }
-                    }
-                    var span = document.getElementsByClassName("close")[0];
-                    span.onclick = function() {
-                      modal.style.display = "none";
-                       modalImg.src = "";
-                    } 
-                    notifyMessage("Image received from " + msgFrom , 5000);
+            if ( msgType === "meshpipe" ) {
+               notifyMessage( "Node start: " + msgMessage, 5000);                   
             }
-        }
-        //
-        // Normal message 
-        // TODO: sanitize, validate & parse etc (this is just an demo)
-        //
-        if ( msgArray.length != 4 && msgType != "dragMarker" && msgType != "trackMarker" && msgType != "sensorMarker" && msgType != "imageMarker" && msgType != "joinMessage" && msgType != "sensor" ) {
-            openMessageEntryBox(); 
-            getElementItem('#msgChannelLog').innerHTML += trimmedString;
-            getElementItem('#msgChannelLog').innerHTML += "<br>";
-            var scrollElement = document.getElementById('msgChannelLog');
-            scrollElement.scrollTop = scrollElement.scrollHeight;
-        }
-    };
+            //
+            // Join message demo
+            //
+            /*
+            if ( msgType === "joinMessage" ) {
+                
+                if ( !peersOnMap.present(msgFrom) ) {
+                    notifyMessage( msgFrom +" " +msgMessage, 5000);    
+                }
+                // Add (or update) peer with callsign and timestamp
+                peersOnMap.add( msgFrom, Math.round(+new Date()/1000) );
+                updatePeerListBlock(); 
+            }*/
+            if ( msgArray.length == 4 ) 
+            {
+                //
+                // Geolocated peer marker
+                //
+                if ( msgType === "trackMarker" ) {
+                    const location = msgLocation;
+                    const locationNumbers = location.replace(/[\])}[{(]/g, '');
+                    const locationArray = locationNumbers.split(",");
+                    createTrackMarkerFromMessage(locationArray[0], locationArray[1],msgFrom,msgMessage);
+                }
+                //
+                // Shared 'drag marker'
+                //
+                if ( msgType === "dragMarker" ) {                        
+                    const location = msgLocation;
+                    const locationNumbers = location.replace(/[\])}[{(]/g, '');
+                    const locationArray = locationNumbers.split(",");
+                    dragMarker.setLngLat([ locationArray[0], locationArray[1] ]);
+                    dragMarkerPopup.setText(msgFrom + " " + msgMessage);
+                    
+                    if ( msgMessage.includes("dragged") ) {
+                        if ( !dragMarkerPopup.isOpen() ) {
+                            dragMarkerPopup.addTo(map);
+                        }
+                    } 
+                     if ( msgMessage.includes("released") )  {
+                        if ( dragMarkerPopup.isOpen() ) {
+                            dragMarkerPopup.remove();
+                        }
+                    } 
+                }
+                //
+                // Messaging 'drop in' marker
+                //
+                if ( msgType === "dropMarker" ) {
+                    const location = msgLocation;
+                    const locationNumbers = location.replace(/[\])}[{(]/g, '');
+                    const locationArray = locationNumbers.split(",");
+                    const markerText = "<b>" + msgFrom + "</b>:" + msgMessage + "<br>" + locationArray[1]+","+locationArray[0];		
+                    createMarkerFromMessage(mapPinMarkerCount, locationArray[0], locationArray[1],markerText );
+                    mapPinMarkerCount++;                        
+                }
+                //
+                // Sensor marker: [FROM]|sensorMarker|[LAT,LON]|[markedId],[markerStatus],[symbol code]
+                //
+                if ( msgType == "sensorMarker" ) {
+                    const location = msgLocation;
+                    const locationNumbers = location.replace(/[\])}[{(]/g, '');
+                    const locationArray = locationNumbers.split(",");   
+                    const sensorDataArray = msgMessage.split(",");
+                    const sensorId = sensorDataArray[0];
+                    const sensorStatus = sensorDataArray[1];
+                    const sensorSymbol = sensorDataArray[2];
+                    createSensorMarker(locationArray[0], locationArray[1],sensorId,sensorStatus,sensorSymbol);
+                }
+                //
+                // Image marker: [FROM]|imageMarker|[LAT,LON]|[FILENAME]
+                // 
+                // Based on: https://stackoverflow.com/questions/47798971/several-modal-images-on-page
+                //
+                if ( msgType == "imageMarker" ) {
+                    const location = msgLocation;
+                    const locationNumbers = location.replace(/[\])}[{(]/g, '');
+                    const locationArray = locationNumbers.split(",");   
+                    createImageMarker(msgFrom,locationArray[0], locationArray[1],msgMessage.slice(0,-2));
+                        var modal = document.getElementById('myModal');
+                        var images = document.getElementsByClassName('myImages');
+                        var modalImg = document.getElementById("img01");
+                        var captionText = document.getElementById("caption");
+                        for (var i = 0; i < images.length; i++) {
+                          var img = images[i];
+                          img.onclick = function(evt) {
+                            modal.style.display = "block";
+                            modalImg.src = this.alt; 
+                            captionText.innerHTML = "Full size image";
+                          }
+                        }
+                        var span = document.getElementsByClassName("close")[0];
+                        span.onclick = function() {
+                          modal.style.display = "none";
+                           modalImg.src = "";
+                        } 
+                        notifyMessage("Image received from " + msgFrom , 5000);
+                }
+            }
+            //
+            // Normal message 
+            // TODO: sanitize, validate & parse etc (this is just an demo)
+            //
+            if ( msgArray.length != 4 && msgType != "dragMarker" && msgType != "trackMarker" && msgType != "sensorMarker" && msgType != "imageMarker" && msgType != "joinMessage" && msgType != "sensor" ) {
+                openMessageEntryBox(); 
+                getElementItem('#msgChannelLog').innerHTML += trimmedString;
+                getElementItem('#msgChannelLog').innerHTML += "<br>";
+                var scrollElement = document.getElementById('msgChannelLog');
+                scrollElement.scrollTop = scrollElement.scrollHeight;
+            }
+        };
+    }
     // ===============
     // == RETICULUM ==
     // ===============
@@ -912,7 +923,7 @@
     meshtasticMsgSocket.onclose = function(event) {
         document.getElementById('meshtasticMsgSocketStatus').style="display:none;";
         document.getElementById('meshtasticMsgSocketStatusRed').style="display:block; padding-left: 5px; padding-top:5px;"; 
-        notifyMessage("Message channel disconnected! Try reloading page.", 5000);
+        notifyMessage("Message channel disconnected! Try reloading page..", 5000);
         meshtasticMsgSocketConnected=false;
     };
     
@@ -1091,26 +1102,21 @@
     
     getElementItem('#sendMsg').onclick = function(e) {
         console.log("Send message debug: ", getElementItem('#myCallSign').value);
-        var msgPayload = getElementItem('#myCallSign').value + '|' + getElementItem('#msgInput').value + '\n';
-        console.log("Send message msgPayload: ", msgPayload);
+        var msgPayload = getElementItem('#myCallSign').value + '|' + getElementItem('#msgInput').value + '\n';       
+        // This is for reticulum ACK message demonstration
+        if ( reticulumFeatureEnabled ) {
+            document.getElementById("delivery_status").innerHTML = ""
+            fadeIn(deliveryStatusDiv,400);
+            // fireup timeout for fadeout
+            window.setInterval(function () {
+            fadeOut(deliveryStatusDiv,1000);
+            }, 20000 );
+        }
         
-        // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-        // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-        
-        document.getElementById("delivery_status").innerHTML = ""
-        fadeIn(deliveryStatusDiv,400);
-        // fireup timeout for fadeout
-        window.setInterval(function () {
-        fadeOut(deliveryStatusDiv,1000);
-        }, 20000 );
-        
+        // Send based on socket connection
         sendRetiCulumAndMeshtasticMessage( msgPayload );
-        
-        // Q: How we handle duplicate messages (incoming) when they arrive from both methods?
         // meshtasticMsgSocket.send( msgPayload );
         
-        // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-        // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
         getElementItem('#msgChannelLog').innerHTML += msgPayload  + '<br>';
         getElementItem('#msgInput').value = '';
         var scrollElement = document.getElementById('msgChannelLog');
@@ -1187,7 +1193,10 @@
         meshtasticStatusSocket = new WebSocket(wsProtocol+wsHost+':7995');
     if ( wsProtocol == "wss://" )
         meshtasticStatusSocket = new WebSocket(wsProtocol+wsHost+':8995');
-        
+    
+    //
+    // Meshtastic Status socket 
+    //
     meshtasticStatusSocket.onopen = function(event) {
         // Menubar
         document.getElementById('meshtasticStatus').style="display:block; padding-top:5px;"; 
@@ -1220,70 +1229,70 @@
         }
     };
     
-    
-    
-    //
-    // reticulumStatusSocket (8997)
-    //
-    if ( wsProtocol == "ws://" )
-        reticulumStatusSocket = new WebSocket(wsProtocol+wsHost+':7997');
-    if ( wsProtocol == "wss://" )
-        reticulumStatusSocket = new WebSocket(wsProtocol+wsHost+':8997');
+    // Disabled on meshtastic build
+    if ( reticulumFeatureEnabled ) {
+        //
+        // reticulumStatusSocket (8997)
+        //
+        if ( wsProtocol == "ws://" )
+            reticulumStatusSocket = new WebSocket(wsProtocol+wsHost+':7997');
+        if ( wsProtocol == "wss://" )
+            reticulumStatusSocket = new WebSocket(wsProtocol+wsHost+':8997');
+            
+        reticulumStatusSocket.onopen = function(event) {
+            document.getElementById('reticulumStatus').style="display:block; padding-top:5px;"; 
+            document.getElementById('reticulumStatusRed').style="display:none;";
+            reticulumStatusSocketConnected=true;
+        };
+        reticulumStatusSocket.onclose = function(event) {
+            document.getElementById('reticulumStatusRed').style="display:block; padding-top:5px;";
+            document.getElementById('reticulumStatus').style="display:none;";
+            reticulumStatusSocketConnected=false;
+        };
         
-    reticulumStatusSocket.onopen = function(event) {
-        // Menubar icon
-        document.getElementById('reticulumStatus').style="display:block; padding-top:5px;"; 
-        document.getElementById('reticulumStatusRed').style="display:none;";
-        reticulumStatusSocketConnected=true;
-        // document.getElementById('reticulumButton').style="display:block;";
-        // fadeOut(reticulumNotifyDotDiv,50);
-    };
-    reticulumStatusSocket.onclose = function(event) {
-        document.getElementById('reticulumStatusRed').style="display:block; padding-top:5px;";
-        document.getElementById('reticulumStatus').style="display:none;";
-        reticulumStatusSocketConnected=false;
-    };
+        reticulumStatusSocket.onmessage = function(event) {
+            var incomingMessage = event.data;
+            var trimmedString = incomingMessage.substring(0, 80);
+            // console.log("DEBUG: ", trimmedString)
+            const nodeArray = trimmedString.split(",");
+            // reticulumnode,[callsign],[timestamp],[hash]
+            if ( nodeArray[0] === "reticulumnode" )
+            {
+                // console.log("reticulumNodesOnSystem.add() : ", nodeArray[1],nodeArray[2],nodeArray[3],nodeArray[4],nodeArray[5],nodeArray[6],nodeArray[7] );
+                reticulumNodesOnSystem.add( nodeArray[1],nodeArray[2],nodeArray[3],nodeArray[4],nodeArray[5],nodeArray[6],nodeArray[7] ); 
+                updateReticulumBlock(); 
+            }
+            fadeIn(reticulumNotifyDotDiv,200);
+            if ( ! isHidden(reticulumListblockDiv) ) {
+                fadeOut(reticulumNotifyDotDiv,10000);
+            }
+            // announcereceived,[callsign],[hash]
+            if ( nodeArray[0] === "announcereceived" ) {
+                // notifyMessage("Announce from " + nodeArray[1], 5000);
+                // 
+                document.getElementById("reticulumAnnounceNotify").innerHTML = nodeArray[1];
+            }
+            // message-ack,[callsign]
+            if ( nodeArray[0] === "message-ack" ) {
+                delivery_ack_node = nodeArray[1];
+                document.getElementById("delivery_status_header").innerHTML = "Delivery acknowledge from:";
+                document.getElementById("delivery_status").innerHTML += "<span style='color:#0F0;'> "+delivery_ack_node+"</span>";  
+            }
+            if ( nodeArray[0] === "client_count" ) { 
+                clients_connected = nodeArray[1];
+                notifyMessage("Clients connected: " + clients_connected, 5000);
+            }
+        };
     
-    reticulumStatusSocket.onmessage = function(event) {
-        var incomingMessage = event.data;
-        var trimmedString = incomingMessage.substring(0, 80);
-        // console.log("DEBUG: ", trimmedString)
-        const nodeArray = trimmedString.split(",");
-        // reticulumnode,[callsign],[timestamp],[hash]
-        if ( nodeArray[0] === "reticulumnode" )
-        {
-            // console.log("reticulumNodesOnSystem.add() : ", nodeArray[1],nodeArray[2],nodeArray[3],nodeArray[4],nodeArray[5],nodeArray[6],nodeArray[7] );
-            reticulumNodesOnSystem.add( nodeArray[1],nodeArray[2],nodeArray[3],nodeArray[4],nodeArray[5],nodeArray[6],nodeArray[7] ); 
-            updateReticulumBlock(); 
-        }
-        fadeIn(reticulumNotifyDotDiv,200);
-        if ( ! isHidden(reticulumListblockDiv) ) {
-            fadeOut(reticulumNotifyDotDiv,10000);
-        }
-        // announcereceived,[callsign],[hash]
-        if ( nodeArray[0] === "announcereceived" ) {
-            // notifyMessage("Announce from " + nodeArray[1], 5000);
-            // 
-            document.getElementById("reticulumAnnounceNotify").innerHTML = nodeArray[1];
-        }
-        // message-ack,[callsign]
-        if ( nodeArray[0] === "message-ack" ) {
-            delivery_ack_node = nodeArray[1];
-            document.getElementById("delivery_status_header").innerHTML = "Delivery acknowledge from:";
-            document.getElementById("delivery_status").innerHTML += "<span style='color:#0F0;'> "+delivery_ack_node+"</span>";  
-        }
-        if ( nodeArray[0] === "client_count" ) { 
-            clients_connected = nodeArray[1];
-            notifyMessage("Clients connected: " + clients_connected, 5000);
-        }
-    };
-    
+    }
 
-
-    
-
-    
-    
+    // Hide development icons
+    document.getElementById('trackingIndicator').style="display:none;"; 
+    document.getElementById('trackingIndicatorRed').style="display:none;";
+    document.getElementById('reticulumMsgSocketStatus').style="display:none;";
+    document.getElementById('reticulumStatus').style="display:none;";
+    document.getElementById('reticulumMsgSocketStatusRed').style="display:none;";
+    document.getElementById('reticulumStatusRed').style="display:none;";
     
     //
     // 'info window' open and close logic
@@ -1317,8 +1326,6 @@
     //
     const logIcon = document.getElementById("log-icon");
     const logDiv = document.getElementById("log-window");
-    // const zoomDiv = document.getElementById("rightSensoryDisplay");
-    // const sensorDiv = document.getElementById("rightZoomButtons");
     const bottomBarDiv = document.getElementById("bottomBar");
     const callSignEntryBoxDiv =  document.getElementById("callSignEntry");
     const coordinateEntryBoxDiv =  document.getElementById("coordinateSearchEntry");
@@ -1327,11 +1334,10 @@
     const radiolistblockDiv =  document.getElementById("radiolistblock");
     const userlistbuttonDiv = document.getElementById("userlistbutton");   
     const radiolistbuttonDiv = document.getElementById("meshtasticButton");
-    // const manualGpsbuttonDiv = document.getElementById("manual-gps-button");  REMOVE
     const radioNotifyDotDiv = document.getElementById("radioNotifyDot"); 
     const reticulumNotifyDotDiv = document.getElementById("reticulumNotifyDot");    // DEV
     const reticulumListblockDiv =  document.getElementById("reticulumlistblock");   // DEV
-    const reticulumListButtonDiv = document.getElementById("reticulumButton"); // DEV
+    const reticulumListButtonDiv = document.getElementById("reticulumButton");      // DEV
     const videoConferenceDiv = document.getElementById("videoBlock");
     const deliveryStatusDiv = document.getElementById("delivery-status-window"); 
     const mapClickLatlonSectionDiv = document.getElementById("mapClickLatlonSection");
@@ -1342,7 +1348,6 @@
     maplibregl.setRTLTextPlugin('js/mapbox-gl-rtl-text.js',null,true);
     let protocol = new pmtiles.Protocol();
     maplibregl.addProtocol("pmtiles",protocol.tile);
-
 
     //
     // Drag marker
@@ -1400,12 +1405,14 @@
 
 
     // Update meshtastic and reticulum nodes every 30 s to UI
-    // Note: updateReticulumBlock() has also age checking
+    // Note: updateReticulumBlock() has also age checking 
     window.setInterval(function () {
         checkMeshtasticRadioExpiry();
-        checkReticulumRadioExpiry();
         updateMeshtasticRadioListBlock();
-        updateReticulumBlock(); 
+        if ( reticulumFeatureEnabled ) {
+            checkReticulumRadioExpiry();
+            updateReticulumBlock(); 
+        }
     }, 30000 );
 
     //
@@ -1476,7 +1483,10 @@
     // when the map has finished loading
     //
     map.on('load', function () {
-        notifyMessage("EdgeMap "+ edgemapUiVersion +" ready!", 5000);
+        // notifyMessage("EdgeMap "+ edgemapUiVersion +" ready!", 5000);
+        fadeIn(document.getElementById("platform_status") ,1000);
+        fadeIn(document.getElementById("platform_help") ,1000);
+        fadeIn(document.getElementById("platform_logo") ,1000);
         if ( geoJsonLayerActive  ) {
             
             // 
@@ -1516,10 +1526,16 @@
         console.log("Map loaded.");
         map.setTerrain(null);
         loadCallSign();
-        sendReticulumControlMessage('clients_connected');
+        if ( reticulumFeatureEnabled ) {
+            sendReticulumControlMessage('clients_connected');
+        }
         mapLoaded = true;
         setSkyFromUi();
-        
+        // Fade out help
+        window.setInterval(function () {
+        fadeOut(document.getElementById("platform_help") ,1000);
+        fadeOut(document.getElementById("platform_logo") ,1000);
+        }, 15000 );
         
     });
     
@@ -1532,10 +1548,6 @@
     // Geolocate (requires TLS)
     // Firefox: about:config => geo.enabled
     //
-    
-    // review this later
-    document.getElementById('trackingIndicator').style="display:none;"; 
-    document.getElementById('trackingIndicatorRed').style="display:none;";
     
     //
     // Initialize and add the geolocate control

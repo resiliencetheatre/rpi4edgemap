@@ -26,6 +26,18 @@
 #  In:
 #  edgex|trackMarker|23.6406054,50.7603593|GPS-snapshot
 #
+#  For development, read fifo's:
+#
+#  while [ 1 ]; do cat /tmp/msgchannel; done;
+#  while [ 1 ]; do cat /tmp/statusin; done;
+#
+#  Export MESHTASTIC port:
+#
+#  export $(xargs < meshtastic.env )
+#
+#  To disable duty cycle checking:
+# 
+#  meshtastic --set lora.override_duty_cycle true
 #
 
 import meshtastic
@@ -160,8 +172,13 @@ def onReceive(packet, interface):
     To       = packet.get('to')
     From     = packet.get('from')
     
+    # print('** onReceive() from: {}'.format(From))
+    # print('** onReceive() Decoded: {}'.format(Decoded))
+        
     DecodePacket('MainPacket',packet)
+    
     if packet is not None:
+                
         fromIdentString = packet.get('fromId')
         if fromIdentString is not None:
             fromIdent = fromIdentString[1:]
@@ -190,15 +207,19 @@ def onReceive(packet, interface):
                 fifo_write = open('/tmp/statusin', 'w')
                 fifo_write.write(meshtasticmessage)
                 fifo_write.flush()
+                fifo_write.close()
 
     if Decoded is not None:
+        
         Message  = Decoded.get('text')
+        
         if(Message):
             hexFromValue = "{0:0>8X}".format(From)
             print("Incoming: {: <20} {: <20}".format(hexFromValue,Message[:-1]))
             fifo_write = open('/tmp/msgchannel', 'w')
             fifo_write.write(Message)
             fifo_write.flush()
+            fifo_write.close()
             if( fromIdent.upper() == hexFromValue ):
                 # edgex|trackMarker|23.6406054,50.7603593|GPS-snapshot
                 messageFields = Message.split('|')
@@ -302,7 +323,7 @@ def send_msg_from_fifo(interface, Message):
 
 def send_msg_from_fifo_to_one_node(interface, Message, nodeId):
     outMsg = Message + '\n'
-    interface.sendText(outMsg, wantAck=True,destinationId=nodeId)
+    interface.sendText(outMsg, wantAck=False,destinationId=nodeId)
     print("Sending p2p message to: {}".format(nodeId) )
     # print("To:      {}".format(nodeId))
     # print("From:    BaseStation")
@@ -396,9 +417,10 @@ def DisplayNodes(interface):
         nodeidstring = node['user']['id']
         nodeidstring = nodeidstring[1:]
         meshtasticmessage = "peernode," + nodeidstring
-        fifo_write = open('/tmp/statusin', 'w')
-        fifo_write.write(meshtasticmessage)
-        fifo_write.flush()
+        fifo_status_write = open('/tmp/statusin', 'w')
+        fifo_status_write.write(meshtasticmessage)
+        fifo_status_write.flush()
+        fifo_status_write.close()
 
     except Exception as ErrorMessage:
       TraceMessage = traceback.format_exc()
@@ -416,8 +438,10 @@ def create_fifo_pipe(pipe_path):
 # Thread T2
 def read_manual_gps():
     global myRadioHexId
-    min_interval_time=30
-    max_interval_time=60
+    # Time: 5 - 10 min
+    min_interval_time=300
+    max_interval_time=600
+
     print("Starting read_manual_gps()")
     t2_start_time = time.time()
     t2_interval_rand = randrange(min_interval_time, max_interval_time)
@@ -449,7 +473,7 @@ def read_manual_gps():
                             t2_lkg_lon = t2_gps_array[1].rstrip()
                             # print("Manual GPS: ",t2_callsign_from_file,t2_location_from_file)                
                             # Send
-                            t2_track_marker_string= t2_callsign_from_file + "|trackMarker|" + t2_lkg_lon + "," + t2_lkg_lat + "|Manual position"
+                            t2_track_marker_string= t2_callsign_from_file.rstrip() + "|trackMarker|" + t2_lkg_lon + "," + t2_lkg_lat + "|Manual position"
                             send_msg_from_fifo(interface, t2_track_marker_string)
                             # Update own location to radio.db when fix is manual
                             meshtasticDbUpdate(t2_callsign_from_file,t2_lkg_lat,t2_lkg_lon,"trackMarker",myRadioHexId,"0","0");

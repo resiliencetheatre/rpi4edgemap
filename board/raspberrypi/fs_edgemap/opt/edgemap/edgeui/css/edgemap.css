@@ -5,6 +5,32 @@ body { margin: 0; padding: 0;  }
       cursor: crosshair;
     }
 
+.space-holder {
+    position: absolute;
+    top:80px;
+    left: 10px;
+    color: #00FF00;
+    visibility: hidden;
+}
+
+.space-logo {
+    position: absolute;
+    top:80px;
+    right: 20px;
+    color: #00FF00;
+    visibility: hidden;
+}
+
+.space-holder-left-bottom {
+    position: absolute;
+    bottom:40px;
+    left: 10px;
+    color: #00FF00;
+    padding: 5px;
+    visibility: hidden;
+    
+}
+
 .map-right-upload-overlay {
 	font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
 	position: absolute;
