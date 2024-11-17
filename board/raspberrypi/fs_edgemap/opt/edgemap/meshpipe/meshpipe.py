@@ -5,6 +5,9 @@
 # Copyright (c) Resilience Theatre, 2024
 # Copyright (c) 2021, datagod
 # 
+# https://github.com/meshtastic/python
+# https://python.meshtastic.org/
+#
 # FIFO files:
 #
 # /tmp/msgincoming -> meshtastic radio
@@ -28,16 +31,17 @@
 #
 #  For development, read fifo's:
 #
-#  while [ 1 ]; do cat /tmp/msgchannel; done;
-#  while [ 1 ]; do cat /tmp/statusin; done;
+#  while [ 1 ]; do cat /tmp/msgchannel; sleep 1; done;
+#  while [ 1 ]; do cat /tmp/statusin; sleep 1; done;
 #
 #  Export MESHTASTIC port:
 #
 #  export $(xargs < meshtastic.env )
 #
-#  To disable duty cycle checking:
+#  Setting this option to 'true' means the device will ignore the hourly 
+#  duty cycle limit in Europe. 
 # 
-#  meshtastic --set lora.override_duty_cycle true
+#  meshtastic --port /dev/ttyACM0 --set lora.override_duty_cycle true
 #
 
 import meshtastic
@@ -174,6 +178,7 @@ def onReceive(packet, interface):
     
     # print('** onReceive() from: {}'.format(From))
     # print('** onReceive() Decoded: {}'.format(Decoded))
+    # sys.stdout.flush()
         
     DecodePacket('MainPacket',packet)
     
@@ -216,6 +221,7 @@ def onReceive(packet, interface):
         if(Message):
             hexFromValue = "{0:0>8X}".format(From)
             print("Incoming: {: <20} {: <20}".format(hexFromValue,Message[:-1]))
+            sys.stdout.flush()
             fifo_write = open('/tmp/msgchannel', 'w')
             fifo_write.write(Message)
             fifo_write.flush()
@@ -275,12 +281,13 @@ def meshtasticDbUpdate(callsign,lat,lon,event,radio_id,snr,rssi):
 
 def onConnectionEstablished(interface, topic=pub.AUTO_TOPIC): 
     
-    To   = "All"
-    current_time = datetime.now().strftime("%H:%M:%S")
-    Message = "{}|meshpipe|-|{}".format(current_time,DeviceName[1:])
+    # To   = "All"
+    # current_time = datetime.now().strftime("%H:%M:%S")
+    # Message = "{}|meshpipe|-|{}".format(current_time,DeviceName[1:])
 
     try:
       print("Connected to meshtastic radio: {}".format(myRadioHexId) )
+      sys.stdout.flush()
       # interface.sendText(Message, wantAck=False)
       # print("== Connection up packet sent ==")
       # print("To:      {}".format(To))
@@ -294,14 +301,17 @@ def onConnectionEstablished(interface, topic=pub.AUTO_TOPIC):
 
 def onConnectionLost(interface, topic=pub.AUTO_TOPIC): 
     print('onConnectionLost, exiting. \n')
+    sys.stdout.flush()
     os._exit(0)  # Forcefully exits the entire Python process
 
 def onNodeUpdated(interface, topic=pub.AUTO_TOPIC): 
     print('onNodeUpdated \n')
+    sys.stdout.flush()
    
 
 def SIGINT_handler(signal_received, frame):
     print('SIGINT detected. \n')
+    sys.stdout.flush()
     os._exit(0)  # Forcefully exits the entire Python process
 
 
@@ -318,13 +328,15 @@ def send_msg(interface, Message):
 
 def send_msg_from_fifo(interface, Message):
     outMsg = Message + '\n'
-    interface.sendText(outMsg, wantAck=False)
-    print('  Sending broadcast message: {}'.format(Message))
+    interface.sendText(outMsg, wantAck=True)
+    print('  Sending broadcast message (wantAck=True) : {}'.format(Message))
+    sys.stdout.flush()
 
 def send_msg_from_fifo_to_one_node(interface, Message, nodeId):
     outMsg = Message + '\n'
-    interface.sendText(outMsg, wantAck=False,destinationId=nodeId)
+    interface.sendText(outMsg, wantAck=True,destinationId=nodeId)
     print("Sending p2p message to: {}".format(nodeId) )
+    sys.stdout.flush()
     # print("To:      {}".format(nodeId))
     # print("From:    BaseStation")
     # print('Message: {}'.format(Message))
@@ -373,6 +385,7 @@ def GetMyNodeInfo(interface):
       print('Battery:   ',TheNode['position']['batteryLevel'])
 
     print('---\n')
+    sys.stdout.flush()
 
 
 def deg2num(lat_deg, lon_deg, zoom):
@@ -393,6 +406,7 @@ def DisplayNodes(interface):
         print("NAME:      {}".format(node['user']['longName']))  
         print("NODE:      {}".format(node['num']))  
         print("ID:        {}".format(node['user']['id']))  
+        sys.stdout.flush()
         #print("MAC:       {}".format(node['user']['macaddr']))
         if 'position' in node.keys():
           #used to calculate XY for tile servers
@@ -403,20 +417,23 @@ def DisplayNodes(interface):
             print("Tile:      {}/{}".format(xtile,ytile)) 
             print("LAT:       {}".format(node['position']['latitude']))  
             print("LONG:      {}".format(node['position']['longitude']))
+            sys.stdout.flush()
 
           if 'batteryLevel' in node['position']:
             Battery = node['position']['batteryLevel']
             print("Battery:   {}".format(Battery))  
+            sys.stdout.flush()
         
         if 'lastHeard' in node.keys():
           LastHeardDatetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(node['lastHeard']))
           print("LastHeard: {}".format(LastHeardDatetime))  
+          sys.stdout.flush()
         print('-----')
         
         # Update UI
         nodeidstring = node['user']['id']
         nodeidstring = nodeidstring[1:]
-        meshtasticmessage = "peernode," + nodeidstring
+        meshtasticmessage = "peernode," + nodeidstring + "\n"
         fifo_status_write = open('/tmp/statusin', 'w')
         fifo_status_write.write(meshtasticmessage)
         fifo_status_write.flush()
@@ -432,17 +449,27 @@ def create_fifo_pipe(pipe_path):
     try:
         os.mkfifo(pipe_path)
         print(f"Named pipe created at {pipe_path}")
+        sys.stdout.flush()
+        
     except OSError as e:
         print(f"Error: {e}")
+        sys.stdout.flush()
+
+    
+    
+        
+        
 
 # Thread T2
 def read_manual_gps():
     global myRadioHexId
-    # Time: 5 - 10 min
-    min_interval_time=300
-    max_interval_time=600
+    global interface # Nov 16th
+    # Randomize time
+    min_interval_time=120
+    max_interval_time=240
 
     print("Starting read_manual_gps()")
+    sys.stdout.flush()
     t2_start_time = time.time()
     t2_interval_rand = randrange(min_interval_time, max_interval_time)
     t2_callsign_from_file = "no-callsign"
@@ -487,14 +514,17 @@ def read_manual_gps():
                     t2_interval_rand = randrange(min_interval_time, max_interval_time)
     except Exception as e:
         print(f"Exception caught in thread: {e}")
+        sys.stdout.flush()
         os._exit(0)  # Forcefully exits the entire Python process
                 
 # Live GPS thread T1
 def read_live_gps():
     global myRadioHexId
+    global interface # Nov 16th
     min_interval_time=60
     max_interval_time=90
     print('Starting read_live_gps()')
+    sys.stdout.flush()
     FIFO = '/tmp/livegps'
     fifo_read=open(FIFO,'r')
     # Get initial state
@@ -604,7 +634,9 @@ def read_live_gps():
 
 # Read incoming FIFO thread T3
 def read_incoming_fifo():
+    global interface # Nov 16th
     print("Started read_incoming_fifo()")
+    sys.stdout.flush()
     # Open FIFO for reading
     FIFO = '/tmp/msgincoming'
     fifo_read=open(FIFO,'r')
@@ -615,7 +647,8 @@ def read_incoming_fifo():
           # print('While loop')
           fifo_msg_in = fifo_read.readline()[:-1]
           if not fifo_msg_in == "":
-            # print('FIFO Message in: ', fifo_msg_in)
+            print('FIFO Message in: ', fifo_msg_in)
+            sys.stdout.flush()
             # Send to single NODE:  [CALLSIGN]|[MESSAGE]|[TO_NODE_ID]
             # Send to broadcast:    [CALLSIGN]|[MESSAGE]
             answer_array=fifo_msg_in.split("|")
@@ -624,10 +657,12 @@ def read_incoming_fifo():
             # Send as broadcast by default on Edgemap UI
             if array_len == 2 or array_len == 4:
                 print("Sending to broadcast")
+                sys.stdout.flush()
                 send_msg_from_fifo(interface, fifo_msg_in)
             # Send as individual recipient
             if array_len == 3:
                 print("Sending to single recipient")
+                sys.stdout.flush()
                 answer_recipient = '!'+answer_array[2]
                 answer_payload = answer_array[0]+"|"+answer_array[1]
                 send_msg_from_fifo_to_one_node(interface, answer_payload, answer_recipient)
@@ -718,6 +753,7 @@ def main():
 
 
     print("Connecting to device at port {}".format(args.port))
+    sys.stdout.flush()
     interface = meshtastic.serial_interface.SerialInterface(args.port)
 
     # Get node info for connected device
@@ -731,18 +767,20 @@ def main():
     pub.subscribe(onReceive, "meshtastic.receive")
 
     # Display nodes
-    DisplayNodes(interface)
+    # DisplayNodes(interface)
 
     # Launch threads
-    t1 = threading.Thread(target=read_live_gps, args=())
+    # t1 = threading.Thread(target=read_live_gps, args=())
     t2 = threading.Thread(target=read_manual_gps, args=()) 
     t3 = threading.Thread(target=read_incoming_fifo, args=()) 
-    t1.start()
+    # t1.start()
     t2.start()
     t3.start()
-    t1.join()
+    # t1.join()
     t2.join()
     t3.join()
+    
+    print("XXXXXXXXXXXXXXXXXXXXX")
 
     interface.close()  
 

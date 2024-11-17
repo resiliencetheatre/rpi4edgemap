@@ -194,16 +194,21 @@ cd ~/build-directory/buildroot
 rm package/rpi-firmware/rpi-firmware.hash
 ```
 
-Protobufs 28.1
+Protobufs 28.3
 
-This version uses protobufs 28.1 (for python-meshtastic) which is not yet
-in buildroot master branch and you need to [patch](https://patchwork.ozlabs.org/project/buildroot/patch/20241107191634.378670-2-james.hilliard1@gmail.com/)
-your buildroot manually before building the image. 
+This version uses protobufs 28.3 (for python-meshtastic) which is not yet
+in buildroot master branch and you need to patch your buildroot manually 
+before building the image. There is now patch avaialable to patch protobufs 
+28.3. and it's based on [this patch](https://patchwork.ozlabs.org/project/buildroot/patch/20241107191634.378670-2-james.hilliard1@gmail.com/). 
 
 ```
 cd ~/build-directory/buildroot
-patch --directory=. --strip=1 < ../rpi4edgemap/buildroot-extras/v5-2-4-package-python--protobuf-bump-to-version-28.1.diff
+patch --directory=. --strip=1 < ../rpi4edgemap/buildroot-extras/v5-2-4-package-python--protobuf-bump-to-version-28.3.diff
 ```
+
+Note that if you're using more recent upstream buildroot, this change might be incorporated 
+into your buildroot already. Check `package/protobuf/protobuf.mk` for version before applying
+patch above. 
 
 Export BR2_EXTERNAL variable, make defconfig and start build with make:
 
