@@ -395,8 +395,8 @@ def deg2num(lat_deg, lon_deg, zoom):
   ytile = int((1.0 - math.asinh(math.tan(lat_rad)) / math.pi) / 2.0 * n)
   return (xtile, ytile)
       
-# TODO: Deliver nodes to fifo or create mesh status fifo for UI?
 
+# TODO: Deliver nodes to fifo or create mesh status fifo for UI?
 def DisplayNodes(interface):
     
     print('\n-- DisplayNodes --')
@@ -454,12 +454,8 @@ def create_fifo_pipe(pipe_path):
     except OSError as e:
         print(f"Error: {e}")
         sys.stdout.flush()
-
-    
-    
-        
-        
-
+  
+  
 # Thread T2
 def read_manual_gps():
     global myRadioHexId
@@ -569,7 +565,7 @@ def read_live_gps():
                         
                         start_time = time.time()
                         interval_rand = randrange(min_interval_time, max_interval_time)
-                        # print("track_marker_string: ", track_marker_string)
+                        print("track_marker_string: ", track_marker_string)
                         lkg_lat = gps_array[5]
                         lkg_lon = gps_array[4]
                     
@@ -613,19 +609,23 @@ def read_live_gps():
                             
                             start_time = time.time()
                             interval_rand = randrange(min_interval_time, max_interval_time)
-                            # print("LKG: track_marker_string: ", track_marker_string)
+                            print("LKG: track_marker_string: ", track_marker_string)
                         else:
-                            # print("We don't have last known good position. Not sending anything. ")
+                            print("We don't have last known good position. Not sending anything. ")
                             start_time = time.time()
                             interval_rand = randrange(min_interval_time, max_interval_time)
                                 
                     pass
             else:
                 # print("GPS location send is overridden by manually provided location!")
+                # let thread sleep a bit
+                time.sleep(2) 
                 pass
           
           else:
             # No fifo data
+            # let thread sleep a bit
+            time.sleep(2)
             pass
     
     except Exception as e:
@@ -770,13 +770,17 @@ def main():
     # DisplayNodes(interface)
 
     # Launch threads
-    # t1 = threading.Thread(target=read_live_gps, args=())
+    # BUG: Live blocks execution => 
+    #      looks that loop in read_live_gps() was without time.sleep() 
+    #      and it blocked. Disabling t1 was temporal cure, now there is 
+    #      time.sleep() in thread to prevent blocking.
+    t1 = threading.Thread(target=read_live_gps, args=())
     t2 = threading.Thread(target=read_manual_gps, args=()) 
     t3 = threading.Thread(target=read_incoming_fifo, args=()) 
-    # t1.start()
+    t1.start()
     t2.start()
     t3.start()
-    # t1.join()
+    t1.join()
     t2.join()
     t3.join()
     
