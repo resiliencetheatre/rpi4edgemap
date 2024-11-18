@@ -460,9 +460,13 @@ def create_fifo_pipe(pipe_path):
 def read_manual_gps():
     global myRadioHexId
     global interface # Nov 16th
+    
     # Randomize time
     min_interval_time=120
     max_interval_time=240
+    
+    # Position broadcast on
+    send_positions = True
 
     print("Starting read_manual_gps()")
     sys.stdout.flush()
@@ -474,9 +478,10 @@ def read_manual_gps():
     
     try:
         while True:
+            
             # Manual loop should only run when location.txt is present!
             if ( os.path.isfile("/opt/edgemap-persist/location.txt") ):
-                
+
                 # Read send interval from /opt/edgemap-persist/pos_interval.txt (if present)
                 if ( os.path.isfile("/opt/edgemap-persist/pos_interval.txt") ):
                     t2_interval_file = open("/opt/edgemap-persist/pos_interval.txt","r")
@@ -488,53 +493,64 @@ def read_manual_gps():
                     # TODO: Implement off and manual send
                     if t2_interval_from_file == '2':
                         t2_interval_rand = randrange(90, 150)
+                        send_positions = True
                     if t2_interval_from_file == '4':
                         t2_interval_rand = randrange(210, 270)
+                        send_positions = True
                     if t2_interval_from_file == '10':
                         t2_interval_rand = randrange(570, 630)
-                
+                        send_positions = True
+                    if t2_interval_from_file == 'off':
+                        send_positions = False
                 
                 # Slow loop down a bit
                 time.sleep(1)
-                # Randomize sending interval
-                t2_end_time = time.time()
-                t2_elapsed_time = t2_end_time - t2_start_time
                 
-                if ( t2_elapsed_time > t2_interval_rand ):
-                    # print("Manual loop",t2_elapsed_time,t2_interval_rand)
-                    if ( os.path.isfile("/opt/edgemap-persist/callsign.txt") ):
-                        t2_callsign_file = open("/opt/edgemap-persist/callsign.txt", "r")
-                        t2_callsign_from_file = t2_callsign_file.readline()
-                        t2_callsign_file.close()
-                        # Read location from file
-                        if ( os.path.isfile("/opt/edgemap-persist/location.txt") ):
-                            t2_location_file = open("/opt/edgemap-persist/location.txt","r")
-                            t2_location_from_file = t2_location_file.readline()
-                            t2_location_file.close()
-                            t2_gps_array = t2_location_from_file.split(",")
-                            t2_lkg_lat = t2_gps_array[0].rstrip()
-                            t2_lkg_lon = t2_gps_array[1].rstrip()
-                            # print("Manual GPS: ",t2_callsign_from_file,t2_location_from_file)                
-                            # Send
-                            t2_track_marker_string= t2_callsign_from_file.rstrip() + "|trackMarker|" + t2_lkg_lon + "," + t2_lkg_lat + "|Manual position"
-                            send_msg_from_fifo(interface, t2_track_marker_string)
-                            # Update own location to radio.db when fix is manual
-                            meshtasticDbUpdate(t2_callsign_from_file,t2_lkg_lat,t2_lkg_lon,"trackMarker",myRadioHexId,"0","0");
-                            t2_start_time = time.time()
-                            t2_interval_rand = randrange(min_interval_time, max_interval_time)
-                                
-                    else:
-                        t2_callsign_from_file = "no-callsign"
-                    
-                    t2_start_time = time.time()
-                    t2_interval_rand = randrange(min_interval_time, max_interval_time)
+                # Send if allowed
+                if ( send_positions ):          
+                    # Randomize sending interval
+                    t2_end_time = time.time()
+                    t2_elapsed_time = t2_end_time - t2_start_time
+                
+                    if ( t2_elapsed_time > t2_interval_rand ):
+                        # print("Manual loop",t2_elapsed_time,t2_interval_rand)
+                        if ( os.path.isfile("/opt/edgemap-persist/callsign.txt") ):
+                            t2_callsign_file = open("/opt/edgemap-persist/callsign.txt", "r")
+                            t2_callsign_from_file = t2_callsign_file.readline()
+                            t2_callsign_file.close()
+                            # Read location from file
+                            if ( os.path.isfile("/opt/edgemap-persist/location.txt") ):
+                                t2_location_file = open("/opt/edgemap-persist/location.txt","r")
+                                t2_location_from_file = t2_location_file.readline()
+                                t2_location_file.close()
+                                t2_gps_array = t2_location_from_file.split(",")
+                                t2_lkg_lat = t2_gps_array[0].rstrip()
+                                t2_lkg_lon = t2_gps_array[1].rstrip()
+                                # print("Manual GPS: ",t2_callsign_from_file,t2_location_from_file)                
+                                # Send
+                                t2_track_marker_string= t2_callsign_from_file.rstrip() + "|trackMarker|" + t2_lkg_lon + "," + t2_lkg_lat + "|Manual position"
+                                send_msg_from_fifo(interface, t2_track_marker_string)
+                                # Update own location to radio.db when fix is manual
+                                meshtasticDbUpdate(t2_callsign_from_file,t2_lkg_lat,t2_lkg_lon,"trackMarker",myRadioHexId,"0","0");
+                                t2_start_time = time.time()
+                                t2_interval_rand = randrange(min_interval_time, max_interval_time)
+                                    
+                        else:
+                            t2_callsign_from_file = "no-callsign"
+                        
+                        t2_start_time = time.time()
+                        t2_interval_rand = randrange(min_interval_time, max_interval_time)
+                else:
+                    time.sleep(60)
+                    print("Position send is OFF")
                     
     
     except Exception as e:
         print(f"Exception caught in thread: {e}")
         sys.stdout.flush()
         os._exit(0)  # Forcefully exits the entire Python process
-                
+
+
 # Live GPS thread T1
 def read_live_gps():
     global myRadioHexId
