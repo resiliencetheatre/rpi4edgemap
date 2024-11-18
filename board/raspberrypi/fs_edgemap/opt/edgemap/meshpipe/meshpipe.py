@@ -475,11 +475,31 @@ def read_manual_gps():
     try:
         while True:
             # Manual loop should only run when location.txt is present!
-            if ( os.path.isfile("/opt/edgemap-persist/location.txt") ):            
+            if ( os.path.isfile("/opt/edgemap-persist/location.txt") ):
                 
+                # Read send interval from /opt/edgemap-persist/pos_interval.txt (if present)
+                if ( os.path.isfile("/opt/edgemap-persist/pos_interval.txt") ):
+                    t2_interval_file = open("/opt/edgemap-persist/pos_interval.txt","r")
+                    t2_interval_from_file = t2_interval_file.readline().rstrip()
+                    t2_interval_file.close()
+                    
+                    # Based on Web UI instructed values, implement 2,4 and 10 minutes
+                    # position sending over meshtastic. Random minutes +/- 30 seconds. 
+                    # TODO: Implement off and manual send
+                    if t2_interval_from_file == '2':
+                        t2_interval_rand = randrange(90, 150)
+                    if t2_interval_from_file == '4':
+                        t2_interval_rand = randrange(210, 270)
+                    if t2_interval_from_file == '10':
+                        t2_interval_rand = randrange(570, 630)
+                
+                
+                # Slow loop down a bit
+                time.sleep(1)
                 # Randomize sending interval
                 t2_end_time = time.time()
                 t2_elapsed_time = t2_end_time - t2_start_time
+                
                 if ( t2_elapsed_time > t2_interval_rand ):
                     # print("Manual loop",t2_elapsed_time,t2_interval_rand)
                     if ( os.path.isfile("/opt/edgemap-persist/callsign.txt") ):
@@ -508,6 +528,8 @@ def read_manual_gps():
                     
                     t2_start_time = time.time()
                     t2_interval_rand = randrange(min_interval_time, max_interval_time)
+                    
+    
     except Exception as e:
         print(f"Exception caught in thread: {e}")
         sys.stdout.flush()

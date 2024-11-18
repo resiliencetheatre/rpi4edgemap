@@ -85,8 +85,46 @@ var menuItems = [
                 ]
             },
             {
+                id   : 'timer',
+                title: 'Pos report',
+                icon: '#svg-icon-timer',
+                
+                items: [
+                    {
+                        id   : 'pos_off',
+                        title: 'Reports Off',
+                        icon: '#svg-icon-transmit-off',
+                    },
+                    {
+                        id   : 'pos_2',
+                        title: 'minutes',
+                        icon: '#svg-icon-2-min',
+                    },
+                    {
+                        id   : 'pos_4',
+                        title: 'minutes',
+                        icon: '#svg-icon-4-min',
+                    },
+                    {
+                        id   : 'pos_10',
+                        title: 'minutes',
+                        icon: '#svg-icon-10-min',
+                    },
+                    {
+                        id   : 'pos_manual',
+                        title: 'Manual',
+                        icon: '#svg-icon-manual',
+                    },
+                    {
+                        id   : 'pos_random',
+                        title: 'Random',
+                        icon: '#svg-icon-random',
+                    }
+                ]
+            },
+            {
                 id   : 'coordinate',
-                title: 'Coord search',
+                title: 'Coordinates',
                 icon: '#svg-icon-coordinate-search'
             },
             {
@@ -111,8 +149,12 @@ var menuItems = [
             },
             
             
+            
         ]
     },
+    
+    
+    
     {
         id: 'message',
         title: 'Message',
@@ -136,7 +178,7 @@ window.onload = function ()
 		closeOnClickOutside: true,
 		onClick: function(item)
 		{
-			console.log('You have clicked:', item.id, item.title);
+			// console.log('You have clicked:', item.id, item.title);
 			// console.log(item);
             
             if ( item.id == "setlocation" ) {
@@ -200,6 +242,24 @@ window.onload = function ()
             }
             if ( item.id == "poweroff" ) {
                 systemControl("poweroff");
+            }
+            if ( item.id == "pos_off" ) {
+                systemControl("pos_off");
+            }
+            if ( item.id == "pos_2" ) {
+                systemControl("pos_2");
+            }
+            if ( item.id == "pos_4" ) {
+                systemControl("pos_4");
+            }
+            if ( item.id == "pos_10" ) {
+                systemControl("pos_10");
+            }
+            if ( item.id == "pos_manual" ) {
+                systemControl("pos_manual");
+            }
+            if ( item.id == "pos_random" ) {
+                systemControl("pos_random");
             }
             
             

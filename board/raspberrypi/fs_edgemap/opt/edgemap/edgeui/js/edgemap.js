@@ -1867,14 +1867,16 @@ function submitCoordinateSearch() {
     document.getElementById('coordinateInput').value="";   
 }
 
+//
 // Place holder function to implement proper control towards system
+// 
 function systemControl(action) {
-    console.log("systemControl: ", action);
+    // console.log("systemControl: ", action);
     page_url = 'control.php?id=' + action;
     fetch(page_url) 
         .then(response => response.text()) 
         .then(data => {
-            console.log("returned data: ", data);
+            // console.log("returned data: ", data);
             notifyMessage(data, 10000);
         })
         .catch(error => console.error('Error loading control page:', error));

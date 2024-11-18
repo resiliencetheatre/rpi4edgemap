@@ -28,8 +28,16 @@ body { margin: 0; padding: 0;  }
     color: #00FF00;
     padding: 5px;
     visibility: hidden;
-    
 }
+
+.space-holder-right-bottom {
+    position: absolute;
+    bottom:40px;
+    right: 10px;
+    color: #00FF00;
+    padding: 5px;
+}
+
 
 .map-right-upload-overlay {
 	font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;

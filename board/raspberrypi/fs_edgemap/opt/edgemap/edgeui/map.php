@@ -50,7 +50,6 @@
     
     <div id="platform_help" class="space-holder-left-bottom" >
         <table >
-            
             <tr><td>Close dialog</td><td align="center">ESC</td></tr>
             <tr><td>Messages</td><td align="center">m</td></tr>
             <tr><td>Meshtastic radios</td><td align="center">r</td></tr>
@@ -59,8 +58,6 @@
             <tr><td>Coordinate search</td><td align="center">f</td></tr>
         </table>
     </div>
-
-
 
     <div id="map"></div>
     
@@ -224,14 +221,6 @@
     <div class="coordinateSearch" id="coordinateSearchEntry" >
             <input id="coordinateInput" type="text" placeholder="[latitude,longitude]" class="coordinateSearchInput" maxlength="20" onkeypress="handleKeyPress(event)" onfocus="ensureVisible(this)">
     </div>
-    
-    
-    
-
-    
-    
-    
-    
     
 
     <div class="callSignEntry" id="callSignEntry" >
@@ -426,7 +415,7 @@
     
     // geojson url
     var geojsonUrl = 'meshtastic_geojson.php?linkline=1';
-    var geoJsonLayerActive = false;
+    var geoJsonLayerActive = true;
 	
 	// One user created pin marker for a demo
 	const mapPinMarker = [];
@@ -588,8 +577,9 @@
     Since WebRTC requires TLS connection, our web sockets must be 
     served with security. There are two different set of systemd
     services for this to happen. Here is summary of used ports.
-    Function                Plain   With SSL
-    Local GPS               7790    8790
+    
+    Function                Plain   With SSL    FIFO
+    Local GPS               7790    8790        /tmp/gpssocket
     Highrate marker         7890    8890
     reticulum messaging     7990    8990 
     meshtastic messaging    7991    8991
@@ -1436,6 +1426,7 @@
                         // 
                         // First 'geojson' parse to create symbol images
                         // 
+                        
                         var name;
                         var another = JSON.parse(this.response, function (key, value) {			
                             if ( key == "targetName" ) {
@@ -1488,7 +1479,7 @@
         fadeIn(document.getElementById("platform_help") ,1000);
         fadeIn(document.getElementById("platform_logo") ,1000);
         if ( geoJsonLayerActive  ) {
-            
+            console.log("Activating geojson layer")
             // 
             // 'drone' is target layer for geojson data
             // TODO: Calculating icon-offset for symbology text changes 
@@ -1521,7 +1512,7 @@
                     'filter': ['==', '$type', 'Point']
             });
             // Enable tails for targets
-            showTails();
+            // showTails();
         }
         console.log("Map loaded.");
         map.setTerrain(null);
@@ -1536,6 +1527,8 @@
         fadeOut(document.getElementById("platform_help") ,1000);
         fadeOut(document.getElementById("platform_logo") ,1000);
         }, 15000 );
+        
+        showTails();
         
     });
     
@@ -1809,6 +1802,19 @@
     <svg id="svg-icon-wipe" xmlns="http://www.w3.org/2000/svg" width="2" height="2" viewBox="0 0 48 48"><g fill="none" stroke="#F00" stroke-linejoin="round" stroke-width="4"><path d="M9 10v34h30V10z"/><path stroke-linecap="round" d="M20 20v13m8-13v13M4 10h40"/><path d="m16 10l3.289-6h9.488L32 10z"/></g></svg>
     <svg id="svg-icon-poweroff" xmlns="http://www.w3.org/2000/svg" width="2" height="2" viewBox="0 0 24 24"><path fill="#FF0" d="m16.56 5.44l-1.45 1.45A5.97 5.97 0 0 1 18 12a6 6 0 0 1-6 6a6 6 0 0 1-6-6c0-2.17 1.16-4.06 2.88-5.12L7.44 5.44A7.96 7.96 0 0 0 4 12a8 8 0 0 0 8 8a8 8 0 0 0 8-8c0-2.72-1.36-5.12-3.44-6.56M13 3h-2v10h2"/></svg>
 
+    <svg id="svg-icon-settings" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="#00ff00" d="m9.25 22l-.4-3.2q-.325-.125-.612-.3t-.563-.375L4.7 19.375l-2.75-4.75l2.575-1.95Q4.5 12.5 4.5 12.338v-.675q0-.163.025-.338L1.95 9.375l2.75-4.75l2.975 1.25q.275-.2.575-.375t.6-.3l.4-3.2h5.5l.4 3.2q.325.125.613.3t.562.375l2.975-1.25l2.75 4.75l-2.575 1.95q.025.175.025.338v.674q0 .163-.05.338l2.575 1.95l-2.75 4.75l-2.95-1.25q-.275.2-.575.375t-.6.3l-.4 3.2zm2.8-6.5q1.45 0 2.475-1.025T15.55 12t-1.025-2.475T12.05 8.5q-1.475 0-2.488 1.025T8.55 12t1.013 2.475T12.05 15.5"/></svg>
+    <svg id="svg-icon-timer" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 56 56"><path fill="#00FF00" d="M28 51.906c13.055 0 23.906-10.828 23.906-23.906c0-13.055-10.828-23.906-23.883-23.906c-1.242 0-1.851.75-1.851 1.968v9.094c0 1.008.68 1.828 1.71 1.828c1.032 0 1.735-.82 1.735-1.828V8.148C39.93 8.968 47.898 17.5 47.898 28A19.84 19.84 0 0 1 28 47.922c-11.063 0-19.945-8.86-19.922-19.922c.023-4.922 1.781-9.398 4.711-12.844c.726-.914.773-2.015 0-2.836c-.774-.843-2.086-.773-2.93.282C6.273 16.773 4.094 22.164 4.094 28c0 13.078 10.828 23.906 23.906 23.906m3.75-20.297c1.851-1.922 1.477-4.547-.75-6.093l-12.4-8.649c-1.171-.82-2.39.399-1.57 1.57l8.649 12.399c1.547 2.227 4.171 2.625 6.07.773"/></svg>
+    <svg id="svg-icon-transmit-off" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#ff0000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m10 14l2-2m2-2l7-7M10.718 6.713L21 3l-3.715 10.289m-1.063 2.941L14.5 21a.55.55 0 0 1-1 0L10 14l-7-3.5a.55.55 0 0 1 0-1l4.772-1.723M3 3l18 18"/></svg>
+    
+    
+    <svg id="svg-icon-2-min" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#00ff00" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8a4 4 0 1 1 8 0c0 1.098-.564 2.025-1.159 2.815L8 20h8"/></svg>
+    <svg id="svg-icon-4-min" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#00ff00" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 20V5L7 16h10"/></svg>
+    <svg id="svg-icon-10-min" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#00ff00" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 20V4L3 9m13 11a4 4 0 0 0 4-4V8a4 4 0 1 0-8 0v8a4 4 0 0 0 4 4"/></svg>
+    
+    
+    <svg id="svg-icon-manual" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#0096FF" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 12h2m16 0h2M4 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0m12 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0m-8.5-1.5L15 5"/></svg>
+    <svg id="svg-icon-random" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><path fill="#FFA500" fill-rule="evenodd" d="M465.023 135.32L376.68 465.023L46.977 376.68L135.32 46.977zm-52.256 30.17L165.49 99.233L99.233 346.51l247.277 66.257zM317.08 316.538c17.07 4.574 27.201 22.121 22.627 39.192c-4.574 17.07-22.121 27.201-39.192 22.627c-17.07-4.574-27.201-22.12-22.627-39.192c4.574-17.07 22.12-27.201 39.192-22.627m-52.798-91.448c17.071 4.575 27.202 22.121 22.628 39.192s-22.121 27.202-39.192 22.628s-27.202-22.121-22.628-39.192s22.121-27.202 39.192-22.628m-52.797-91.447c17.07 4.574 27.201 22.12 22.627 39.192c-4.574 17.07-22.12 27.201-39.192 22.627c-17.07-4.574-27.201-22.12-22.627-39.192c4.574-17.07 22.121-27.201 39.192-22.627"/></svg>
+    
 </div>
 
 
