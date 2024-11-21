@@ -1,6 +1,6 @@
 /**
  * MapLibre GL JS
- * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.0.0-pre.6/LICENSE.txt
+ * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.0.0-pre.7/LICENSE.txt
  */
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -9429,6 +9429,13 @@ function getRollPitchBearing(rotation) {
     }
     return { roll, pitch: xAngle + 90.0, bearing };
 }
+function getAngleDelta(lastPoint, currentPoint, center) {
+    const pointVect = fromValues(currentPoint.x - center.x, currentPoint.y - center.y);
+    const lastPointVec = fromValues(lastPoint.x - center.x, lastPoint.y - center.y);
+    const crossProduct = pointVect[0] * lastPointVec[1] - pointVect[1] * lastPointVec[0];
+    const angleRadians = Math.atan2(crossProduct, dot$1(pointVect, lastPointVec));
+    return radiansToDegrees(angleRadians);
+}
 /**
  * This method converts roll, pitch, and bearing angles in degrees to a rotation quaternion.
  * @param roll - Roll angle in degrees
@@ -11649,13 +11656,15 @@ var terrain = {
 };
 var projection = {
 	type: {
-		type: "enum",
+		type: "projectionDefinition",
 		"default": "mercator",
-		values: {
-			mercator: {
-			},
-			globe: {
-			}
+		"property-type": "data-constant",
+		transition: false,
+		expression: {
+			interpolated: true,
+			parameters: [
+				"zoom"
+			]
 		}
 	}
 };
@@ -13333,7 +13342,7 @@ function diffLayers(before, after, commands) {
  * @param {*} after stylesheet to compare to
  * @returns Array list of changes
  */
-function diffStyles(before, after) {
+function diff(before, after) {
     if (!before)
         return [{ command: 'setStyle', args: [after] }];
     let commands = [];
@@ -13491,6 +13500,7 @@ const NumberType = { kind: 'number' };
 const StringType = { kind: 'string' };
 const BooleanType = { kind: 'boolean' };
 const ColorType = { kind: 'color' };
+const ProjectionDefinitionType = { kind: 'projectionDefinition' };
 const ObjectType = { kind: 'object' };
 const ValueType = { kind: 'value' };
 const ErrorType = { kind: 'error' };
@@ -13499,16 +13509,16 @@ const FormattedType = { kind: 'formatted' };
 const PaddingType = { kind: 'padding' };
 const ResolvedImageType = { kind: 'resolvedImage' };
 const VariableAnchorOffsetCollectionType = { kind: 'variableAnchorOffsetCollection' };
-function array$1(itemType, N) {
+function array(itemType, N) {
     return {
         kind: 'array',
         itemType,
         N
     };
 }
-function toString$1(type) {
+function typeToString(type) {
     if (type.kind === 'array') {
-        const itemType = toString$1(type.itemType);
+        const itemType = typeToString(type.itemType);
         return typeof type.N === 'number' ?
             `array<${itemType}, ${type.N}>` :
             type.itemType.kind === 'value' ? 'array' : `array<${itemType}>`;
@@ -13523,9 +13533,10 @@ const valueMemberTypes = [
     StringType,
     BooleanType,
     ColorType,
+    ProjectionDefinitionType,
     FormattedType,
     ObjectType,
-    array$1(ValueType),
+    array(ValueType),
     PaddingType,
     ResolvedImageType,
     VariableAnchorOffsetCollectionType
@@ -13557,7 +13568,7 @@ function checkSubtype(expected, t) {
             }
         }
     }
-    return `Expected ${toString$1(expected)} but found ${toString$1(t)} instead.`;
+    return `Expected ${typeToString(expected)} but found ${typeToString(t)} instead.`;
 }
 function isValidType(provided, allowedTypes) {
     return allowedTypes.some(t => t.kind === provided.kind);
@@ -13985,6 +13996,25 @@ const namedColors = {
     yellowgreen: [154, 205, 50],
 };
 
+function interpolateNumber(from, to, t) {
+    return from + t * (to - from);
+}
+function interpolateArray(from, to, t) {
+    return from.map((d, i) => {
+        return interpolateNumber(d, to[i], t);
+    });
+}
+
+/**
+ * Checks whether the specified color space is one of the supported interpolation color spaces.
+ *
+ * @param colorSpace Color space key to verify.
+ * @returns `true` if the specified color space is one of the supported
+ * interpolation color spaces, `false` otherwise
+ */
+function isSupportedInterpolationColorSpace(colorSpace) {
+    return colorSpace === 'rgb' || colorSpace === 'hcl' || colorSpace === 'lab';
+}
 /**
  * Color representation used by WebGL.
  * Defined in sRGB color space and pre-blended with alpha.
@@ -14106,6 +14136,54 @@ class Color {
         const [r, g, b, a] = this.rgb;
         return `rgba(${[r, g, b].map(n => Math.round(n * 255)).join(',')},${a})`;
     }
+    static interpolate(from, to, t, spaceKey = 'rgb') {
+        switch (spaceKey) {
+            case 'rgb': {
+                const [r, g, b, alpha] = interpolateArray(from.rgb, to.rgb, t);
+                return new Color(r, g, b, alpha, false);
+            }
+            case 'hcl': {
+                const [hue0, chroma0, light0, alphaF] = from.hcl;
+                const [hue1, chroma1, light1, alphaT] = to.hcl;
+                // https://github.com/gka/chroma.js/blob/cd1b3c0926c7a85cbdc3b1453b3a94006de91a92/src/interpolator/_hsx.js
+                let hue, chroma;
+                if (!isNaN(hue0) && !isNaN(hue1)) {
+                    let dh = hue1 - hue0;
+                    if (hue1 > hue0 && dh > 180) {
+                        dh -= 360;
+                    }
+                    else if (hue1 < hue0 && hue0 - hue1 > 180) {
+                        dh += 360;
+                    }
+                    hue = hue0 + t * dh;
+                }
+                else if (!isNaN(hue0)) {
+                    hue = hue0;
+                    if (light1 === 1 || light1 === 0)
+                        chroma = chroma0;
+                }
+                else if (!isNaN(hue1)) {
+                    hue = hue1;
+                    if (light0 === 1 || light0 === 0)
+                        chroma = chroma1;
+                }
+                else {
+                    hue = NaN;
+                }
+                const [r, g, b, alpha] = hclToRgb([
+                    hue,
+                    chroma !== null && chroma !== void 0 ? chroma : interpolateNumber(chroma0, chroma1, t),
+                    interpolateNumber(light0, light1, t),
+                    interpolateNumber(alphaF, alphaT, t),
+                ]);
+                return new Color(r, g, b, alpha, false);
+            }
+            case 'lab': {
+                const [r, g, b, alpha] = labToRgb(interpolateArray(from.lab, to.lab, t));
+                return new Color(r, g, b, alpha, false);
+            }
+        }
+    }
 }
 Color.black = new Color(0, 0, 0, 1);
 Color.white = new Color(1, 1, 1, 1);
@@ -14222,6 +14300,19 @@ class Padding {
     toString() {
         return JSON.stringify(this.values);
     }
+    static interpolate(from, to, t) {
+        return new Padding(interpolateArray(from.values, to.values, t));
+    }
+}
+
+class RuntimeError {
+    constructor(message) {
+        this.name = 'ExpressionEvaluationError';
+        this.message = message;
+    }
+    toJSON() {
+        return this.message;
+    }
 }
 
 /** Set of valid anchor positions, as a set for validation */
@@ -14260,6 +14351,26 @@ class VariableAnchorOffsetCollection {
     toString() {
         return JSON.stringify(this.values);
     }
+    static interpolate(from, to, t) {
+        const fromValues = from.values;
+        const toValues = to.values;
+        if (fromValues.length !== toValues.length) {
+            throw new RuntimeError(`Cannot interpolate values of different length. from: ${from.toString()}, to: ${to.toString()}`);
+        }
+        const output = [];
+        for (let i = 0; i < fromValues.length; i += 2) {
+            // Anchor entries must match
+            if (fromValues[i] !== toValues[i]) {
+                throw new RuntimeError(`Cannot interpolate values containing mismatched anchors. from[${i}]: ${fromValues[i]}, to[${i}]: ${toValues[i]}`);
+            }
+            output.push(fromValues[i]);
+            // Interpolate the offset values for each anchor
+            const [fx, fy] = fromValues[i + 1];
+            const [tx, ty] = toValues[i + 1];
+            output.push([interpolateNumber(fx, tx, t), interpolateNumber(fy, ty, t)]);
+        }
+        return new VariableAnchorOffsetCollection(output);
+    }
 }
 
 class ResolvedImage {
@@ -14274,6 +14385,32 @@ class ResolvedImage {
         if (!name)
             return null; // treat empty values as no image
         return new ResolvedImage({ name, available: false });
+    }
+}
+
+class ProjectionDefinition {
+    constructor(from, to, transition) {
+        this.from = from;
+        this.to = to;
+        this.transition = transition;
+    }
+    static interpolate(from, to, t) {
+        return new ProjectionDefinition(from, to, t);
+    }
+    static parse(input) {
+        if (input instanceof ProjectionDefinition) {
+            return input;
+        }
+        if (Array.isArray(input) && input.length === 3 && typeof input[0] === 'string' && typeof input[1] === 'string' && typeof input[2] === 'number') {
+            return new ProjectionDefinition(input[0], input[1], input[2]);
+        }
+        if (typeof input === 'object' && typeof input.from === 'string' && typeof input.to === 'string' && typeof input.transition === 'number') {
+            return new ProjectionDefinition(input.from, input.to, input.transition);
+        }
+        if (typeof input === 'string') {
+            return new ProjectionDefinition(input, input, 1);
+        }
+        return undefined;
     }
 }
 
@@ -14294,6 +14431,7 @@ function isValue(mixed) {
         typeof mixed === 'string' ||
         typeof mixed === 'boolean' ||
         typeof mixed === 'number' ||
+        mixed instanceof ProjectionDefinition ||
         mixed instanceof Color ||
         mixed instanceof Collator ||
         mixed instanceof Formatted ||
@@ -14338,6 +14476,9 @@ function typeOf(value) {
     else if (value instanceof Color) {
         return ColorType;
     }
+    else if (value instanceof ProjectionDefinition) {
+        return ProjectionDefinitionType;
+    }
     else if (value instanceof Collator) {
         return CollatorType;
     }
@@ -14369,13 +14510,13 @@ function typeOf(value) {
                 break;
             }
         }
-        return array$1(itemType || ValueType, length);
+        return array(itemType || ValueType, length);
     }
     else {
         return ObjectType;
     }
 }
-function toString(value) {
+function valueToString(value) {
     const type = typeof value;
     if (value === null) {
         return '';
@@ -14383,7 +14524,7 @@ function toString(value) {
     else if (type === 'string' || type === 'number' || type === 'boolean') {
         return String(value);
     }
-    else if (value instanceof Color || value instanceof Formatted || value instanceof Padding || value instanceof VariableAnchorOffsetCollection || value instanceof ResolvedImage) {
+    else if (value instanceof Color || value instanceof ProjectionDefinition || value instanceof Formatted || value instanceof Padding || value instanceof VariableAnchorOffsetCollection || value instanceof ResolvedImage) {
         return value.toString();
     }
     else {
@@ -14420,16 +14561,6 @@ class Literal {
     eachChild() { }
     outputDefined() {
         return true;
-    }
-}
-
-class RuntimeError {
-    constructor(message) {
-        this.name = 'ExpressionEvaluationError';
-        this.message = message;
-    }
-    toJSON() {
-        return this.message;
     }
 }
 
@@ -14473,7 +14604,7 @@ class Assertion {
                 N = args[2];
                 i++;
             }
-            type = array$1(itemType, N);
+            type = array(itemType, N);
         }
         else {
             if (!types$1[name])
@@ -14497,7 +14628,7 @@ class Assertion {
                 return value;
             }
             else if (i === this.args.length - 1) {
-                throw new RuntimeError(`Expected value to be of type ${toString$1(this.type)}, but found ${toString$1(typeOf(value))} instead.`);
+                throw new RuntimeError(`Expected value to be of type ${typeToString(this.type)}, but found ${typeToString(typeOf(value))} instead.`);
             }
         }
         throw new Error();
@@ -14616,11 +14747,13 @@ class Coercion {
             case 'formatted':
                 // There is no explicit 'to-formatted' but this coercion can be implicitly
                 // created by properties that expect the 'formatted' type.
-                return Formatted.fromString(toString(this.args[0].evaluate(ctx)));
+                return Formatted.fromString(valueToString(this.args[0].evaluate(ctx)));
             case 'resolvedImage':
-                return ResolvedImage.fromString(toString(this.args[0].evaluate(ctx)));
+                return ResolvedImage.fromString(valueToString(this.args[0].evaluate(ctx)));
+            case 'projectionDefinition':
+                return this.args[0].evaluate(ctx);
             default:
-                return toString(this.args[0].evaluate(ctx));
+                return valueToString(this.args[0].evaluate(ctx));
         }
     }
     eachChild(fn) {
@@ -14932,6 +15065,9 @@ class ParsingContext {
                     if ((expected.kind === 'string' || expected.kind === 'number' || expected.kind === 'boolean' || expected.kind === 'object' || expected.kind === 'array') && actual.kind === 'value') {
                         parsed = annotate(parsed, expected, options.typeAnnotation || 'assert');
                     }
+                    else if ((expected.kind === 'projectionDefinition') && (actual.kind === 'string' || actual.kind === 'array')) {
+                        parsed = annotate(parsed, expected, options.typeAnnotation || 'coerce');
+                    }
                     else if ((expected.kind === 'color' || expected.kind === 'formatted' || expected.kind === 'resolvedImage') && (actual.kind === 'value' || actual.kind === 'string')) {
                         parsed = annotate(parsed, expected, options.typeAnnotation || 'coerce');
                     }
@@ -15088,7 +15224,7 @@ class At {
         if (args.length !== 3)
             return context.error(`Expected 2 arguments, but found ${args.length - 1} instead.`);
         const index = context.parse(args[1], 1, NumberType);
-        const input = context.parse(args[2], 2, array$1(context.expectedType || ValueType));
+        const input = context.parse(args[2], 2, array(context.expectedType || ValueType));
         if (!index || !input)
             return null;
         const t = input.type;
@@ -15132,7 +15268,7 @@ class In {
         if (!needle || !haystack)
             return null;
         if (!isValidType(needle.type, [BooleanType, StringType, NumberType, NullType, ValueType])) {
-            return context.error(`Expected first argument to be of type boolean, string, number or null, but found ${toString$1(needle.type)} instead`);
+            return context.error(`Expected first argument to be of type boolean, string, number or null, but found ${typeToString(needle.type)} instead`);
         }
         return new In(needle, haystack);
     }
@@ -15142,10 +15278,10 @@ class In {
         if (!haystack)
             return false;
         if (!isValidNativeType(needle, ['boolean', 'string', 'number', 'null'])) {
-            throw new RuntimeError(`Expected first argument to be of type boolean, string, number or null, but found ${toString$1(typeOf(needle))} instead.`);
+            throw new RuntimeError(`Expected first argument to be of type boolean, string, number or null, but found ${typeToString(typeOf(needle))} instead.`);
         }
         if (!isValidNativeType(haystack, ['string', 'array'])) {
-            throw new RuntimeError(`Expected second argument to be of type array or string, but found ${toString$1(typeOf(haystack))} instead.`);
+            throw new RuntimeError(`Expected second argument to be of type array or string, but found ${typeToString(typeOf(haystack))} instead.`);
         }
         return haystack.indexOf(needle) >= 0;
     }
@@ -15174,7 +15310,7 @@ class IndexOf {
         if (!needle || !haystack)
             return null;
         if (!isValidType(needle.type, [BooleanType, StringType, NumberType, NullType, ValueType])) {
-            return context.error(`Expected first argument to be of type boolean, string, number or null, but found ${toString$1(needle.type)} instead`);
+            return context.error(`Expected first argument to be of type boolean, string, number or null, but found ${typeToString(needle.type)} instead`);
         }
         if (args.length === 4) {
             const fromIndex = context.parse(args[3], 3, NumberType);
@@ -15190,7 +15326,7 @@ class IndexOf {
         const needle = this.needle.evaluate(ctx);
         const haystack = this.haystack.evaluate(ctx);
         if (!isValidNativeType(needle, ['boolean', 'string', 'number', 'null'])) {
-            throw new RuntimeError(`Expected first argument to be of type boolean, string, number or null, but found ${toString$1(typeOf(needle))} instead.`);
+            throw new RuntimeError(`Expected first argument to be of type boolean, string, number or null, but found ${typeToString(typeOf(needle))} instead.`);
         }
         let fromIndex;
         if (this.fromIndex) {
@@ -15210,7 +15346,7 @@ class IndexOf {
             return haystack.indexOf(needle, fromIndex);
         }
         else {
-            throw new RuntimeError(`Expected second argument to be of type array or string, but found ${toString$1(typeOf(haystack))} instead.`);
+            throw new RuntimeError(`Expected second argument to be of type array or string, but found ${typeToString(typeOf(haystack))} instead.`);
         }
     }
     eachChild(fn) {
@@ -15377,8 +15513,8 @@ class Slice {
         const beginIndex = context.parse(args[2], 2, NumberType);
         if (!input || !beginIndex)
             return null;
-        if (!isValidType(input.type, [array$1(ValueType), StringType, ValueType])) {
-            return context.error(`Expected first argument to be of type array or string, but found ${toString$1(input.type)} instead`);
+        if (!isValidType(input.type, [array(ValueType), StringType, ValueType])) {
+            return context.error(`Expected first argument to be of type array or string, but found ${typeToString(input.type)} instead`);
         }
         if (args.length === 4) {
             const endIndex = context.parse(args[3], 3, NumberType);
@@ -15405,7 +15541,7 @@ class Slice {
             return input.slice(beginIndex, endIndex);
         }
         else {
-            throw new RuntimeError(`Expected first argument to be of type array or string, but found ${toString$1(typeOf(input))} instead.`);
+            throw new RuntimeError(`Expected first argument to be of type array or string, but found ${typeToString(typeOf(input))} instead.`);
         }
     }
     eachChild(fn) {
@@ -15616,117 +15752,6 @@ function requireUnitbezier () {
 var unitbezierExports = requireUnitbezier();
 var UnitBezier = /*@__PURE__*/getDefaultExportFromCjs(unitbezierExports);
 
-/**
- * Checks whether the specified color space is one of the supported interpolation color spaces.
- *
- * @param colorSpace Color space key to verify.
- * @returns `true` if the specified color space is one of the supported
- * interpolation color spaces, `false` otherwise
- */
-function isSupportedInterpolationColorSpace(colorSpace) {
-    return colorSpace === 'rgb' || colorSpace === 'hcl' || colorSpace === 'lab';
-}
-/**
- * @param interpolationType Interpolation type
- * @returns interpolation fn
- * @deprecated use `interpolate[type]` instead
- */
-const interpolateFactory = (interpolationType) => {
-    switch (interpolationType) {
-        case 'number': return number;
-        case 'color': return color;
-        case 'array': return array;
-        case 'padding': return padding;
-        case 'variableAnchorOffsetCollection': return variableAnchorOffsetCollection;
-    }
-};
-function number(from, to, t) {
-    return from + t * (to - from);
-}
-function color(from, to, t, spaceKey = 'rgb') {
-    switch (spaceKey) {
-        case 'rgb': {
-            const [r, g, b, alpha] = array(from.rgb, to.rgb, t);
-            return new Color(r, g, b, alpha, false);
-        }
-        case 'hcl': {
-            const [hue0, chroma0, light0, alphaF] = from.hcl;
-            const [hue1, chroma1, light1, alphaT] = to.hcl;
-            // https://github.com/gka/chroma.js/blob/cd1b3c0926c7a85cbdc3b1453b3a94006de91a92/src/interpolator/_hsx.js
-            let hue, chroma;
-            if (!isNaN(hue0) && !isNaN(hue1)) {
-                let dh = hue1 - hue0;
-                if (hue1 > hue0 && dh > 180) {
-                    dh -= 360;
-                }
-                else if (hue1 < hue0 && hue0 - hue1 > 180) {
-                    dh += 360;
-                }
-                hue = hue0 + t * dh;
-            }
-            else if (!isNaN(hue0)) {
-                hue = hue0;
-                if (light1 === 1 || light1 === 0)
-                    chroma = chroma0;
-            }
-            else if (!isNaN(hue1)) {
-                hue = hue1;
-                if (light0 === 1 || light0 === 0)
-                    chroma = chroma1;
-            }
-            else {
-                hue = NaN;
-            }
-            const [r, g, b, alpha] = hclToRgb([
-                hue,
-                chroma !== null && chroma !== void 0 ? chroma : number(chroma0, chroma1, t),
-                number(light0, light1, t),
-                number(alphaF, alphaT, t),
-            ]);
-            return new Color(r, g, b, alpha, false);
-        }
-        case 'lab': {
-            const [r, g, b, alpha] = labToRgb(array(from.lab, to.lab, t));
-            return new Color(r, g, b, alpha, false);
-        }
-    }
-}
-function array(from, to, t) {
-    return from.map((d, i) => {
-        return number(d, to[i], t);
-    });
-}
-function padding(from, to, t) {
-    return new Padding(array(from.values, to.values, t));
-}
-function variableAnchorOffsetCollection(from, to, t) {
-    const fromValues = from.values;
-    const toValues = to.values;
-    if (fromValues.length !== toValues.length) {
-        throw new RuntimeError(`Cannot interpolate values of different length. from: ${from.toString()}, to: ${to.toString()}`);
-    }
-    const output = [];
-    for (let i = 0; i < fromValues.length; i += 2) {
-        // Anchor entries must match
-        if (fromValues[i] !== toValues[i]) {
-            throw new RuntimeError(`Cannot interpolate values containing mismatched anchors. from[${i}]: ${fromValues[i]}, to[${i}]: ${toValues[i]}`);
-        }
-        output.push(fromValues[i]);
-        // Interpolate the offset values for each anchor
-        const [fx, fy] = fromValues[i + 1];
-        const [tx, ty] = toValues[i + 1];
-        output.push([number(fx, tx, t), number(fy, ty, t)]);
-    }
-    return new VariableAnchorOffsetCollection(output);
-}
-const interpolate = {
-    number,
-    color,
-    array,
-    padding,
-    variableAnchorOffsetCollection
-};
-
 class Interpolate {
     constructor(type, operator, interpolation, input, stops) {
         this.type = type;
@@ -15821,11 +15846,12 @@ class Interpolate {
             stops.push([label, parsed]);
         }
         if (!verifyType(outputType, NumberType) &&
+            !verifyType(outputType, ProjectionDefinitionType) &&
             !verifyType(outputType, ColorType) &&
             !verifyType(outputType, PaddingType) &&
             !verifyType(outputType, VariableAnchorOffsetCollectionType) &&
-            !verifyType(outputType, array$1(NumberType))) {
-            return context.error(`Type ${toString$1(outputType)} is not interpolatable.`);
+            !verifyType(outputType, array(NumberType))) {
+            return context.error(`Type ${typeToString(outputType)} is not interpolatable.`);
         }
         return new Interpolate(outputType, operator, interpolation, input, stops);
     }
@@ -15851,11 +15877,24 @@ class Interpolate {
         const outputUpper = outputs[index + 1].evaluate(ctx);
         switch (this.operator) {
             case 'interpolate':
-                return interpolate[this.type.kind](outputLower, outputUpper, t);
+                switch (this.type.kind) {
+                    case 'number':
+                        return interpolateNumber(outputLower, outputUpper, t);
+                    case 'color':
+                        return Color.interpolate(outputLower, outputUpper, t);
+                    case 'padding':
+                        return Padding.interpolate(outputLower, outputUpper, t);
+                    case 'variableAnchorOffsetCollection':
+                        return VariableAnchorOffsetCollection.interpolate(outputLower, outputUpper, t);
+                    case 'array':
+                        return interpolateArray(outputLower, outputUpper, t);
+                    case 'projectionDefinition':
+                        return ProjectionDefinition.interpolate(outputLower, outputUpper, t);
+                }
             case 'interpolate-hcl':
-                return interpolate.color(outputLower, outputUpper, t, 'hcl');
+                return Color.interpolate(outputLower, outputUpper, t, 'hcl');
             case 'interpolate-lab':
-                return interpolate.color(outputLower, outputUpper, t, 'lab');
+                return Color.interpolate(outputLower, outputUpper, t, 'lab');
         }
     }
     eachChild(fn) {
@@ -15916,6 +15955,13 @@ function exponentialInterpolation(input, base, lowerValue, upperValue) {
         return (Math.pow(base, progress) - 1) / (Math.pow(base, difference) - 1);
     }
 }
+const interpolateFactory = {
+    color: Color.interpolate,
+    number: interpolateNumber,
+    padding: Padding.interpolate,
+    variableAnchorOffsetCollection: VariableAnchorOffsetCollection.interpolate,
+    array: interpolateArray
+};
 
 class Coalesce {
     constructor(type, args) {
@@ -16046,18 +16092,18 @@ function makeComparison(op, compareBasic, compareWithCollator) {
             if (!lhs)
                 return null;
             if (!isComparableType(op, lhs.type)) {
-                return context.concat(1).error(`"${op}" comparisons are not supported for type '${toString$1(lhs.type)}'.`);
+                return context.concat(1).error(`"${op}" comparisons are not supported for type '${typeToString(lhs.type)}'.`);
             }
             let rhs = context.parse(args[2], 2, ValueType);
             if (!rhs)
                 return null;
             if (!isComparableType(op, rhs.type)) {
-                return context.concat(2).error(`"${op}" comparisons are not supported for type '${toString$1(rhs.type)}'.`);
+                return context.concat(2).error(`"${op}" comparisons are not supported for type '${typeToString(rhs.type)}'.`);
             }
             if (lhs.type.kind !== rhs.type.kind &&
                 lhs.type.kind !== 'value' &&
                 rhs.type.kind !== 'value') {
-                return context.error(`Cannot compare types '${toString$1(lhs.type)}' and '${toString$1(rhs.type)}'.`);
+                return context.error(`Cannot compare types '${typeToString(lhs.type)}' and '${typeToString(rhs.type)}'.`);
             }
             if (isOrderComparison) {
                 // typing rules specific to less/greater than operators
@@ -16270,7 +16316,7 @@ class FormatExpression {
                 }
                 let font = null;
                 if (arg['text-font']) {
-                    font = context.parse(arg['text-font'], 1, array$1(StringType));
+                    font = context.parse(arg['text-font'], 1, array(StringType));
                     if (!font)
                         return null;
                 }
@@ -16304,7 +16350,7 @@ class FormatExpression {
             if (typeOf(evaluatedContent) === ResolvedImageType) {
                 return new FormattedSection('', evaluatedContent, null, null, null);
             }
-            return new FormattedSection(toString(evaluatedContent), null, section.scale ? section.scale.evaluate(ctx) : null, section.font ? section.font.evaluate(ctx).join(',') : null, section.textColor ? section.textColor.evaluate(ctx) : null);
+            return new FormattedSection(valueToString(evaluatedContent), null, section.scale ? section.scale.evaluate(ctx) : null, section.font ? section.font.evaluate(ctx).join(',') : null, section.textColor ? section.textColor.evaluate(ctx) : null);
         };
         return new Formatted(this.sections.map(evaluateSection));
     }
@@ -16371,7 +16417,7 @@ class Length {
         if (!input)
             return null;
         if (input.type.kind !== 'array' && input.type.kind !== 'string' && input.type.kind !== 'value')
-            return context.error(`Expected argument of type string or array, but found ${toString$1(input.type)} instead.`);
+            return context.error(`Expected argument of type string or array, but found ${typeToString(input.type)} instead.`);
         return new Length(input);
     }
     evaluate(ctx) {
@@ -16384,7 +16430,7 @@ class Length {
             return input.length;
         }
         else {
-            throw new RuntimeError(`Expected value to be of type string or array, but found ${toString$1(typeOf(input))} instead.`);
+            throw new RuntimeError(`Expected value to be of type string or array, but found ${typeToString(typeOf(input))} instead.`);
         }
     }
     eachChild(fn) {
@@ -17505,7 +17551,7 @@ class CompoundExpression {
                 const parsed = context.parse(args[i], 1 + actualTypes.length);
                 if (!parsed)
                     return null;
-                actualTypes.push(toString$1(parsed.type));
+                actualTypes.push(typeToString(parsed.type));
             }
             context.error(`Expected arguments of type ${signatures}, but found (${actualTypes.join(', ')}) instead.`);
         }
@@ -17559,10 +17605,10 @@ CompoundExpression.register(expressions$1, {
     'typeof': [
         StringType,
         [ValueType],
-        (ctx, [v]) => toString$1(typeOf(v.evaluate(ctx)))
+        (ctx, [v]) => typeToString(typeOf(v.evaluate(ctx)))
     ],
     'to-rgba': [
-        array$1(NumberType, 4),
+        array(NumberType, 4),
         [ColorType],
         (ctx, [v]) => {
             const [r, g, b, a] = v.evaluate(ctx).rgb;
@@ -17892,23 +17938,23 @@ CompoundExpression.register(expressions$1, {
     ],
     'filter-type-in': [
         BooleanType,
-        [array$1(StringType)],
+        [array(StringType)],
         (ctx, [v]) => v.value.indexOf(ctx.geometryDollarType()) >= 0
     ],
     'filter-id-in': [
         BooleanType,
-        [array$1(ValueType)],
+        [array(ValueType)],
         (ctx, [v]) => v.value.indexOf(ctx.id()) >= 0
     ],
     'filter-in-small': [
         BooleanType,
-        [StringType, array$1(ValueType)],
+        [StringType, array(ValueType)],
         // assumes v is an array literal
         (ctx, [k, v]) => v.value.indexOf(ctx.properties()[k.value]) >= 0
     ],
     'filter-in-large': [
         BooleanType,
-        [StringType, array$1(ValueType)],
+        [StringType, array(ValueType)],
         // assumes v is a array literal with values sorted in ascending order and of a single type
         (ctx, [k, v]) => binarySearch(ctx.properties()[k.value], v.value, 0, v.value.length - 1)
     ],
@@ -17980,7 +18026,7 @@ CompoundExpression.register(expressions$1, {
     'concat': [
         StringType,
         varargs(ValueType),
-        (ctx, args) => args.map(arg => toString(arg.evaluate(ctx))).join('')
+        (ctx, args) => args.map(arg => valueToString(arg.evaluate(ctx))).join('')
     ],
     'resolved-locale': [
         StringType,
@@ -17990,10 +18036,10 @@ CompoundExpression.register(expressions$1, {
 });
 function stringifySignature(signature) {
     if (Array.isArray(signature)) {
-        return `(${signature.map(toString$1).join(', ')})`;
+        return `(${signature.map(typeToString).join(', ')})`;
     }
     else {
-        return `(${toString$1(signature.type)}...)`;
+        return `(${typeToString(signature.type)}...)`;
     }
 }
 function isExpressionConstant(expression) {
@@ -18294,7 +18340,7 @@ function evaluateExponentialFunction(parameters, propertySpec, input) {
     const t = interpolationFactor(input, base, parameters.stops[index][0], parameters.stops[index + 1][0]);
     const outputLower = parameters.stops[index][1];
     const outputUpper = parameters.stops[index + 1][1];
-    const interp = interpolate[propertySpec.type] || identityFunction;
+    const interp = interpolateFactory[propertySpec.type] || identityFunction;
     if (typeof outputLower.evaluate === 'function') {
         return {
             evaluate(...args) {
@@ -18564,6 +18610,9 @@ function normalizePropertyExpression(value, specification) {
         else if (specification.type === 'variableAnchorOffsetCollection' && Array.isArray(value)) {
             constant = VariableAnchorOffsetCollection.parse(value);
         }
+        else if (specification.type === 'projectionDefinition' && typeof value === 'string') {
+            constant = ProjectionDefinition.parse(value);
+        }
         return {
             kind: 'constant',
             evaluate: () => constant
@@ -18617,11 +18666,12 @@ function getExpectedType(spec) {
         boolean: BooleanType,
         formatted: FormattedType,
         padding: PaddingType,
+        projectionDefinition: ProjectionDefinitionType,
         resolvedImage: ResolvedImageType,
         variableAnchorOffsetCollection: VariableAnchorOffsetCollectionType
     };
     if (spec.type === 'array') {
-        return array$1(types[spec.value] || ValueType, spec.length);
+        return array(types[spec.value] || ValueType, spec.length);
     }
     return types[spec.type];
 }
@@ -18640,6 +18690,9 @@ function getDefaultValue(spec) {
     }
     else if (spec.type === 'variableAnchorOffsetCollection') {
         return VariableAnchorOffsetCollection.parse(spec.default) || null;
+    }
+    else if (spec.type === 'projectionDefinition') {
+        return ProjectionDefinition.parse(spec.default) || null;
     }
     else if (spec.default === undefined) {
         return null;
@@ -18703,7 +18756,7 @@ const filterSpec = {
  * @param {Array} filter MapLibre filter
  * @returns {Function} filter-evaluating function
  */
-function createFilter(filter) {
+function featureFilter(filter) {
     if (filter === null || filter === undefined) {
         return { filter: () => true, needGeometry: false };
     }
@@ -19369,14 +19422,14 @@ function emptyStyle() {
     const style = {};
     const version = v8Spec['$version'];
     for (const styleKey in v8Spec['$root']) {
-        const spec = v8Spec['$root'][styleKey];
-        if (spec.required) {
+        const specification = v8Spec['$root'][styleKey];
+        if (specification.required) {
             let value = null;
             if (styleKey === 'version') {
                 value = version;
             }
             else {
-                if (spec.type === 'array') {
+                if (specification.type === 'array') {
                     value = [];
                 }
                 else {
@@ -20488,6 +20541,33 @@ function validateProjection(options) {
     return errors;
 }
 
+function validateProjectionDefinition(options) {
+    const key = options.key;
+    let value = options.value;
+    value = value instanceof String ? value.valueOf() : value;
+    const type = getType(value);
+    if (type === 'array' && !isProjectionDefinitionValue(value) && !isPropertyValueSpecification(value)) {
+        return [new ValidationError(key, value, `projection expected, invalid array ${JSON.stringify(value)} found`)];
+    }
+    else if (!['array', 'string'].includes(type)) {
+        return [new ValidationError(key, value, `projection expected, invalid type "${type}" found`)];
+    }
+    return [];
+}
+function isPropertyValueSpecification(value) {
+    if (['interpolate', 'step', 'literal'].includes(value[0])) {
+        return true;
+    }
+    return false;
+}
+function isProjectionDefinitionValue(value) {
+    return Array.isArray(value) &&
+        value.length === 3 &&
+        typeof value[0] === 'string' &&
+        typeof value[1] === 'string' &&
+        typeof value[2] === 'number';
+}
+
 const VALIDATORS = {
     '*'() {
         return [];
@@ -20507,6 +20587,7 @@ const VALIDATORS = {
     'sky': validateSky$1,
     'terrain': validateTerrain$1,
     'projection': validateProjection,
+    'projectionDefinition': validateProjectionDefinition,
     'string': validateString,
     'formatted': validateFormatted,
     'resolvedImage': validateImage,
@@ -22584,7 +22665,7 @@ class DataConstantProperty {
     }
     interpolate(a, b, t) {
         const interpolationType = this.specification.type;
-        const interpolationFn = interpolate[interpolationType];
+        const interpolationFn = interpolateFactory[interpolationType];
         if (interpolationFn) {
             return interpolationFn(a, b, t);
         }
@@ -22628,7 +22709,7 @@ class DataDrivenProperty {
             return new PossiblyEvaluatedPropertyValue(this, { kind: 'constant', value: undefined }, a.parameters);
         }
         const interpolationType = this.specification.type;
-        const interpolationFn = interpolate[interpolationType];
+        const interpolationFn = interpolateFactory[interpolationType];
         if (interpolationFn) {
             const interpolatedValue = interpolationFn(a.value.value, b.value.value, t);
             return new PossiblyEvaluatedPropertyValue(this, { kind: 'constant', value: interpolatedValue }, a.parameters);
@@ -25495,6 +25576,7 @@ const getPaint$8 = () => paint$8 = paint$8 || new Properties({
 });
 var properties$8 = ({ get paint() { return getPaint$8(); }, get layout() { return getLayout$3(); } });
 
+const isCircleStyleLayer = (layer) => layer.type === 'circle';
 /**
  * A style layer that defines a circle
  */
@@ -25715,6 +25797,7 @@ function renderColorRamp(params) {
 }
 
 const HEATMAP_FULL_RENDER_FBO_KEY = 'big-fb';
+const isHeatmapStyleLayer = (layer) => layer.type === 'heatmap';
 /**
  * A style layer that defines a heatmap
  */
@@ -25771,6 +25854,7 @@ const getPaint$6 = () => paint$6 = paint$6 || new Properties({
 });
 var properties$6 = ({ get paint() { return getPaint$6(); } });
 
+const isHillshadeStyleLayer = (layer) => layer.type === 'hillshade';
 class HillshadeStyleLayer extends StyleLayer {
     constructor(layer) {
         super(layer, properties$6);
@@ -27676,6 +27760,7 @@ const getPaint$5 = () => paint$5 = paint$5 || new Properties({
 });
 var properties$5 = ({ get paint() { return getPaint$5(); }, get layout() { return getLayout$2(); } });
 
+const isFillStyleLayer = (layer) => layer.type === 'fill';
 class FillStyleLayer extends StyleLayer {
     constructor(layer) {
         super(layer, properties$5);
@@ -28289,6 +28374,7 @@ var properties$4 = ({ get paint() { return getPaint$4(); } });
 
 class Point3D extends Point {
 }
+const isFillExtrusionStyleLayer = (layer) => layer.type === 'fill-extrusion';
 class FillExtrusionStyleLayer extends StyleLayer {
     constructor(layer) {
         super(layer, properties$4);
@@ -28951,6 +29037,7 @@ class LineFloorwidthProperty extends DataDrivenProperty {
     }
 }
 let lineFloorwidthProperty;
+const isLineStyleLayer = (layer) => layer.type === 'line';
 class LineStyleLayer extends StyleLayer {
     constructor(layer) {
         super(layer, properties$3);
@@ -30952,7 +31039,7 @@ function evaluateSizeForFeature(sizeData, { uSize, uSizeT }, { lowerSize, upperS
         return lowerSize / SIZE_PACK_FACTOR;
     }
     else if (sizeData.kind === 'composite') {
-        return interpolate.number(lowerSize / SIZE_PACK_FACTOR, upperSize / SIZE_PACK_FACTOR, uSizeT);
+        return interpolateFactory.number(lowerSize / SIZE_PACK_FACTOR, upperSize / SIZE_PACK_FACTOR, uSizeT);
     }
     return uSize;
 }
@@ -30971,7 +31058,7 @@ function evaluateSizeForZoom(sizeData, zoom) {
         // restriction on composite functions
         const t = !interpolationType ? 0 : clamp$1(Interpolate.interpolationFactor(interpolationType, zoom, minZoom, maxZoom), 0, 1);
         if (sizeData.kind === 'camera') {
-            uSize = interpolate.number(sizeData.minSize, sizeData.maxSize, t);
+            uSize = interpolateFactory.number(sizeData.minSize, sizeData.maxSize, t);
         }
         else {
             uSizeT = t;
@@ -31718,6 +31805,7 @@ class FormatSectionOverride {
 }
 register('FormatSectionOverride', FormatSectionOverride, { omit: ['defaultValue'] });
 
+const isSymbolStyleLayer = (layer) => layer.type === 'symbol';
 class SymbolStyleLayer extends StyleLayer {
     constructor(layer) {
         super(layer, properties$2);
@@ -31865,6 +31953,7 @@ const getPaint$1 = () => paint$1 = paint$1 || new Properties({
 });
 var properties$1 = ({ get paint() { return getPaint$1(); } });
 
+const isBackgroundStyleLayer = (layer) => layer.type === 'background';
 class BackgroundStyleLayer extends StyleLayer {
     constructor(layer) {
         super(layer, properties$1);
@@ -31886,6 +31975,7 @@ const getPaint = () => paint = paint || new Properties({
 });
 var properties = ({ get paint() { return getPaint(); } });
 
+const isRasterStyleLayer = (layer) => layer.type === 'raster';
 class RasterStyleLayer extends StyleLayer {
     constructor(layer) {
         super(layer, properties);
@@ -31914,6 +32004,7 @@ function validateCustomStyleLayer(layerObject) {
     }
     return errors;
 }
+const isCustomStyleLayer = (layer) => layer.type === 'custom';
 class CustomStyleLayer extends StyleLayer {
     constructor(implementation) {
         super(implementation, {});
@@ -32985,7 +33076,7 @@ class FeatureIndex {
         this.loadVTLayers();
         const params = args.params;
         const pixelsToTileUnits = EXTENT$1 / args.tileSize / args.scale;
-        const filter = createFilter(params.filter);
+        const filter = featureFilter(params.filter);
         const queryGeometry = args.queryGeometry;
         const queryPadding = args.queryPadding * pixelsToTileUnits;
         const bounds = getBounds(queryGeometry);
@@ -33069,7 +33160,7 @@ class FeatureIndex {
     lookupSymbolFeatures(symbolFeatureIndexes, serializedLayers, bucketIndex, sourceLayerIndex, filterSpec, filterLayerIDs, availableImages, styleLayers) {
         const result = {};
         this.loadVTLayers();
-        const filter = createFilter(filterSpec);
+        const filter = featureFilter(filterSpec);
         for (const symbolFeatureIndex of symbolFeatureIndexes) {
             this.loadMatchingFeature(result, bucketIndex, sourceLayerIndex, symbolFeatureIndex, filter, filterLayerIDs, availableImages, styleLayers, serializedLayers);
         }
@@ -33290,7 +33381,7 @@ function getCenterAnchor(line, maxAngle, shapedText, shapedIcon, glyphSize, boxS
         const segmentDistance = a.dist(b);
         if (prevDistance + segmentDistance > centerDistance) {
             // The center is on this segment
-            const t = (centerDistance - prevDistance) / segmentDistance, x = interpolate.number(a.x, b.x, t), y = interpolate.number(a.y, b.y, t);
+            const t = (centerDistance - prevDistance) / segmentDistance, x = interpolateFactory.number(a.x, b.x, t), y = interpolateFactory.number(a.y, b.y, t);
             const anchor = new Anchor(x, y, b.angleTo(a), i);
             anchor._round();
             if (!angleWindowSize || checkMaxAngle(line, anchor, labelLength, angleWindowSize, maxAngle)) {
@@ -33337,7 +33428,7 @@ function resample(line, offset, spacing, angleWindowSize, maxAngle, labelLength,
         const segmentDist = a.dist(b), angle = b.angleTo(a);
         while (markedDistance + spacing < distance + segmentDist) {
             markedDistance += spacing;
-            const t = (markedDistance - distance) / segmentDist, x = interpolate.number(a.x, b.x, t), y = interpolate.number(a.y, b.y, t);
+            const t = (markedDistance - distance) / segmentDist, x = interpolateFactory.number(a.x, b.x, t), y = interpolateFactory.number(a.y, b.y, t);
             // Check that the point is within the tile boundaries and that
             // the label would fit before the beginning and end of the line
             // if placed at this point.
@@ -34948,7 +35039,6 @@ exports.create$2 = create;
 exports.create$3 = create$6;
 exports.createAbortError = createAbortError;
 exports.createExpression = createExpression;
-exports.createFilter = createFilter;
 exports.createIdentityMat4f64 = createIdentityMat4f64;
 exports.createLayout = createLayout;
 exports.createMat4f64 = createMat4f64;
@@ -34960,7 +35050,7 @@ exports.deepEqual = deepEqual$1;
 exports.defaultEasing = defaultEasing;
 exports.degreesToRadians = degreesToRadians;
 exports.derefLayers = derefLayers;
-exports.diffStyles = diffStyles;
+exports.diff = diff;
 exports.differenceOfAnglesDegrees = differenceOfAnglesDegrees;
 exports.distanceOfAnglesRadians = distanceOfAnglesRadians;
 exports.dot = dot$5;
@@ -34974,6 +35064,7 @@ exports.evaluateSizeForFeature = evaluateSizeForFeature;
 exports.evaluateSizeForZoom = evaluateSizeForZoom;
 exports.exactEquals = exactEquals$5;
 exports.extend = extend;
+exports.featureFilter = featureFilter;
 exports.filterObject = filterObject;
 exports.findLineIntersection = findLineIntersection;
 exports.fromRotation = fromRotation$2;
@@ -34981,6 +35072,7 @@ exports.fromScaling = fromScaling;
 exports.getAABB = getAABB;
 exports.getAnchorAlignment = getAnchorAlignment;
 exports.getAnchorJustification = getAnchorJustification;
+exports.getAngleDelta = getAngleDelta;
 exports.getArrayBuffer = getArrayBuffer;
 exports.getDefaultExportFromCjs = getDefaultExportFromCjs$1;
 exports.getImageData = getImageData;
@@ -34992,14 +35084,24 @@ exports.getRollPitchBearing = getRollPitchBearing;
 exports.getVideo = getVideo;
 exports.groupByLayout = groupByLayout;
 exports.identity = identity$2;
-exports.interpolate = interpolate;
+exports.interpolateFactory = interpolateFactory;
 exports.invert = invert$5;
 exports.invert$1 = invert$2;
 exports.isAbortError = isAbortError;
+exports.isBackgroundStyleLayer = isBackgroundStyleLayer;
+exports.isCircleStyleLayer = isCircleStyleLayer;
+exports.isCustomStyleLayer = isCustomStyleLayer;
+exports.isFillExtrusionStyleLayer = isFillExtrusionStyleLayer;
+exports.isFillStyleLayer = isFillStyleLayer;
+exports.isHeatmapStyleLayer = isHeatmapStyleLayer;
+exports.isHillshadeStyleLayer = isHillshadeStyleLayer;
 exports.isImageBitmap = isImageBitmap;
 exports.isInBoundsForZoomLngLat = isInBoundsForZoomLngLat;
+exports.isLineStyleLayer = isLineStyleLayer;
 exports.isOffscreenCanvasDistorted = isOffscreenCanvasDistorted;
+exports.isRasterStyleLayer = isRasterStyleLayer;
 exports.isSafari = isSafari;
+exports.isSymbolStyleLayer = isSymbolStyleLayer;
 exports.isWorker = isWorker;
 exports.keysDifference = keysDifference;
 exports.length = length;
@@ -35091,7 +35193,7 @@ class StyleLayerIndex {
         for (const layerConfig of layerConfigs) {
             this._layerConfigs[layerConfig.id] = layerConfig;
             const layer = this._layers[layerConfig.id] = performance.createStyleLayer(layerConfig);
-            layer._featureFilter = performance.createFilter(layer.filter);
+            layer._featureFilter = performance.featureFilter(layer.filter);
             if (this.keyCache[layerConfig.id])
                 delete this.keyCache[layerConfig.id];
         }
@@ -37700,7 +37802,7 @@ define('index', ['exports', './shared'], (function (exports, performance$1) { 'u
 
 var name = "maplibre-gl";
 var description = "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library";
-var version$2 = "5.0.0-pre.6";
+var version$2 = "5.0.0-pre.7";
 var main = "dist/maplibre-gl.js";
 var style = "dist/maplibre-gl.css";
 var license = "BSD-3-Clause";
@@ -37723,7 +37825,7 @@ var dependencies = {
 	"@mapbox/unitbezier": "^0.0.1",
 	"@mapbox/vector-tile": "^1.3.1",
 	"@mapbox/whoots-js": "^3.1.0",
-	"@maplibre/maplibre-gl-style-spec": "^21.1.0",
+	"@maplibre/maplibre-gl-style-spec": "^22.0.0",
 	"@types/geojson": "^7946.0.14",
 	"@types/geojson-vt": "3.2.5",
 	"@types/mapbox__point-geometry": "^0.1.4",
@@ -37767,7 +37869,7 @@ var devDependencies = {
 	"@types/minimist": "^1.2.5",
 	"@types/murmurhash-js": "^1.0.6",
 	"@types/nise": "^1.4.5",
-	"@types/node": "^22.9.0",
+	"@types/node": "^22.9.1",
 	"@types/offscreencanvas": "^2019.7.3",
 	"@types/pixelmatch": "^5.2.6",
 	"@types/pngjs": "^6.0.5",
@@ -37776,8 +37878,8 @@ var devDependencies = {
 	"@types/request": "^2.48.12",
 	"@types/shuffle-seed": "^1.1.3",
 	"@types/window-or-global": "^1.0.6",
-	"@typescript-eslint/eslint-plugin": "^8.13.0",
-	"@typescript-eslint/parser": "^8.13.0",
+	"@typescript-eslint/eslint-plugin": "^8.14.0",
+	"@typescript-eslint/parser": "^8.15.0",
 	address: "^2.0.3",
 	autoprefixer: "^10.4.20",
 	benchmark: "^2.1.4",
@@ -37786,10 +37888,10 @@ var devDependencies = {
 	cssnano: "^7.0.6",
 	d3: "^7.9.0",
 	"d3-queue": "^3.0.7",
-	"devtools-protocol": "^0.0.1379457",
+	"devtools-protocol": "^0.0.1383960",
 	diff: "^7.0.0",
 	"dts-bundle-generator": "^9.5.1",
-	eslint: "^9.14.0",
+	eslint: "^9.15.0",
 	"eslint-plugin-html": "^8.1.2",
 	"eslint-plugin-import": "^2.31.0",
 	"eslint-plugin-jest": "^28.9.0",
@@ -37815,14 +37917,14 @@ var devDependencies = {
 	"pdf-merger-js": "^5.1.2",
 	pixelmatch: "^6.0.0",
 	pngjs: "^7.0.0",
-	postcss: "^8.4.47",
+	postcss: "^8.4.49",
 	"postcss-cli": "^11.0.0",
 	"postcss-inline-svg": "^6.0.0",
 	"pretty-bytes": "^6.1.1",
-	puppeteer: "^23.7.0",
+	puppeteer: "^23.8.0",
 	react: "^18.3.1",
 	"react-dom": "^18.3.1",
-	rollup: "^4.24.4",
+	rollup: "^4.27.2",
 	"rollup-plugin-sourcemaps2": "^0.4.2",
 	rw: "^1.3.3",
 	semver: "^7.6.3",
@@ -37836,7 +37938,7 @@ var devDependencies = {
 	tslib: "^2.8.1",
 	typedoc: "^0.26.11",
 	"typedoc-plugin-markdown": "^4.2.10",
-	"typedoc-plugin-missing-exports": "^3.0.0",
+	"typedoc-plugin-missing-exports": "^3.0.2",
 	typescript: "^5.6.3"
 };
 var scripts = {
@@ -38063,6 +38165,56 @@ class DOM {
     static remove(node) {
         if (node.parentNode) {
             node.parentNode.removeChild(node);
+        }
+    }
+    /**
+     * Sanitize an HTML string - this might not be enough to prevent all XSS attacks
+     * Base on https://javascriptsource.com/sanitize-an-html-string-to-reduce-the-risk-of-xss-attacks/
+     * (c) 2021 Chris Ferdinandi, MIT License, https://gomakethings.com
+     */
+    static sanitize(str) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(str, 'text/html');
+        const html = doc.body || document.createElement('body');
+        const scripts = html.querySelectorAll('script');
+        for (const script of scripts) {
+            script.remove();
+        }
+        DOM.clean(html);
+        return html.innerHTML;
+    }
+    /**
+     * Check if the attribute is potentially dangerous
+     */
+    static isPossiblyDangerous(name, value) {
+        const val = value.replace(/\s+/g, '').toLowerCase();
+        if (['src', 'href', 'xlink:href'].includes(name)) {
+            if (val.includes('javascript:') || val.includes('data:'))
+                return true;
+        }
+        if (name.startsWith('on'))
+            return true;
+    }
+    /**
+     * Remove dangerous stuff from the HTML document's nodes
+     * @param html - The HTML document
+     */
+    static clean(html) {
+        const nodes = html.children;
+        for (const node of nodes) {
+            DOM.removeAttributes(node);
+            DOM.clean(node);
+        }
+    }
+    /**
+     * Remove potentially dangerous attributes from an element
+     * @param elem - The element
+     */
+    static removeAttributes(elem) {
+        for (const { name, value } of elem.attributes) {
+            if (!DOM.isPossiblyDangerous(name, value))
+                continue;
+            elem.removeAttribute(name);
         }
     }
 }
@@ -39089,9 +39241,9 @@ class LightPositionProperty {
     }
     interpolate(a, b, t) {
         return {
-            x: performance$1.interpolate.number(a.x, b.x, t),
-            y: performance$1.interpolate.number(a.y, b.y, t),
-            z: performance$1.interpolate.number(a.z, b.z, t),
+            x: performance$1.interpolateFactory.number(a.x, b.x, t),
+            y: performance$1.interpolateFactory.number(a.y, b.y, t),
+            z: performance$1.interpolateFactory.number(a.z, b.z, t),
         };
     }
 }
@@ -40706,7 +40858,6 @@ class GeoJSONSource extends performance$1.Evented {
         if (options.attribution)
             this.attribution = options.attribution;
         this.promoteId = options.promoteId;
-        const scale = performance$1.EXTENT / this.tileSize;
         if (options.clusterMaxZoom !== undefined && this.maxzoom <= options.clusterMaxZoom) {
             performance$1.warnOnce(`The maxzoom value "${this.maxzoom}" is expected to be greater than the clusterMaxZoom value "${options.clusterMaxZoom}".`);
         }
@@ -40718,8 +40869,8 @@ class GeoJSONSource extends performance$1.Evented {
             source: this.id,
             cluster: options.cluster || false,
             geojsonVtOptions: {
-                buffer: (options.buffer !== undefined ? options.buffer : 128) * scale,
-                tolerance: (options.tolerance !== undefined ? options.tolerance : 0.375) * scale,
+                buffer: this._pixelsToTileUnits(options.buffer !== undefined ? options.buffer : 128),
+                tolerance: this._pixelsToTileUnits(options.tolerance !== undefined ? options.tolerance : 0.375),
                 extent: performance$1.EXTENT,
                 maxZoom: this.maxzoom,
                 lineMetrics: options.lineMetrics || false,
@@ -40729,7 +40880,7 @@ class GeoJSONSource extends performance$1.Evented {
                 maxZoom: options.clusterMaxZoom !== undefined ? options.clusterMaxZoom : this.maxzoom - 1,
                 minPoints: Math.max(2, options.clusterMinPoints || 2),
                 extent: performance$1.EXTENT,
-                radius: (options.clusterRadius || 50) * scale,
+                radius: this._pixelsToTileUnits(options.clusterRadius || 50),
                 log: false,
                 generateId: options.generateId || false
             },
@@ -40740,6 +40891,9 @@ class GeoJSONSource extends performance$1.Evented {
         if (typeof this.promoteId === 'string') {
             this.workerOptions.promoteId = this.promoteId;
         }
+    }
+    _pixelsToTileUnits(pixelValue) {
+        return pixelValue * (performance$1.EXTENT / this.tileSize);
     }
     load() {
         return performance$1.__awaiter(this, void 0, void 0, function* () {
@@ -40802,7 +40956,7 @@ class GeoJSONSource extends performance$1.Evented {
         this.workerOptions.cluster = options.cluster;
         if (options) {
             if (options.clusterRadius !== undefined)
-                this.workerOptions.superclusterOptions.radius = options.clusterRadius;
+                this.workerOptions.superclusterOptions.radius = this._pixelsToTileUnits(options.clusterRadius);
             if (options.clusterMaxZoom !== undefined)
                 this.workerOptions.superclusterOptions.maxZoom = options.clusterMaxZoom;
         }
@@ -41882,7 +42036,7 @@ class Tile {
         const layer = vtLayers._geojsonTileLayer || vtLayers[sourceLayer];
         if (!layer)
             return;
-        const filter = performance$1.createFilter(params && params.filter);
+        const filter = performance$1.featureFilter(params && params.filter);
         const { z, x, y } = this.tileID.canonical;
         const coord = { z, x, y };
         for (let i = 0; i < layer.length; i++) {
@@ -42380,13 +42534,13 @@ class EdgeInsets {
      */
     interpolate(start, target, t) {
         if (target.top != null && start.top != null)
-            this.top = performance$1.interpolate.number(start.top, target.top, t);
+            this.top = performance$1.interpolateFactory.number(start.top, target.top, t);
         if (target.bottom != null && start.bottom != null)
-            this.bottom = performance$1.interpolate.number(start.bottom, target.bottom, t);
+            this.bottom = performance$1.interpolateFactory.number(start.bottom, target.bottom, t);
         if (target.left != null && start.left != null)
-            this.left = performance$1.interpolate.number(start.left, target.left, t);
+            this.left = performance$1.interpolateFactory.number(start.left, target.left, t);
         if (target.right != null && start.right != null)
-            this.right = performance$1.interpolate.number(start.right, target.right, t);
+            this.right = performance$1.interpolateFactory.number(start.right, target.right, t);
         return this;
     }
     /**
@@ -46647,37 +46801,37 @@ var depthVert = 'attribute vec2 a_pos;void main() {\n#ifdef GLOBE\ngl_Position=p
 var fillFrag = '#pragma mapbox: define highp vec4 color\n#pragma mapbox: define lowp float opacity\nvoid main() {\n#pragma mapbox: initialize highp vec4 color\n#pragma mapbox: initialize lowp float opacity\ngl_FragColor=color*opacity;\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var fillVert = 'uniform vec2 u_fill_translate;attribute vec2 a_pos;\n#pragma mapbox: define highp vec4 color\n#pragma mapbox: define lowp float opacity\nvoid main() {\n#pragma mapbox: initialize highp vec4 color\n#pragma mapbox: initialize lowp float opacity\ngl_Position=projectTile(a_pos+u_fill_translate);}';
+var fillVert = 'uniform vec2 u_fill_translate;attribute vec2 a_pos;\n#pragma mapbox: define highp vec4 color\n#pragma mapbox: define lowp float opacity\nvoid main() {\n#pragma mapbox: initialize highp vec4 color\n#pragma mapbox: initialize lowp float opacity\ngl_Position=projectTile(a_pos+u_fill_translate,a_pos);}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
 var fillOutlineFrag = 'varying vec2 v_pos;\n#ifdef GLOBE\nvarying float v_depth;\n#endif\n#pragma mapbox: define highp vec4 outline_color\n#pragma mapbox: define lowp float opacity\nvoid main() {\n#pragma mapbox: initialize highp vec4 outline_color\n#pragma mapbox: initialize lowp float opacity\nfloat dist=length(v_pos-gl_FragCoord.xy);float alpha=1.0-smoothstep(0.0,1.0,dist);gl_FragColor=outline_color*(alpha*opacity);\n#ifdef GLOBE\nif (v_depth > 1.0) {discard;}\n#endif\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var fillOutlineVert = 'uniform vec2 u_world;uniform vec2 u_fill_translate;attribute vec2 a_pos;varying vec2 v_pos;\n#ifdef GLOBE\nvarying float v_depth;\n#endif\n#pragma mapbox: define highp vec4 outline_color\n#pragma mapbox: define lowp float opacity\nvoid main() {\n#pragma mapbox: initialize highp vec4 outline_color\n#pragma mapbox: initialize lowp float opacity\ngl_Position=projectTile(a_pos+u_fill_translate);v_pos=(gl_Position.xy/gl_Position.w+1.0)/2.0*u_world;\n#ifdef GLOBE\nv_depth=gl_Position.z/gl_Position.w;\n#endif\n}';
+var fillOutlineVert = 'uniform vec2 u_world;uniform vec2 u_fill_translate;attribute vec2 a_pos;varying vec2 v_pos;\n#ifdef GLOBE\nvarying float v_depth;\n#endif\n#pragma mapbox: define highp vec4 outline_color\n#pragma mapbox: define lowp float opacity\nvoid main() {\n#pragma mapbox: initialize highp vec4 outline_color\n#pragma mapbox: initialize lowp float opacity\ngl_Position=projectTile(a_pos+u_fill_translate,a_pos);v_pos=(gl_Position.xy/gl_Position.w+1.0)/2.0*u_world;\n#ifdef GLOBE\nv_depth=gl_Position.z/gl_Position.w;\n#endif\n}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
 var fillOutlinePatternFrag = 'uniform vec2 u_texsize;uniform sampler2D u_image;uniform float u_fade;varying vec2 v_pos_a;varying vec2 v_pos_b;varying vec2 v_pos;\n#ifdef GLOBE\nvarying float v_depth;\n#endif\n#pragma mapbox: define lowp float opacity\n#pragma mapbox: define lowp vec4 pattern_from\n#pragma mapbox: define lowp vec4 pattern_to\nvoid main() {\n#pragma mapbox: initialize lowp float opacity\n#pragma mapbox: initialize mediump vec4 pattern_from\n#pragma mapbox: initialize mediump vec4 pattern_to\nvec2 pattern_tl_a=pattern_from.xy;vec2 pattern_br_a=pattern_from.zw;vec2 pattern_tl_b=pattern_to.xy;vec2 pattern_br_b=pattern_to.zw;vec2 imagecoord=mod(v_pos_a,1.0);vec2 pos=mix(pattern_tl_a/u_texsize,pattern_br_a/u_texsize,imagecoord);vec4 color1=texture2D(u_image,pos);vec2 imagecoord_b=mod(v_pos_b,1.0);vec2 pos2=mix(pattern_tl_b/u_texsize,pattern_br_b/u_texsize,imagecoord_b);vec4 color2=texture2D(u_image,pos2);float dist=length(v_pos-gl_FragCoord.xy);float alpha=1.0-smoothstep(0.0,1.0,dist);gl_FragColor=mix(color1,color2,u_fade)*alpha*opacity;\n#ifdef GLOBE\nif (v_depth > 1.0) {discard;}\n#endif\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var fillOutlinePatternVert = 'uniform vec2 u_world;uniform vec2 u_pixel_coord_upper;uniform vec2 u_pixel_coord_lower;uniform vec3 u_scale;uniform vec2 u_fill_translate;attribute vec2 a_pos;varying vec2 v_pos_a;varying vec2 v_pos_b;varying vec2 v_pos;\n#ifdef GLOBE\nvarying float v_depth;\n#endif\n#pragma mapbox: define lowp float opacity\n#pragma mapbox: define lowp vec4 pattern_from\n#pragma mapbox: define lowp vec4 pattern_to\n#pragma mapbox: define lowp float pixel_ratio_from\n#pragma mapbox: define lowp float pixel_ratio_to\nvoid main() {\n#pragma mapbox: initialize lowp float opacity\n#pragma mapbox: initialize mediump vec4 pattern_from\n#pragma mapbox: initialize mediump vec4 pattern_to\n#pragma mapbox: initialize lowp float pixel_ratio_from\n#pragma mapbox: initialize lowp float pixel_ratio_to\nvec2 pattern_tl_a=pattern_from.xy;vec2 pattern_br_a=pattern_from.zw;vec2 pattern_tl_b=pattern_to.xy;vec2 pattern_br_b=pattern_to.zw;float tileRatio=u_scale.x;float fromScale=u_scale.y;float toScale=u_scale.z;gl_Position=projectTile(a_pos+u_fill_translate);vec2 display_size_a=(pattern_br_a-pattern_tl_a)/pixel_ratio_from;vec2 display_size_b=(pattern_br_b-pattern_tl_b)/pixel_ratio_to;v_pos_a=get_pattern_pos(u_pixel_coord_upper,u_pixel_coord_lower,fromScale*display_size_a,tileRatio,a_pos);v_pos_b=get_pattern_pos(u_pixel_coord_upper,u_pixel_coord_lower,toScale*display_size_b,tileRatio,a_pos);v_pos=(gl_Position.xy/gl_Position.w+1.0)/2.0*u_world;\n#ifdef GLOBE\nv_depth=gl_Position.z/gl_Position.w;\n#endif\n}';
+var fillOutlinePatternVert = 'uniform vec2 u_world;uniform vec2 u_pixel_coord_upper;uniform vec2 u_pixel_coord_lower;uniform vec3 u_scale;uniform vec2 u_fill_translate;attribute vec2 a_pos;varying vec2 v_pos_a;varying vec2 v_pos_b;varying vec2 v_pos;\n#ifdef GLOBE\nvarying float v_depth;\n#endif\n#pragma mapbox: define lowp float opacity\n#pragma mapbox: define lowp vec4 pattern_from\n#pragma mapbox: define lowp vec4 pattern_to\n#pragma mapbox: define lowp float pixel_ratio_from\n#pragma mapbox: define lowp float pixel_ratio_to\nvoid main() {\n#pragma mapbox: initialize lowp float opacity\n#pragma mapbox: initialize mediump vec4 pattern_from\n#pragma mapbox: initialize mediump vec4 pattern_to\n#pragma mapbox: initialize lowp float pixel_ratio_from\n#pragma mapbox: initialize lowp float pixel_ratio_to\nvec2 pattern_tl_a=pattern_from.xy;vec2 pattern_br_a=pattern_from.zw;vec2 pattern_tl_b=pattern_to.xy;vec2 pattern_br_b=pattern_to.zw;float tileRatio=u_scale.x;float fromScale=u_scale.y;float toScale=u_scale.z;gl_Position=projectTile(a_pos+u_fill_translate,a_pos);vec2 display_size_a=(pattern_br_a-pattern_tl_a)/pixel_ratio_from;vec2 display_size_b=(pattern_br_b-pattern_tl_b)/pixel_ratio_to;v_pos_a=get_pattern_pos(u_pixel_coord_upper,u_pixel_coord_lower,fromScale*display_size_a,tileRatio,a_pos);v_pos_b=get_pattern_pos(u_pixel_coord_upper,u_pixel_coord_lower,toScale*display_size_b,tileRatio,a_pos);v_pos=(gl_Position.xy/gl_Position.w+1.0)/2.0*u_world;\n#ifdef GLOBE\nv_depth=gl_Position.z/gl_Position.w;\n#endif\n}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
 var fillPatternFrag = '#ifdef GL_ES\nprecision highp float;\n#endif\nuniform vec2 u_texsize;uniform float u_fade;uniform sampler2D u_image;varying vec2 v_pos_a;varying vec2 v_pos_b;\n#pragma mapbox: define lowp float opacity\n#pragma mapbox: define lowp vec4 pattern_from\n#pragma mapbox: define lowp vec4 pattern_to\nvoid main() {\n#pragma mapbox: initialize lowp float opacity\n#pragma mapbox: initialize mediump vec4 pattern_from\n#pragma mapbox: initialize mediump vec4 pattern_to\nvec2 pattern_tl_a=pattern_from.xy;vec2 pattern_br_a=pattern_from.zw;vec2 pattern_tl_b=pattern_to.xy;vec2 pattern_br_b=pattern_to.zw;vec2 imagecoord=mod(v_pos_a,1.0);vec2 pos=mix(pattern_tl_a/u_texsize,pattern_br_a/u_texsize,imagecoord);vec4 color1=texture2D(u_image,pos);vec2 imagecoord_b=mod(v_pos_b,1.0);vec2 pos2=mix(pattern_tl_b/u_texsize,pattern_br_b/u_texsize,imagecoord_b);vec4 color2=texture2D(u_image,pos2);gl_FragColor=mix(color1,color2,u_fade)*opacity;\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var fillPatternVert = 'uniform vec2 u_pixel_coord_upper;uniform vec2 u_pixel_coord_lower;uniform vec3 u_scale;uniform vec2 u_fill_translate;attribute vec2 a_pos;varying vec2 v_pos_a;varying vec2 v_pos_b;\n#pragma mapbox: define lowp float opacity\n#pragma mapbox: define lowp vec4 pattern_from\n#pragma mapbox: define lowp vec4 pattern_to\n#pragma mapbox: define lowp float pixel_ratio_from\n#pragma mapbox: define lowp float pixel_ratio_to\nvoid main() {\n#pragma mapbox: initialize lowp float opacity\n#pragma mapbox: initialize mediump vec4 pattern_from\n#pragma mapbox: initialize mediump vec4 pattern_to\n#pragma mapbox: initialize lowp float pixel_ratio_from\n#pragma mapbox: initialize lowp float pixel_ratio_to\nvec2 pattern_tl_a=pattern_from.xy;vec2 pattern_br_a=pattern_from.zw;vec2 pattern_tl_b=pattern_to.xy;vec2 pattern_br_b=pattern_to.zw;float tileZoomRatio=u_scale.x;float fromScale=u_scale.y;float toScale=u_scale.z;vec2 display_size_a=(pattern_br_a-pattern_tl_a)/pixel_ratio_from;vec2 display_size_b=(pattern_br_b-pattern_tl_b)/pixel_ratio_to;gl_Position=projectTile(a_pos+u_fill_translate);v_pos_a=get_pattern_pos(u_pixel_coord_upper,u_pixel_coord_lower,fromScale*display_size_a,tileZoomRatio,a_pos);v_pos_b=get_pattern_pos(u_pixel_coord_upper,u_pixel_coord_lower,toScale*display_size_b,tileZoomRatio,a_pos);}';
+var fillPatternVert = 'uniform vec2 u_pixel_coord_upper;uniform vec2 u_pixel_coord_lower;uniform vec3 u_scale;uniform vec2 u_fill_translate;attribute vec2 a_pos;varying vec2 v_pos_a;varying vec2 v_pos_b;\n#pragma mapbox: define lowp float opacity\n#pragma mapbox: define lowp vec4 pattern_from\n#pragma mapbox: define lowp vec4 pattern_to\n#pragma mapbox: define lowp float pixel_ratio_from\n#pragma mapbox: define lowp float pixel_ratio_to\nvoid main() {\n#pragma mapbox: initialize lowp float opacity\n#pragma mapbox: initialize mediump vec4 pattern_from\n#pragma mapbox: initialize mediump vec4 pattern_to\n#pragma mapbox: initialize lowp float pixel_ratio_from\n#pragma mapbox: initialize lowp float pixel_ratio_to\nvec2 pattern_tl_a=pattern_from.xy;vec2 pattern_br_a=pattern_from.zw;vec2 pattern_tl_b=pattern_to.xy;vec2 pattern_br_b=pattern_to.zw;float tileZoomRatio=u_scale.x;float fromScale=u_scale.y;float toScale=u_scale.z;vec2 display_size_a=(pattern_br_a-pattern_tl_a)/pixel_ratio_from;vec2 display_size_b=(pattern_br_b-pattern_tl_b)/pixel_ratio_to;gl_Position=projectTile(a_pos+u_fill_translate,a_pos);v_pos_a=get_pattern_pos(u_pixel_coord_upper,u_pixel_coord_lower,fromScale*display_size_a,tileZoomRatio,a_pos);v_pos_b=get_pattern_pos(u_pixel_coord_upper,u_pixel_coord_lower,toScale*display_size_b,tileZoomRatio,a_pos);}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
 var fillExtrusionFrag = 'varying vec4 v_color;void main() {gl_FragColor=v_color;\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var fillExtrusionVert = 'uniform vec3 u_lightcolor;uniform lowp vec3 u_lightpos;uniform lowp vec3 u_lightpos_globe;uniform lowp float u_lightintensity;uniform float u_vertical_gradient;uniform lowp float u_opacity;uniform vec2 u_fill_translate;attribute vec2 a_pos;attribute vec4 a_normal_ed;\n#ifdef TERRAIN3D\nattribute vec2 a_centroid;\n#endif\nvarying vec4 v_color;\n#pragma mapbox: define highp float base\n#pragma mapbox: define highp float height\n#pragma mapbox: define highp vec4 color\nvoid main() {\n#pragma mapbox: initialize highp float base\n#pragma mapbox: initialize highp float height\n#pragma mapbox: initialize highp vec4 color\nvec3 normal=a_normal_ed.xyz;\n#ifdef TERRAIN3D\nfloat height_terrain3d_offset=get_elevation(a_centroid);float base_terrain3d_offset=height_terrain3d_offset-(base > 0.0 ? 0.0 : 10.0);\n#else\nfloat height_terrain3d_offset=0.0;float base_terrain3d_offset=0.0;\n#endif\nbase=max(0.0,base)+base_terrain3d_offset;height=max(0.0,height)+height_terrain3d_offset;float t=mod(normal.x,2.0);float elevation=t > 0.0 ? height : base;vec2 posInTile=a_pos+u_fill_translate;\n#ifdef GLOBE\nvec3 spherePos=projectToSphere(posInTile);gl_Position=interpolateProjectionFor3D(posInTile,spherePos,elevation);\n#else\ngl_Position=u_projection_matrix*vec4(posInTile,elevation,1.0);\n#endif\nfloat colorvalue=color.r*0.2126+color.g*0.7152+color.b*0.0722;v_color=vec4(0.0,0.0,0.0,1.0);vec4 ambientlight=vec4(0.03,0.03,0.03,1.0);color+=ambientlight;vec3 normalForLighting=normal/16384.0;float directional=clamp(dot(normalForLighting,u_lightpos),0.0,1.0);\n#ifdef GLOBE\nmat3 rotMatrix=globeGetRotationMatrix(spherePos);normalForLighting=rotMatrix*normalForLighting;directional=mix(directional,clamp(dot(normalForLighting,u_lightpos_globe),0.0,1.0),u_projection_transition);\n#endif\ndirectional=mix((1.0-u_lightintensity),max((1.0-colorvalue+u_lightintensity),1.0),directional);if (normal.y !=0.0) {directional*=((1.0-u_vertical_gradient)+(u_vertical_gradient*clamp((t+base)*pow(height/150.0,0.5),mix(0.7,0.98,1.0-u_lightintensity),1.0)));}v_color.r+=clamp(color.r*directional*u_lightcolor.r,mix(0.0,0.3,1.0-u_lightcolor.r),1.0);v_color.g+=clamp(color.g*directional*u_lightcolor.g,mix(0.0,0.3,1.0-u_lightcolor.g),1.0);v_color.b+=clamp(color.b*directional*u_lightcolor.b,mix(0.0,0.3,1.0-u_lightcolor.b),1.0);v_color*=u_opacity;}';
+var fillExtrusionVert = 'uniform vec3 u_lightcolor;uniform lowp vec3 u_lightpos;uniform lowp vec3 u_lightpos_globe;uniform lowp float u_lightintensity;uniform float u_vertical_gradient;uniform lowp float u_opacity;uniform vec2 u_fill_translate;attribute vec2 a_pos;attribute vec4 a_normal_ed;\n#ifdef TERRAIN3D\nattribute vec2 a_centroid;\n#endif\nvarying vec4 v_color;\n#pragma mapbox: define highp float base\n#pragma mapbox: define highp float height\n#pragma mapbox: define highp vec4 color\nvoid main() {\n#pragma mapbox: initialize highp float base\n#pragma mapbox: initialize highp float height\n#pragma mapbox: initialize highp vec4 color\nvec3 normal=a_normal_ed.xyz;\n#ifdef TERRAIN3D\nfloat height_terrain3d_offset=get_elevation(a_centroid);float base_terrain3d_offset=height_terrain3d_offset-(base > 0.0 ? 0.0 : 10.0);\n#else\nfloat height_terrain3d_offset=0.0;float base_terrain3d_offset=0.0;\n#endif\nbase=max(0.0,base)+base_terrain3d_offset;height=max(0.0,height)+height_terrain3d_offset;float t=mod(normal.x,2.0);float elevation=t > 0.0 ? height : base;vec2 posInTile=a_pos+u_fill_translate;\n#ifdef GLOBE\nvec3 spherePos=projectToSphere(posInTile,a_pos);gl_Position=interpolateProjectionFor3D(posInTile,spherePos,elevation);\n#else\ngl_Position=u_projection_matrix*vec4(posInTile,elevation,1.0);\n#endif\nfloat colorvalue=color.r*0.2126+color.g*0.7152+color.b*0.0722;v_color=vec4(0.0,0.0,0.0,1.0);vec4 ambientlight=vec4(0.03,0.03,0.03,1.0);color+=ambientlight;vec3 normalForLighting=normal/16384.0;float directional=clamp(dot(normalForLighting,u_lightpos),0.0,1.0);\n#ifdef GLOBE\nmat3 rotMatrix=globeGetRotationMatrix(spherePos);normalForLighting=rotMatrix*normalForLighting;directional=mix(directional,clamp(dot(normalForLighting,u_lightpos_globe),0.0,1.0),u_projection_transition);\n#endif\ndirectional=mix((1.0-u_lightintensity),max((1.0-colorvalue+u_lightintensity),1.0),directional);if (normal.y !=0.0) {directional*=((1.0-u_vertical_gradient)+(u_vertical_gradient*clamp((t+base)*pow(height/150.0,0.5),mix(0.7,0.98,1.0-u_lightintensity),1.0)));}v_color.r+=clamp(color.r*directional*u_lightcolor.r,mix(0.0,0.3,1.0-u_lightcolor.r),1.0);v_color.g+=clamp(color.g*directional*u_lightcolor.g,mix(0.0,0.3,1.0-u_lightcolor.g),1.0);v_color.b+=clamp(color.b*directional*u_lightcolor.b,mix(0.0,0.3,1.0-u_lightcolor.b),1.0);v_color*=u_opacity;}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
 var fillExtrusionPatternFrag = 'uniform vec2 u_texsize;uniform float u_fade;uniform sampler2D u_image;varying vec2 v_pos_a;varying vec2 v_pos_b;varying vec4 v_lighting;\n#pragma mapbox: define lowp float base\n#pragma mapbox: define lowp float height\n#pragma mapbox: define lowp vec4 pattern_from\n#pragma mapbox: define lowp vec4 pattern_to\n#pragma mapbox: define lowp float pixel_ratio_from\n#pragma mapbox: define lowp float pixel_ratio_to\nvoid main() {\n#pragma mapbox: initialize lowp float base\n#pragma mapbox: initialize lowp float height\n#pragma mapbox: initialize mediump vec4 pattern_from\n#pragma mapbox: initialize mediump vec4 pattern_to\n#pragma mapbox: initialize lowp float pixel_ratio_from\n#pragma mapbox: initialize lowp float pixel_ratio_to\nvec2 pattern_tl_a=pattern_from.xy;vec2 pattern_br_a=pattern_from.zw;vec2 pattern_tl_b=pattern_to.xy;vec2 pattern_br_b=pattern_to.zw;vec2 imagecoord=mod(v_pos_a,1.0);vec2 pos=mix(pattern_tl_a/u_texsize,pattern_br_a/u_texsize,imagecoord);vec4 color1=texture2D(u_image,pos);vec2 imagecoord_b=mod(v_pos_b,1.0);vec2 pos2=mix(pattern_tl_b/u_texsize,pattern_br_b/u_texsize,imagecoord_b);vec4 color2=texture2D(u_image,pos2);vec4 mixedColor=mix(color1,color2,u_fade);gl_FragColor=mixedColor*v_lighting;\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var fillExtrusionPatternVert = 'uniform vec2 u_pixel_coord_upper;uniform vec2 u_pixel_coord_lower;uniform float u_height_factor;uniform vec3 u_scale;uniform float u_vertical_gradient;uniform lowp float u_opacity;uniform vec2 u_fill_translate;uniform vec3 u_lightcolor;uniform lowp vec3 u_lightpos;uniform lowp vec3 u_lightpos_globe;uniform lowp float u_lightintensity;attribute vec2 a_pos;attribute vec4 a_normal_ed;\n#ifdef TERRAIN3D\nattribute vec2 a_centroid;\n#endif\n#ifdef GLOBE\nvarying vec3 v_sphere_pos;\n#endif\nvarying vec2 v_pos_a;varying vec2 v_pos_b;varying vec4 v_lighting;\n#pragma mapbox: define lowp float base\n#pragma mapbox: define lowp float height\n#pragma mapbox: define lowp vec4 pattern_from\n#pragma mapbox: define lowp vec4 pattern_to\n#pragma mapbox: define lowp float pixel_ratio_from\n#pragma mapbox: define lowp float pixel_ratio_to\nvoid main() {\n#pragma mapbox: initialize lowp float base\n#pragma mapbox: initialize lowp float height\n#pragma mapbox: initialize mediump vec4 pattern_from\n#pragma mapbox: initialize mediump vec4 pattern_to\n#pragma mapbox: initialize lowp float pixel_ratio_from\n#pragma mapbox: initialize lowp float pixel_ratio_to\nvec2 pattern_tl_a=pattern_from.xy;vec2 pattern_br_a=pattern_from.zw;vec2 pattern_tl_b=pattern_to.xy;vec2 pattern_br_b=pattern_to.zw;float tileRatio=u_scale.x;float fromScale=u_scale.y;float toScale=u_scale.z;vec3 normal=a_normal_ed.xyz;float edgedistance=a_normal_ed.w;vec2 display_size_a=(pattern_br_a-pattern_tl_a)/pixel_ratio_from;vec2 display_size_b=(pattern_br_b-pattern_tl_b)/pixel_ratio_to;\n#ifdef TERRAIN3D\nfloat height_terrain3d_offset=get_elevation(a_centroid);float base_terrain3d_offset=height_terrain3d_offset-(base > 0.0 ? 0.0 : 10.0);\n#else\nfloat height_terrain3d_offset=0.0;float base_terrain3d_offset=0.0;\n#endif\nbase=max(0.0,base)+base_terrain3d_offset;height=max(0.0,height)+height_terrain3d_offset;float t=mod(normal.x,2.0);float elevation=t > 0.0 ? height : base;vec2 posInTile=a_pos+u_fill_translate;\n#ifdef GLOBE\nvec3 spherePos=projectToSphere(posInTile);vec3 elevatedPos=spherePos*(1.0+elevation/GLOBE_RADIUS);v_sphere_pos=elevatedPos;gl_Position=interpolateProjectionFor3D(posInTile,spherePos,elevation);\n#else\ngl_Position=u_projection_matrix*vec4(posInTile,elevation,1.0);\n#endif\nvec2 pos=normal.x==1.0 && normal.y==0.0 && normal.z==16384.0\n? a_pos\n: vec2(edgedistance,elevation*u_height_factor);v_pos_a=get_pattern_pos(u_pixel_coord_upper,u_pixel_coord_lower,fromScale*display_size_a,tileRatio,pos);v_pos_b=get_pattern_pos(u_pixel_coord_upper,u_pixel_coord_lower,toScale*display_size_b,tileRatio,pos);v_lighting=vec4(0.0,0.0,0.0,1.0);float directional=clamp(dot(normal/16383.0,u_lightpos),0.0,1.0);directional=mix((1.0-u_lightintensity),max((0.5+u_lightintensity),1.0),directional);if (normal.y !=0.0) {directional*=((1.0-u_vertical_gradient)+(u_vertical_gradient*clamp((t+base)*pow(height/150.0,0.5),mix(0.7,0.98,1.0-u_lightintensity),1.0)));}v_lighting.rgb+=clamp(directional*u_lightcolor,mix(vec3(0.0),vec3(0.3),1.0-u_lightcolor),vec3(1.0));v_lighting*=u_opacity;}';
+var fillExtrusionPatternVert = 'uniform vec2 u_pixel_coord_upper;uniform vec2 u_pixel_coord_lower;uniform float u_height_factor;uniform vec3 u_scale;uniform float u_vertical_gradient;uniform lowp float u_opacity;uniform vec2 u_fill_translate;uniform vec3 u_lightcolor;uniform lowp vec3 u_lightpos;uniform lowp vec3 u_lightpos_globe;uniform lowp float u_lightintensity;attribute vec2 a_pos;attribute vec4 a_normal_ed;\n#ifdef TERRAIN3D\nattribute vec2 a_centroid;\n#endif\n#ifdef GLOBE\nvarying vec3 v_sphere_pos;\n#endif\nvarying vec2 v_pos_a;varying vec2 v_pos_b;varying vec4 v_lighting;\n#pragma mapbox: define lowp float base\n#pragma mapbox: define lowp float height\n#pragma mapbox: define lowp vec4 pattern_from\n#pragma mapbox: define lowp vec4 pattern_to\n#pragma mapbox: define lowp float pixel_ratio_from\n#pragma mapbox: define lowp float pixel_ratio_to\nvoid main() {\n#pragma mapbox: initialize lowp float base\n#pragma mapbox: initialize lowp float height\n#pragma mapbox: initialize mediump vec4 pattern_from\n#pragma mapbox: initialize mediump vec4 pattern_to\n#pragma mapbox: initialize lowp float pixel_ratio_from\n#pragma mapbox: initialize lowp float pixel_ratio_to\nvec2 pattern_tl_a=pattern_from.xy;vec2 pattern_br_a=pattern_from.zw;vec2 pattern_tl_b=pattern_to.xy;vec2 pattern_br_b=pattern_to.zw;float tileRatio=u_scale.x;float fromScale=u_scale.y;float toScale=u_scale.z;vec3 normal=a_normal_ed.xyz;float edgedistance=a_normal_ed.w;vec2 display_size_a=(pattern_br_a-pattern_tl_a)/pixel_ratio_from;vec2 display_size_b=(pattern_br_b-pattern_tl_b)/pixel_ratio_to;\n#ifdef TERRAIN3D\nfloat height_terrain3d_offset=get_elevation(a_centroid);float base_terrain3d_offset=height_terrain3d_offset-(base > 0.0 ? 0.0 : 10.0);\n#else\nfloat height_terrain3d_offset=0.0;float base_terrain3d_offset=0.0;\n#endif\nbase=max(0.0,base)+base_terrain3d_offset;height=max(0.0,height)+height_terrain3d_offset;float t=mod(normal.x,2.0);float elevation=t > 0.0 ? height : base;vec2 posInTile=a_pos+u_fill_translate;\n#ifdef GLOBE\nvec3 spherePos=projectToSphere(posInTile,a_pos);vec3 elevatedPos=spherePos*(1.0+elevation/GLOBE_RADIUS);v_sphere_pos=elevatedPos;gl_Position=interpolateProjectionFor3D(posInTile,spherePos,elevation);\n#else\ngl_Position=u_projection_matrix*vec4(posInTile,elevation,1.0);\n#endif\nvec2 pos=normal.x==1.0 && normal.y==0.0 && normal.z==16384.0\n? a_pos\n: vec2(edgedistance,elevation*u_height_factor);v_pos_a=get_pattern_pos(u_pixel_coord_upper,u_pixel_coord_lower,fromScale*display_size_a,tileRatio,pos);v_pos_b=get_pattern_pos(u_pixel_coord_upper,u_pixel_coord_lower,toScale*display_size_b,tileRatio,pos);v_lighting=vec4(0.0,0.0,0.0,1.0);float directional=clamp(dot(normal/16383.0,u_lightpos),0.0,1.0);directional=mix((1.0-u_lightintensity),max((0.5+u_lightintensity),1.0),directional);if (normal.y !=0.0) {directional*=((1.0-u_vertical_gradient)+(u_vertical_gradient*clamp((t+base)*pow(height/150.0,0.5),mix(0.7,0.98,1.0-u_lightintensity),1.0)));}v_lighting.rgb+=clamp(directional*u_lightcolor,mix(vec3(0.0),vec3(0.3),1.0-u_lightcolor),vec3(1.0));v_lighting*=u_opacity;}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
 var hillshadePrepareFrag = '#ifdef GL_ES\nprecision highp float;\n#endif\nuniform sampler2D u_image;varying vec2 v_pos;uniform vec2 u_dimension;uniform float u_zoom;uniform vec4 u_unpack;float getElevation(vec2 coord,float bias) {vec4 data=texture2D(u_image,coord)*255.0;data.a=-1.0;return dot(data,u_unpack)/4.0;}void main() {vec2 epsilon=1.0/u_dimension;float a=getElevation(v_pos+vec2(-epsilon.x,-epsilon.y),0.0);float b=getElevation(v_pos+vec2(0,-epsilon.y),0.0);float c=getElevation(v_pos+vec2(epsilon.x,-epsilon.y),0.0);float d=getElevation(v_pos+vec2(-epsilon.x,0),0.0);float e=getElevation(v_pos,0.0);float f=getElevation(v_pos+vec2(epsilon.x,0),0.0);float g=getElevation(v_pos+vec2(-epsilon.x,epsilon.y),0.0);float h=getElevation(v_pos+vec2(0,epsilon.y),0.0);float i=getElevation(v_pos+vec2(epsilon.x,epsilon.y),0.0);float exaggerationFactor=u_zoom < 2.0 ? 0.4 : u_zoom < 4.5 ? 0.35 : 0.3;float exaggeration=u_zoom < 15.0 ? (u_zoom-15.0)*exaggerationFactor : 0.0;vec2 deriv=vec2((c+f+f+i)-(a+d+d+g),(g+h+h+i)-(a+b+b+c))/pow(2.0,exaggeration+(19.2562-u_zoom));gl_FragColor=clamp(vec4(deriv.x/2.0+0.5,deriv.y/2.0+0.5,1.0,1.0),0.0,1.0);\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
@@ -46689,7 +46843,7 @@ var hillshadePrepareVert = 'uniform mat4 u_matrix;uniform vec2 u_dimension;attri
 var hillshadeFrag = 'uniform sampler2D u_image;varying vec2 v_pos;uniform vec2 u_latrange;uniform vec2 u_light;uniform vec4 u_shadow;uniform vec4 u_highlight;uniform vec4 u_accent;\n#define PI 3.141592653589793\nvoid main() {vec4 pixel=texture2D(u_image,v_pos);vec2 deriv=((pixel.rg*2.0)-1.0);float scaleFactor=cos(radians((u_latrange[0]-u_latrange[1])*(1.0-v_pos.y)+u_latrange[1]));float slope=atan(1.25*length(deriv)/scaleFactor);float aspect=deriv.x !=0.0 ? atan(deriv.y,-deriv.x) : PI/2.0*(deriv.y > 0.0 ? 1.0 :-1.0);float intensity=u_light.x;float azimuth=u_light.y+PI;float base=1.875-intensity*1.75;float maxValue=0.5*PI;float scaledSlope=intensity !=0.5 ? ((pow(base,slope)-1.0)/(pow(base,maxValue)-1.0))*maxValue : slope;float accent=cos(scaledSlope);vec4 accent_color=(1.0-accent)*u_accent*clamp(intensity*2.0,0.0,1.0);float shade=abs(mod((aspect+azimuth)/PI+0.5,2.0)-1.0);vec4 shade_color=mix(u_shadow,u_highlight,shade)*sin(scaledSlope)*clamp(intensity*2.0,0.0,1.0);gl_FragColor=accent_color*(1.0-shade_color.a)+shade_color;\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var hillshadeVert = 'uniform mat4 u_matrix;attribute vec2 a_pos;varying vec2 v_pos;void main() {gl_Position=projectTile(a_pos);v_pos=a_pos/8192.0;if (a_pos.y <-32767.5) {v_pos.y=0.0;}if (a_pos.y > 32766.5) {v_pos.y=1.0;}}';
+var hillshadeVert = 'uniform mat4 u_matrix;attribute vec2 a_pos;varying vec2 v_pos;void main() {gl_Position=projectTile(a_pos,a_pos);v_pos=a_pos/8192.0;if (a_pos.y <-32767.5) {v_pos.y=0.0;}if (a_pos.y > 32766.5) {v_pos.y=1.0;}}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
 var lineFrag = 'uniform lowp float u_device_pixel_ratio;varying vec2 v_width2;varying vec2 v_normal;varying float v_gamma_scale;\n#ifdef GLOBE\nvarying float v_depth;\n#endif\n#pragma mapbox: define highp vec4 color\n#pragma mapbox: define lowp float blur\n#pragma mapbox: define lowp float opacity\nvoid main() {\n#pragma mapbox: initialize highp vec4 color\n#pragma mapbox: initialize lowp float blur\n#pragma mapbox: initialize lowp float opacity\nfloat dist=length(v_normal)*v_width2.s;float blur2=(blur+1.0/u_device_pixel_ratio)*v_gamma_scale;float alpha=clamp(min(dist-(v_width2.t-blur2),v_width2.s-dist)/blur2,0.0,1.0);gl_FragColor=color*(alpha*opacity);\n#ifdef GLOBE\nif (v_depth > 1.0) {discard;}\n#endif\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
@@ -46719,7 +46873,7 @@ var lineSDFVert = '\n#define scale 0.015873016\n#define LINE_DISTANCE_SCALE 2.0\
 var rasterFrag = 'uniform float u_fade_t;uniform float u_opacity;uniform sampler2D u_image0;uniform sampler2D u_image1;varying vec2 v_pos0;varying vec2 v_pos1;uniform float u_brightness_low;uniform float u_brightness_high;uniform float u_saturation_factor;uniform float u_contrast_factor;uniform vec3 u_spin_weights;void main() {vec4 color0=texture2D(u_image0,v_pos0);vec4 color1=texture2D(u_image1,v_pos1);if (color0.a > 0.0) {color0.rgb=color0.rgb/color0.a;}if (color1.a > 0.0) {color1.rgb=color1.rgb/color1.a;}vec4 color=mix(color0,color1,u_fade_t);color.a*=u_opacity;vec3 rgb=color.rgb;rgb=vec3(dot(rgb,u_spin_weights.xyz),dot(rgb,u_spin_weights.zxy),dot(rgb,u_spin_weights.yzx));float average=(color.r+color.g+color.b)/3.0;rgb+=(average-rgb)*u_saturation_factor;rgb=(rgb-0.5)*u_contrast_factor+0.5;vec3 u_high_vec=vec3(u_brightness_low,u_brightness_low,u_brightness_low);vec3 u_low_vec=vec3(u_brightness_high,u_brightness_high,u_brightness_high);gl_FragColor=vec4(mix(u_high_vec,u_low_vec,rgb)*color.a,color.a);\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var rasterVert = 'uniform vec2 u_tl_parent;uniform float u_scale_parent;uniform float u_buffer_scale;uniform vec4 u_coords_top;uniform vec4 u_coords_bottom;attribute vec2 a_pos;varying vec2 v_pos0;varying vec2 v_pos1;void main() {vec2 fractionalPos=a_pos/8192.0;vec2 position=mix(mix(u_coords_top.xy,u_coords_top.zw,fractionalPos.x),mix(u_coords_bottom.xy,u_coords_bottom.zw,fractionalPos.x),fractionalPos.y);gl_Position=projectTile(position);v_pos0=((fractionalPos-0.5)/u_buffer_scale )+0.5;\n#ifdef GLOBE\nif (a_pos.y <-32767.5) {v_pos0.y=0.0;}if (a_pos.y > 32766.5) {v_pos0.y=1.0;}\n#endif\nv_pos1=(v_pos0*u_scale_parent)+u_tl_parent;}';
+var rasterVert = 'uniform vec2 u_tl_parent;uniform float u_scale_parent;uniform float u_buffer_scale;uniform vec4 u_coords_top;uniform vec4 u_coords_bottom;attribute vec2 a_pos;varying vec2 v_pos0;varying vec2 v_pos1;void main() {vec2 fractionalPos=a_pos/8192.0;vec2 position=mix(mix(u_coords_top.xy,u_coords_top.zw,fractionalPos.x),mix(u_coords_bottom.xy,u_coords_bottom.zw,fractionalPos.x),fractionalPos.y);gl_Position=projectTile(position,position);v_pos0=((fractionalPos-0.5)/u_buffer_scale)+0.5;\n#ifdef GLOBE\nif (a_pos.y <-32767.5) {v_pos0.y=0.0;}if (a_pos.y > 32766.5) {v_pos0.y=1.0;}\n#endif\nv_pos1=(v_pos0*u_scale_parent)+u_tl_parent;}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
 var symbolIconFrag = 'uniform sampler2D u_texture;varying vec2 v_tex;varying float v_fade_opacity;\n#pragma mapbox: define lowp float opacity\nvoid main() {\n#pragma mapbox: initialize lowp float opacity\nlowp float alpha=opacity*v_fade_opacity;gl_FragColor=texture2D(u_texture,v_tex)*alpha;\n#ifdef OVERDRAW_INSPECTOR\ngl_FragColor=vec4(1.0);\n#endif\n}';
@@ -46764,10 +46918,10 @@ var projectionErrorMeasurementVert = 'attribute vec2 a_pos;uniform highp float u
 var projectionErrorMeasurementFrag = 'varying vec4 v_output_error_encoded;void main() {gl_FragColor=v_output_error_encoded;}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var projectionMercatorVert = 'float projectLineThickness(float tileY) {return 1.0;}float projectCircleRadius(float tileY) {return 1.0;}vec4 projectTile(vec2 p) {vec4 result=u_projection_matrix*vec4(p,0.0,1.0);if (p.y <-32767.5 || p.y > 32766.5) {result.z=-10000000.0;}return result;}vec4 projectTileWithElevation(vec2 posInTile,float elevation) {return u_projection_matrix*vec4(posInTile,elevation,1.0);}vec4 projectTileFor3D(vec2 posInTile,float elevation) {return projectTileWithElevation(posInTile,elevation);}';
+var projectionMercatorVert = 'float projectLineThickness(float tileY) {return 1.0;}float projectCircleRadius(float tileY) {return 1.0;}vec4 projectTile(vec2 p) {vec4 result=u_projection_matrix*vec4(p,0.0,1.0);return result;}vec4 projectTile(vec2 p,vec2 rawPos) {vec4 result=u_projection_matrix*vec4(p,0.0,1.0);if (rawPos.y <-32767.5 || rawPos.y > 32766.5) {result.z=-10000000.0;}return result;}vec4 projectTileWithElevation(vec2 posInTile,float elevation) {return u_projection_matrix*vec4(posInTile,elevation,1.0);}vec4 projectTileFor3D(vec2 posInTile,float elevation) {return projectTileWithElevation(posInTile,elevation);}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
-var projectionGlobeVert = '#define GLOBE_RADIUS 6371008.8\nuniform highp vec4 u_projection_tile_mercator_coords;uniform highp vec4 u_projection_clipping_plane;uniform highp float u_projection_transition;uniform mat4 u_projection_fallback_matrix;vec3 globeRotateVector(vec3 vec,vec2 angles) {vec3 axisRight=vec3(vec.z,0.0,-vec.x);vec3 axisUp=cross(axisRight,vec);axisRight=normalize(axisRight);axisUp=normalize(axisUp);vec2 t=tan(angles);return normalize(vec+axisRight*t.x+axisUp*t.y);}mat3 globeGetRotationMatrix(vec3 spherePos) {vec3 axisRight=vec3(spherePos.z,0.0,-spherePos.x);vec3 axisDown=cross(axisRight,spherePos);axisRight=normalize(axisRight);axisDown=normalize(axisDown);return mat3(axisRight,axisDown,spherePos\n);}float circumferenceRatioAtTileY(float tileY) {float mercator_pos_y=u_projection_tile_mercator_coords.y+u_projection_tile_mercator_coords.w*tileY;float spherical_y=2.0*atan(exp(PI-(mercator_pos_y*PI*2.0)))-PI*0.5;return cos(spherical_y);}float projectLineThickness(float tileY) {float thickness=1.0/circumferenceRatioAtTileY(tileY); \nif (u_projection_transition < 0.999) {return mix(1.0,thickness,u_projection_transition);} else {return thickness;}}vec3 projectToSphere(vec2 posInTile) {vec2 mercator_pos=u_projection_tile_mercator_coords.xy+u_projection_tile_mercator_coords.zw*posInTile;vec2 spherical;spherical.x=mercator_pos.x*PI*2.0+PI;spherical.y=2.0*atan(exp(PI-(mercator_pos.y*PI*2.0)))-PI*0.5;float len=cos(spherical.y);vec3 pos=vec3(sin(spherical.x)*len,sin(spherical.y),cos(spherical.x)*len\n);if (posInTile.y <-32767.5) {pos=vec3(0.0,1.0,0.0);}if (posInTile.y > 32766.5) {pos=vec3(0.0,-1.0,0.0);}return pos;}float globeComputeClippingZ(vec3 spherePos) {return (1.0-(dot(spherePos,u_projection_clipping_plane.xyz)+u_projection_clipping_plane.w));}vec4 interpolateProjection(vec2 posInTile,vec3 spherePos,float elevation) {vec3 elevatedPos=spherePos*(1.0+elevation/GLOBE_RADIUS);vec4 globePosition=u_projection_matrix*vec4(elevatedPos,1.0);globePosition.z=globeComputeClippingZ(elevatedPos)*globePosition.w;if (u_projection_transition < 0.999) {vec4 flatPosition=u_projection_fallback_matrix*vec4(posInTile,elevation,1.0);const float z_globeness_threshold=0.2;vec4 result=globePosition;result.z=mix(0.0,globePosition.z,clamp((u_projection_transition-z_globeness_threshold)/(1.0-z_globeness_threshold),0.0,1.0));result.xyw=mix(flatPosition.xyw,globePosition.xyw,u_projection_transition);if ((posInTile.y <-32767.5) || (posInTile.y > 32766.5)) {result=globePosition;const float poles_hidden_anim_percentage=0.02;result.z=mix(globePosition.z,100.0,pow(max((1.0-u_projection_transition)/poles_hidden_anim_percentage,0.0),8.0));}return result;}return globePosition;}vec4 interpolateProjectionFor3D(vec2 posInTile,vec3 spherePos,float elevation) {vec3 elevatedPos=spherePos*(1.0+elevation/GLOBE_RADIUS);vec4 globePosition=u_projection_matrix*vec4(elevatedPos,1.0);vec4 fallbackPosition=u_projection_fallback_matrix*vec4(posInTile,elevation,1.0);return mix(fallbackPosition,globePosition,u_projection_transition);}vec4 projectTile(vec2 posInTile) {return interpolateProjection(posInTile,projectToSphere(posInTile),0.0);}vec4 projectTileWithElevation(vec2 posInTile,float elevation) {return interpolateProjection(posInTile,projectToSphere(posInTile),elevation);}vec4 projectTileFor3D(vec2 posInTile,float elevation) {vec3 spherePos=projectToSphere(posInTile);return interpolateProjectionFor3D(posInTile,spherePos,elevation);}';
+var projectionGlobeVert = '#define GLOBE_RADIUS 6371008.8\nuniform highp vec4 u_projection_tile_mercator_coords;uniform highp vec4 u_projection_clipping_plane;uniform highp float u_projection_transition;uniform mat4 u_projection_fallback_matrix;vec3 globeRotateVector(vec3 vec,vec2 angles) {vec3 axisRight=vec3(vec.z,0.0,-vec.x);vec3 axisUp=cross(axisRight,vec);axisRight=normalize(axisRight);axisUp=normalize(axisUp);vec2 t=tan(angles);return normalize(vec+axisRight*t.x+axisUp*t.y);}mat3 globeGetRotationMatrix(vec3 spherePos) {vec3 axisRight=vec3(spherePos.z,0.0,-spherePos.x);vec3 axisDown=cross(axisRight,spherePos);axisRight=normalize(axisRight);axisDown=normalize(axisDown);return mat3(axisRight,axisDown,spherePos\n);}float circumferenceRatioAtTileY(float tileY) {float mercator_pos_y=u_projection_tile_mercator_coords.y+u_projection_tile_mercator_coords.w*tileY;float spherical_y=2.0*atan(exp(PI-(mercator_pos_y*PI*2.0)))-PI*0.5;return cos(spherical_y);}float projectLineThickness(float tileY) {float thickness=1.0/circumferenceRatioAtTileY(tileY); \nif (u_projection_transition < 0.999) {return mix(1.0,thickness,u_projection_transition);} else {return thickness;}}vec3 projectToSphere(vec2 posInTile,vec2 rawPos) {vec2 mercator_pos=u_projection_tile_mercator_coords.xy+u_projection_tile_mercator_coords.zw*posInTile;vec2 spherical;spherical.x=mercator_pos.x*PI*2.0+PI;spherical.y=2.0*atan(exp(PI-(mercator_pos.y*PI*2.0)))-PI*0.5;float len=cos(spherical.y);vec3 pos=vec3(sin(spherical.x)*len,sin(spherical.y),cos(spherical.x)*len\n);if (rawPos.y <-32767.5) {pos=vec3(0.0,1.0,0.0);}if (rawPos.y > 32766.5) {pos=vec3(0.0,-1.0,0.0);}return pos;}vec3 projectToSphere(vec2 posInTile) {return projectToSphere(posInTile,vec2(0.0,0.0));}float globeComputeClippingZ(vec3 spherePos) {return (1.0-(dot(spherePos,u_projection_clipping_plane.xyz)+u_projection_clipping_plane.w));}vec4 interpolateProjection(vec2 posInTile,vec3 spherePos,float elevation) {vec3 elevatedPos=spherePos*(1.0+elevation/GLOBE_RADIUS);vec4 globePosition=u_projection_matrix*vec4(elevatedPos,1.0);globePosition.z=globeComputeClippingZ(elevatedPos)*globePosition.w;if (u_projection_transition < 0.999) {vec4 flatPosition=u_projection_fallback_matrix*vec4(posInTile,elevation,1.0);const float z_globeness_threshold=0.2;vec4 result=globePosition;result.z=mix(0.0,globePosition.z,clamp((u_projection_transition-z_globeness_threshold)/(1.0-z_globeness_threshold),0.0,1.0));result.xyw=mix(flatPosition.xyw,globePosition.xyw,u_projection_transition);if ((posInTile.y <-32767.5) || (posInTile.y > 32766.5)) {result=globePosition;const float poles_hidden_anim_percentage=0.02;result.z=mix(globePosition.z,100.0,pow(max((1.0-u_projection_transition)/poles_hidden_anim_percentage,0.0),8.0));}return result;}return globePosition;}vec4 interpolateProjectionFor3D(vec2 posInTile,vec3 spherePos,float elevation) {vec3 elevatedPos=spherePos*(1.0+elevation/GLOBE_RADIUS);vec4 globePosition=u_projection_matrix*vec4(elevatedPos,1.0);vec4 fallbackPosition=u_projection_fallback_matrix*vec4(posInTile,elevation,1.0);return mix(fallbackPosition,globePosition,u_projection_transition);}vec4 projectTile(vec2 posInTile) {return interpolateProjection(posInTile,projectToSphere(posInTile),0.0);}vec4 projectTile(vec2 posInTile,vec2 rawPos) {return interpolateProjection(posInTile,projectToSphere(posInTile,rawPos),0.0);}vec4 projectTileWithElevation(vec2 posInTile,float elevation) {return interpolateProjection(posInTile,projectToSphere(posInTile),elevation);}vec4 projectTileFor3D(vec2 posInTile,float elevation) {vec3 spherePos=projectToSphere(posInTile);return interpolateProjectionFor3D(posInTile,spherePos,elevation);}';
 
 // This file is generated. Edit build/generate-shaders.ts, then run `npm run codegen`.
 var atmosphereFrag = 'varying vec3 view_direction;uniform vec3 u_sun_pos;uniform vec3 u_globe_position;uniform float u_globe_radius;uniform float u_atmosphere_blend;/**Shader use from https:*Made some change to adapt to MapLibre Globe geometry*/const float PI=3.141592653589793;const int iSteps=5;const int jSteps=3;/*radius of the planet*/const float EARTH_RADIUS=6371e3;/*radius of the atmosphere*/const float ATMOS_RADIUS=6471e3;vec2 rsi(vec3 r0,vec3 rd,float sr) {float a=dot(rd,rd);float b=2.0*dot(rd,r0);float c=dot(r0,r0)-(sr*sr);float d=(b*b)-4.0*a*c;if (d < 0.0) return vec2(1e5,-1e5);return vec2((-b-sqrt(d))/(2.0*a),(-b+sqrt(d))/(2.0*a));}vec4 atmosphere(vec3 r,vec3 r0,vec3 pSun,float iSun,float rPlanet,float rAtmos,vec3 kRlh,float kMie,float shRlh,float shMie,float g) {pSun=normalize(pSun);r=normalize(r);vec2 p=rsi(r0,r,rAtmos);if (p.x > p.y) return vec4(0,0,0,0);if (p.x < 0.0) {p.x=0.0;}vec3 pos=r0+r*p.x;vec2 p2=rsi(r0,r,rPlanet);if (p2.x <=p2.y && p2.x > 0.0) {p.y=min(p.y,p2.x);}float iStepSize=(p.y-p.x)/float(iSteps);float iTime=p.x+iStepSize*0.5;vec3 totalRlh=vec3(0,0,0);vec3 totalMie=vec3(0,0,0);float iOdRlh=0.0;float iOdMie=0.0;float mu=dot(r,pSun);float mumu=mu*mu;float gg=g*g;float pRlh=3.0/(16.0*PI)*(1.0+mumu);float pMie=3.0/(8.0*PI)*((1.0-gg)*(mumu+1.0))/(pow(1.0+gg-2.0*mu*g,1.5)*(2.0+gg));for (int i=0; i < iSteps; i++) {vec3 iPos=r0+r*iTime;float iHeight=length(iPos)-rPlanet;float odStepRlh=exp(-iHeight/shRlh)*iStepSize;float odStepMie=exp(-iHeight/shMie)*iStepSize;iOdRlh+=odStepRlh;iOdMie+=odStepMie;float jStepSize=rsi(iPos,pSun,rAtmos).y/float(jSteps);float jTime=jStepSize*0.5;float jOdRlh=0.0;float jOdMie=0.0;for (int j=0; j < jSteps; j++) {vec3 jPos=iPos+pSun*jTime;float jHeight=length(jPos)-rPlanet;jOdRlh+=exp(-jHeight/shRlh)*jStepSize;jOdMie+=exp(-jHeight/shMie)*jStepSize;jTime+=jStepSize;}vec3 attn=exp(-(kMie*(iOdMie+jOdMie)+kRlh*(iOdRlh+jOdRlh)));totalRlh+=odStepRlh*attn;totalMie+=odStepMie*attn;iTime+=iStepSize;}float opacity=min(0.75,exp(-(length(kRlh)*length(totalRlh)+kMie*length(totalMie))));vec3 color=iSun*(pRlh*kRlh*totalRlh+pMie*kMie*totalMie);return vec4(color,opacity);}void main() {vec3 scale_camera_pos=-u_globe_position*EARTH_RADIUS/u_globe_radius;vec4 color=atmosphere(normalize(view_direction),scale_camera_pos,u_sun_pos,22.0,EARTH_RADIUS,ATMOS_RADIUS,vec3(5.5e-6,13.0e-6,22.4e-6),21e-6,8e3,1.2e3,0.758\n);color.xyz=1.0-exp(-1.0*color.xyz);vec4 no_effect_color=vec4(0,0,0,0);gl_FragColor=mix(color,no_effect_color,1.0-u_atmosphere_blend);}';
@@ -47074,7 +47228,7 @@ function unprojectFromWorldCoordinates(worldSize, point) {
 function getMercatorHorizon(transform) {
     return transform.cameraToCenterDistance * Math.min(Math.tan(performance$1.degreesToRadians(90 - transform.pitch)) * 0.85, Math.tan(performance$1.degreesToRadians(maxMercatorHorizonAngle - transform.pitch)));
 }
-function getBasicProjectionData(overscaledTileID, tilePosMatrix, ignoreTerrainMatrix) {
+function getBasicProjectionData(overscaledTileID, tilePosMatrix, applyTerrainMatrix = true) {
     let tileOffsetSize;
     if (overscaledTileID) {
         const scale = (overscaledTileID.canonical.z >= 0) ? (1 << overscaledTileID.canonical.z) : Math.pow(2.0, overscaledTileID.canonical.z);
@@ -47089,7 +47243,7 @@ function getBasicProjectionData(overscaledTileID, tilePosMatrix, ignoreTerrainMa
         tileOffsetSize = [0, 0, 1, 1];
     }
     let mainMatrix;
-    if (overscaledTileID && overscaledTileID.terrainRttPosMatrix && !ignoreTerrainMatrix) {
+    if (overscaledTileID && overscaledTileID.terrainRttPosMatrix && applyTerrainMatrix) {
         mainMatrix = overscaledTileID.terrainRttPosMatrix;
     }
     else if (tilePosMatrix) {
@@ -47582,7 +47736,7 @@ class MercatorTransform {
         const z0 = coord0[2] / w0;
         const z1 = coord1[2] / w1;
         const t = z0 === z1 ? 0 : (targetZ - z0) / (z1 - z0);
-        return new performance$1.MercatorCoordinate(performance$1.interpolate.number(x0, x1, t) / this.worldSize, performance$1.interpolate.number(y0, y1, t) / this.worldSize, targetZ);
+        return new performance$1.MercatorCoordinate(performance$1.interpolateFactory.number(x0, x1, t) / this.worldSize, performance$1.interpolateFactory.number(y0, y1, t) / this.worldSize, targetZ);
     }
     /**
      * Given a coordinate, return the screen point that corresponds to it
@@ -47914,9 +48068,9 @@ class MercatorTransform {
         return false;
     }
     getProjectionData(params) {
-        const { overscaledTileID, aligned, ignoreTerrainMatrix } = params;
+        const { overscaledTileID, aligned, applyTerrainMatrix } = params;
         const matrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID, aligned) : null;
-        return getBasicProjectionData(overscaledTileID, matrix, ignoreTerrainMatrix);
+        return getBasicProjectionData(overscaledTileID, matrix, applyTerrainMatrix);
     }
     isLocationOccluded(_) {
         return false;
@@ -47974,9 +48128,9 @@ class MercatorTransform {
         performance$1.scale(m, m, [-scale, scale, scale]);
         return m;
     }
-    getProjectionDataForCustomLayer() {
+    getProjectionDataForCustomLayer(applyGlobeMatrix = true) {
         const tileID = new performance$1.OverscaledTileID(0, 0, 0, 0, 0);
-        const projectionData = this.getProjectionData({ overscaledTileID: tileID, ignoreTerrainMatrix: true });
+        const projectionData = this.getProjectionData({ overscaledTileID: tileID, applyGlobeMatrix });
         const tileMatrix = calculateTileMatrix(tileID, this.worldSize);
         performance$1.multiply(tileMatrix, this._viewProjMatrix, tileMatrix);
         projectionData.tileMercatorCoords = [0, 0, 1, 1];
@@ -48138,7 +48292,7 @@ class MercatorCameraHelper {
         isZooming = (endZoom !== startZoom);
         const easeFunc = (k) => {
             if (isZooming) {
-                tr.setZoom(performance$1.interpolate.number(startZoom, endZoom, k));
+                tr.setZoom(performance$1.interpolateFactory.number(startZoom, endZoom, k));
             }
             if (!performance$1.equals(startRotation, endRotation)) {
                 updateRotation(startRotation, endRotation, { roll: endRoll, pitch: endPitch, bearing: endBearing }, tr, k);
@@ -48595,15 +48749,17 @@ const globeConstants = {
     errorTransitionTimeSeconds: 0.5
 };
 const granularitySettingsGlobe = new performance$1.SubdivisionGranularitySetting({
-    fill: new performance$1.SubdivisionGranularityExpression(128, 1),
-    line: new performance$1.SubdivisionGranularityExpression(512, 1),
+    fill: new performance$1.SubdivisionGranularityExpression(128, 2),
+    line: new performance$1.SubdivisionGranularityExpression(512, 0),
     // Always keep at least some subdivision on raster tiles, etc,
     // otherwise they will be visibly warped at high zooms (before mercator transition).
     // This si not needed on fill, because fill geometry tends to already be
     // highly tessellated and granular at high zooms.
-    // Minimal granularity of 8 seems to be enough to avoid warped raster tiles, while also minimizing triangle count.
     tile: new performance$1.SubdivisionGranularityExpression(128, 32),
-    stencil: new performance$1.SubdivisionGranularityExpression(128, 4),
+    // Stencil granularity must never be higher than fill granularity,
+    // otherwise we would get seams in the oceans at zoom levels where
+    // stencil has higher granularity than fill.
+    stencil: new performance$1.SubdivisionGranularityExpression(128, 1),
     circle: 3
 });
 class GlobeProjection {
@@ -49292,7 +49448,7 @@ class GlobeTransform {
     get isGlobeRendering() {
         return this._globeness > 0;
     }
-    constructor(globeProjection, globeProjectionEnabled = true) {
+    constructor(globeProjection, globeProjectionEnabled = true, adaptive = true) {
         //
         // Implementation of globe transform
         //
@@ -49330,6 +49486,7 @@ class GlobeTransform {
          * Value 0 is mercator, value 1 is globe, anything between is an interpolation between the two projections.
          */
         this._globeness = 1.0;
+        this._adaptive = adaptive;
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
@@ -49405,7 +49562,7 @@ class GlobeTransform {
     newFrameUpdate() {
         this._lastUpdateTimeSeconds = browser.now() / 1000.0;
         const oldGlobeRendering = this.isGlobeRendering;
-        this._globeness = this._computeGlobenessAnimation();
+        this._globeness = (!this._adaptive && this._globeProjectionAllowed) ? 1 : this._computeGlobenessAnimation();
         // Everything below this comment must happen AFTER globeness update
         this._updateErrorCorrectionValue();
         this._calcMatrices();
@@ -49470,14 +49627,14 @@ class GlobeTransform {
         return (this._lastUpdateTimeSeconds - this._lastGlobeChangeTimeSeconds) < globeConstants.globeTransitionTimeSeconds;
     }
     getProjectionData(params) {
-        const { overscaledTileID, aligned, ignoreTerrainMatrix, ignoreGlobeMatrix } = params;
-        const data = this._mercatorTransform.getProjectionData({ overscaledTileID, aligned, ignoreTerrainMatrix });
+        const { overscaledTileID, aligned, applyTerrainMatrix, applyGlobeMatrix } = params;
+        const data = this._mercatorTransform.getProjectionData({ overscaledTileID, aligned, applyTerrainMatrix });
         // Set 'projectionMatrix' to actual globe transform
         if (this.isGlobeRendering) {
             data.mainMatrix = this._globeViewProjMatrix;
         }
         data.clippingPlane = this._cachedClippingPlane;
-        data.projectionTransition = ignoreGlobeMatrix ? 0 : this._globeness;
+        data.projectionTransition = applyGlobeMatrix ? this._globeness : 0;
         return data;
     }
     _computeClippingPlane(globeRadiusPixels) {
@@ -50099,8 +50256,8 @@ class GlobeTransform {
         performance$1.scale(m, m, [scale, scale, scale]);
         return m;
     }
-    getProjectionDataForCustomLayer() {
-        const projectionData = this.getProjectionData({ overscaledTileID: new performance$1.OverscaledTileID(0, 0, 0, 0, 0) });
+    getProjectionDataForCustomLayer(applyGlobeMatrix = true) {
+        const projectionData = this.getProjectionData({ overscaledTileID: new performance$1.OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix });
         projectionData.tileMercatorCoords = [0, 0, 1, 1];
         // Even though we requested projection data for the mercator base tile which covers the entire mercator range,
         // the shader projection machinery still expects inputs to be in tile units range [0..EXTENT].
@@ -50386,7 +50543,7 @@ class GlobeCameraHelper {
                 tr.setCenter(newCenter.wrap());
             }
             if (isZooming) {
-                const normalizedInterpolatedZoom = performance$1.interpolate.number(normalizedStartZoom, normalizedEndZoom, k);
+                const normalizedInterpolatedZoom = performance$1.interpolateFactory.number(normalizedStartZoom, normalizedEndZoom, k);
                 const interpolatedZoom = normalizedInterpolatedZoom + getZoomAdjustment(0, tr.center.lat);
                 tr.setZoom(interpolatedZoom);
             }
@@ -50517,7 +50674,16 @@ function createProjectionFromName(name) {
                 const proj = new GlobeProjection();
                 return {
                     projection: proj,
-                    transform: new GlobeTransform(proj),
+                    transform: new GlobeTransform(proj, true),
+                    cameraHelper: new GlobeCameraHelper(proj),
+                };
+            }
+        case 'vertical-perspective':
+            {
+                const proj = new GlobeProjection();
+                return {
+                    projection: proj,
+                    transform: new GlobeTransform(proj, true, false),
                     cameraHelper: new GlobeCameraHelper(proj),
                 };
             }
@@ -50951,7 +51117,7 @@ class Style extends performance$1.Evented {
             return false;
         nextState = performance$1.clone$2(nextState);
         nextState.layers = performance$1.derefLayers(nextState.layers);
-        const changes = performance$1.diffStyles(serializedStyle, nextState);
+        const changes = performance$1.diff(serializedStyle, nextState);
         const operations = this._getOperationsToPerform(changes);
         if (operations.unimplemented.length > 0) {
             throw new Error(`Unimplemented: ${operations.unimplemented.join(', ')}.`);
@@ -52874,7 +53040,7 @@ const skyUniformValues = (sky, transform, pixelRatio) => {
     const cosRoll = Math.cos(transform.rollInRadians);
     const sinRoll = Math.sin(transform.rollInRadians);
     const mercatorHorizon = getMercatorHorizon(transform);
-    const projectionData = transform.getProjectionData({ overscaledTileID: null });
+    const projectionData = transform.getProjectionData({ overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true });
     const skyBlend = projectionData.projectionTransition;
     return {
         'u_sky_color': sky.properties.get('sky-color'),
@@ -53839,7 +54005,7 @@ function drawCollisionDebug(painter, sourceCache, layer, coords, isText) {
         if (!buffers) {
             continue;
         }
-        program.draw(context, gl.LINES, DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled, collisionUniformValues(painter.transform), painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord), transform.getProjectionData({ overscaledTileID: coord }), layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer, buffers.segments, null, painter.transform.zoom, null, null, buffers.collisionVertexBuffer);
+        program.draw(context, gl.LINES, DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled, collisionUniformValues(painter.transform), painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord), transform.getProjectionData({ overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true }), layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer, buffers.segments, null, painter.transform.zoom, null, null, buffers.collisionVertexBuffer);
     }
     if (!isText || !tileBatches.length) {
         return;
@@ -53897,9 +54063,10 @@ function createQuadTriangles(quadCount) {
 }
 
 const identityMat4 = performance$1.identity(new Float32Array(16));
-function drawSymbols(painter, sourceCache, layer, coords, variableOffsets) {
+function drawSymbols(painter, sourceCache, layer, coords, variableOffsets, renderOptions) {
     if (painter.renderPass !== 'translucent')
         return;
+    const { isRenderingToTexture } = renderOptions;
     // Disable the stencil test so that labels aren't clipped to tile boundaries.
     const stencilMode = StencilMode.disabled;
     const colorMode = painter.colorModeForRenderPass();
@@ -53910,10 +54077,10 @@ function drawSymbols(painter, sourceCache, layer, coords, variableOffsets) {
         updateVariableAnchors(coords, painter, layer, sourceCache, layer.layout.get('text-rotation-alignment'), layer.layout.get('text-pitch-alignment'), layer.paint.get('text-translate'), layer.paint.get('text-translate-anchor'), variableOffsets);
     }
     if (layer.paint.get('icon-opacity').constantOr(1) !== 0) {
-        drawLayerSymbols(painter, sourceCache, layer, coords, false, layer.paint.get('icon-translate'), layer.paint.get('icon-translate-anchor'), layer.layout.get('icon-rotation-alignment'), layer.layout.get('icon-pitch-alignment'), layer.layout.get('icon-keep-upright'), stencilMode, colorMode);
+        drawLayerSymbols(painter, sourceCache, layer, coords, false, layer.paint.get('icon-translate'), layer.paint.get('icon-translate-anchor'), layer.layout.get('icon-rotation-alignment'), layer.layout.get('icon-pitch-alignment'), layer.layout.get('icon-keep-upright'), stencilMode, colorMode, isRenderingToTexture);
     }
     if (layer.paint.get('text-opacity').constantOr(1) !== 0) {
-        drawLayerSymbols(painter, sourceCache, layer, coords, true, layer.paint.get('text-translate'), layer.paint.get('text-translate-anchor'), layer.layout.get('text-rotation-alignment'), layer.layout.get('text-pitch-alignment'), layer.layout.get('text-keep-upright'), stencilMode, colorMode);
+        drawLayerSymbols(painter, sourceCache, layer, coords, true, layer.paint.get('text-translate'), layer.paint.get('text-translate-anchor'), layer.layout.get('text-rotation-alignment'), layer.layout.get('text-pitch-alignment'), layer.layout.get('text-keep-upright'), stencilMode, colorMode, isRenderingToTexture);
     }
     if (sourceCache.map.showCollisionBoxes) {
         drawCollisionDebug(painter, sourceCache, layer, coords, true);
@@ -54065,7 +54232,7 @@ function getSymbolProgramName(isSDF, isText, bucket) {
         return 'symbolIcon';
     }
 }
-function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate, translateAnchor, rotationAlignment, pitchAlignment, keepUpright, stencilMode, colorMode) {
+function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate, translateAnchor, rotationAlignment, pitchAlignment, keepUpright, stencilMode, colorMode, isRenderingToTexture) {
     const context = painter.context;
     const gl = context.gl;
     const transform = painter.transform;
@@ -54129,7 +54296,7 @@ function drawLayerSymbols(painter, sourceCache, layer, coords, isText, translate
         performance$1.invert$1(pitchedLabelPlaneMatrixInverse, pitchedLabelPlaneMatrix);
         const glCoordMatrixForShader = getGlCoordMatrix(pitchWithMap, rotateWithMap, painter.transform, s);
         const translation = performance$1.translatePosition(transform, tile, translate, translateAnchor);
-        const projectionData = transform.getProjectionData({ overscaledTileID: coord });
+        const projectionData = transform.getProjectionData({ overscaledTileID: coord, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true });
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&
             hasVariableAnchors &&
@@ -54221,9 +54388,10 @@ function drawSymbolElements(buffers, segments, layer, painter, program, depthMod
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer, segments, layer.paint, painter.transform.zoom, buffers.programConfigurations.get(layer.id), buffers.dynamicLayoutVertexBuffer, buffers.opacityVertexBuffer);
 }
 
-function drawCircles(painter, sourceCache, layer, coords) {
+function drawCircles(painter, sourceCache, layer, coords, renderOptions) {
     if (painter.renderPass !== 'translucent')
         return;
+    const { isRenderingToTexture } = renderOptions;
     const opacity = layer.paint.get('circle-opacity');
     const strokeWidth = layer.paint.get('circle-stroke-width');
     const strokeOpacity = layer.paint.get('circle-stroke-opacity');
@@ -54257,7 +54425,7 @@ function drawCircles(painter, sourceCache, layer, coords) {
         const indexBuffer = bucket.indexBuffer;
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
         const uniformValues = circleUniformValues(painter, tile, layer, translateForUniforms, radiusCorrectionFactor);
-        const projectionData = transform.getProjectionData({ overscaledTileID: coord });
+        const projectionData = transform.getProjectionData({ overscaledTileID: coord, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true });
         const state = {
             programConfiguration,
             program,
@@ -54295,11 +54463,12 @@ function drawCircles(painter, sourceCache, layer, coords) {
     }
 }
 
-function drawHeatmap(painter, sourceCache, layer, tileIDs) {
+function drawHeatmap(painter, sourceCache, layer, tileIDs, renderOptions) {
     if (layer.paint.get('heatmap-opacity') === 0) {
         return;
     }
     const context = painter.context;
+    const { isRenderingToTexture, isRenderingGlobe } = renderOptions;
     if (painter.style.map.terrain) {
         for (const coord of tileIDs) {
             const tile = sourceCache.getTile(coord);
@@ -54309,10 +54478,10 @@ function drawHeatmap(painter, sourceCache, layer, tileIDs) {
             if (sourceCache.hasRenderableParent(coord))
                 continue;
             if (painter.renderPass === 'offscreen') {
-                prepareHeatmapTerrain(painter, tile, layer, coord);
+                prepareHeatmapTerrain(painter, tile, layer, coord, isRenderingGlobe);
             }
             else if (painter.renderPass === 'translucent') {
-                renderHeatmapTerrain(painter, layer, coord);
+                renderHeatmapTerrain(painter, layer, coord, isRenderingToTexture, isRenderingGlobe);
             }
         }
         context.viewport.set([0, 0, painter.width, painter.height]);
@@ -54350,7 +54519,7 @@ function prepareHeatmapFlat(painter, sourceCache, layer, coords) {
             continue;
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram('heatmap', programConfiguration);
-        const projectionData = transform.getProjectionData({ overscaledTileID: coord });
+        const projectionData = transform.getProjectionData({ overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: false });
         const radiusCorrectionFactor = transform.getCircleRadiusCorrection();
         program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.backCCW, heatmapUniformValues(tile, transform.zoom, layer.paint.get('heatmap-intensity'), radiusCorrectionFactor), null, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments, layer.paint, transform.zoom, programConfiguration);
     }
@@ -54373,8 +54542,7 @@ function renderHeatmapFlat(painter, layer) {
     colorRampTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
     painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES, DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled, heatmapTextureUniformValues(painter, layer, 0, 1), null, null, layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer, painter.viewportSegments, layer.paint, painter.transform.zoom);
 }
-function prepareHeatmapTerrain(painter, tile, layer, coord) {
-    const isGlobe = painter.style.projection.name === 'globe';
+function prepareHeatmapTerrain(painter, tile, layer, coord, isRenderingGlobe) {
     const context = painter.context;
     const gl = context.gl;
     const stencilMode = StencilMode.disabled;
@@ -54393,13 +54561,12 @@ function prepareHeatmapTerrain(painter, tile, layer, coord) {
     context.viewport.set([0, 0, tile.tileSize, tile.tileSize]);
     context.clear({ color: performance$1.Color.transparent });
     const programConfiguration = bucket.programConfigurations.get(layer.id);
-    const program = painter.useProgram('heatmap', programConfiguration, !isGlobe);
-    const projectionData = painter.transform.getProjectionData({ overscaledTileID: tile.tileID });
+    const program = painter.useProgram('heatmap', programConfiguration, !isRenderingGlobe);
+    const projectionData = painter.transform.getProjectionData({ overscaledTileID: tile.tileID, applyGlobeMatrix: true, applyTerrainMatrix: true });
     const terrainData = painter.style.map.terrain.getTerrainData(coord);
     program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled, heatmapUniformValues(tile, painter.transform.zoom, layer.paint.get('heatmap-intensity'), 1.0), terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments, layer.paint, painter.transform.zoom, programConfiguration);
 }
-function renderHeatmapTerrain(painter, layer, coord) {
-    const isGlobe = painter.style.projection.name === 'globe';
+function renderHeatmapTerrain(painter, layer, coord, isRenderingToTexture, isRenderingGlobe) {
     const context = painter.context;
     const gl = context.gl;
     const transform = painter.transform;
@@ -54416,7 +54583,7 @@ function renderHeatmapTerrain(painter, layer, coord) {
     gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
     context.activeTexture.set(gl.TEXTURE1);
     colorRampTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
-    const projectionData = transform.getProjectionData({ overscaledTileID: coord, ignoreTerrainMatrix: !isGlobe });
+    const projectionData = transform.getProjectionData({ overscaledTileID: coord, applyTerrainMatrix: isRenderingGlobe, applyGlobeMatrix: !isRenderingToTexture });
     painter.useProgram('heatmapTexture').draw(context, gl.TRIANGLES, DepthMode.disabled, StencilMode.disabled, painter.colorModeForRenderPass(), CullFaceMode.disabled, heatmapTextureUniformValues(painter, layer, 0, 1), null, projectionData, layer.id, painter.rasterBoundsBuffer, painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments, layer.paint, transform.zoom);
     // destroy the FBO after rendering
     fbo.destroy();
@@ -54462,16 +54629,16 @@ function getColorRampTexture(context, layer) {
     return layer.colorRampTexture;
 }
 
-function drawLine(painter, sourceCache, layer, coords) {
+function drawLine(painter, sourceCache, layer, coords, renderOptions) {
     if (painter.renderPass !== 'translucent')
         return;
+    const { isRenderingToTexture } = renderOptions;
     const opacity = layer.paint.get('line-opacity');
     const width = layer.paint.get('line-width');
     if (opacity.constantOr(1) === 0 || width.constantOr(1) === 0)
         return;
     const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
-    const globeWithTerrain = !!painter.style.map.terrain && painter.style.projection.name === 'globe';
     const dasharray = layer.paint.get('line-dasharray');
     const patternProperty = layer.paint.get('line-pattern');
     const image = patternProperty.constantOr(1);
@@ -54506,7 +54673,8 @@ function drawLine(painter, sourceCache, layer, coords) {
         }
         const projectionData = transform.getProjectionData({
             overscaledTileID: coord,
-            ignoreGlobeMatrix: globeWithTerrain
+            applyGlobeMatrix: !isRenderingToTexture,
+            applyTerrainMatrix: true
         });
         const pixelRatio = transform.getPixelScale();
         const uniformValues = image ? linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade) :
@@ -54558,7 +54726,7 @@ function drawLine(painter, sourceCache, layer, coords) {
             gradientTexture.bind(layer.stepInterpolant ? gl.NEAREST : gl.LINEAR, gl.CLAMP_TO_EDGE);
         }
         const [stencilModes] = painter.stencilConfigForOverlap(coords);
-        const stencil = globeWithTerrain ? stencilModes[coord.overscaledZ] : painter.stencilModeForClipping(coord);
+        const stencil = isRenderingToTexture ? stencilModes[coord.overscaledZ] : painter.stencilModeForClipping(coord);
         program.draw(context, gl.TRIANGLES, depthMode, stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments, layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
         firstTile = false;
         // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic
@@ -54601,12 +54769,13 @@ function updatePatternPositionsInProgram(programConfiguration, propertyName, con
     }
 }
 
-function drawFill(painter, sourceCache, layer, coords) {
+function drawFill(painter, sourceCache, layer, coords, renderOptions) {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
     if (opacity.constantOr(1) === 0) {
         return;
     }
+    const { isRenderingToTexture } = renderOptions;
     const colorMode = painter.colorModeForRenderPass();
     const pattern = layer.paint.get('fill-pattern');
     const pass = painter.opaquePassEnabledForLayer() &&
@@ -54616,7 +54785,7 @@ function drawFill(painter, sourceCache, layer, coords) {
     // Draw fill
     if (painter.renderPass === pass) {
         const depthMode = painter.getDepthModeForSublayer(1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
-        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, false);
+        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, false, isRenderingToTexture);
     }
     // Draw stroke
     if (painter.renderPass === 'translucent' && layer.paint.get('fill-antialias')) {
@@ -54629,10 +54798,10 @@ function drawFill(painter, sourceCache, layer, coords) {
         // the current shape, some pixels from the outline stroke overlapped
         // the (non-antialiased) fill.
         const depthMode = painter.getDepthModeForSublayer(layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
-        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, true);
+        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, true, isRenderingToTexture);
     }
 }
-function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, isOutline) {
+function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, isOutline, isRenderingToTexture) {
     const gl = painter.context.gl;
     const fillPropertyName = 'fill-pattern';
     const patternProperty = layer.paint.get(fillPropertyName);
@@ -54667,10 +54836,10 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
             programConfiguration.updatePaintBuffers(crossfade);
         }
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
-        const globeWithTerrain = painter.style.map.terrain && painter.style.projection.name === 'globe';
         const projectionData = transform.getProjectionData({
             overscaledTileID: coord,
-            ignoreGlobeMatrix: globeWithTerrain
+            applyGlobeMatrix: !isRenderingToTexture,
+            applyTerrainMatrix: true
         });
         const translateForUniforms = performance$1.translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
         if (!isOutline) {
@@ -54686,66 +54855,42 @@ function drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode
                 fillOutlinePatternUniformValues(painter, crossfade, tile, drawingBufferSize, translateForUniforms) :
                 fillOutlineUniformValues(drawingBufferSize, translateForUniforms);
         }
-        // Stencil is not really needed for anything unless we are drawing transparent things.
-        //
-        // For translucent layers, we must draw any pixel of a given layer at most once,
-        // otherwise we might get artifacts from the transparent geometry being drawn twice over itself,
-        // which can happen due to tiles having a slight overlapping border into neighboring tiles.
-        // Hence we use stencil tile masks for any translucent pass, including for fill.
-        //
-        // Globe rendering relies on these tile borders to hide tile seams, since under globe projection
-        // tiles are not squares, but slightly curved squares. At high zoom levels, the tile stencil mask
-        // is approximated by a square, but if the tile contains fine geometry, it might still get projected
-        // into a curved shape, causing a mismatch with the stencil mask, which is very visible
-        // if the tile border is small.
-        //
-        // The simples workaround for this is to just disable stencil masking for opaque fill layers,
-        // since the fine geometry will always line up perfectly with the geometry in its neighboring tiles,
-        // even if the border is small. Disabling stencil ensures the neighboring geometry isn't clipped.
-        //
-        // This doesn't seem to be an issue for transparent fill layers (or they don't get used enough to be noticeable),
-        // which is a good thing, since there is no easy solution for this problem for transparency, other than
-        // greatly increasing subdivision granularity for both fill layers and stencil masks, at least at tile edges.
         let stencil;
-        if (painter.renderPass === 'translucent') {
-            if (globeWithTerrain) {
-                const [stencilModes] = painter.stencilConfigForOverlap(coords);
-                stencil = stencilModes[coord.overscaledZ];
-            }
-            else {
-                stencil = painter.stencilModeForClipping(coord);
-            }
+        if (painter.renderPass === 'translucent' && isRenderingToTexture) {
+            const [stencilModes] = painter.stencilConfigForOverlap(coords);
+            stencil = stencilModes[coord.overscaledZ];
         }
         else {
-            stencil = StencilMode.disabled;
+            stencil = painter.stencilModeForClipping(coord);
         }
         program.draw(painter.context, drawMode, depthMode, stencil, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, indexBuffer, segments, layer.paint, painter.transform.zoom, programConfiguration);
     }
 }
 
-function drawFillExtrusion(painter, source, layer, coords) {
+function drawFillExtrusion(painter, source, layer, coords, renderOptions) {
     const opacity = layer.paint.get('fill-extrusion-opacity');
     if (opacity === 0) {
         return;
     }
+    const { isRenderingToTexture } = renderOptions;
     if (painter.renderPass === 'translucent') {
         const depthMode = new DepthMode(painter.context.gl.LEQUAL, DepthMode.ReadWrite, painter.depthRangeFor3D);
         if (opacity === 1 && !layer.paint.get('fill-extrusion-pattern').constantOr(1)) {
             const colorMode = painter.colorModeForRenderPass();
-            drawExtrusionTiles(painter, source, layer, coords, depthMode, StencilMode.disabled, colorMode);
+            drawExtrusionTiles(painter, source, layer, coords, depthMode, StencilMode.disabled, colorMode, isRenderingToTexture);
         }
         else {
             // Draw transparent buildings in two passes so that only the closest surface is drawn.
             // First draw all the extrusions into only the depth buffer. No colors are drawn.
-            drawExtrusionTiles(painter, source, layer, coords, depthMode, StencilMode.disabled, ColorMode.disabled);
+            drawExtrusionTiles(painter, source, layer, coords, depthMode, StencilMode.disabled, ColorMode.disabled, isRenderingToTexture);
             // Then draw all the extrusions a second type, only coloring fragments if they have the
             // same depth value as the closest fragment in the previous pass. Use the stencil buffer
             // to prevent the second draw in cases where we have coincident polygons.
-            drawExtrusionTiles(painter, source, layer, coords, depthMode, painter.stencilModeFor3D(), painter.colorModeForRenderPass());
+            drawExtrusionTiles(painter, source, layer, coords, depthMode, painter.stencilModeFor3D(), painter.colorModeForRenderPass(), isRenderingToTexture);
         }
     }
 }
-function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMode, colorMode) {
+function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMode, colorMode, isRenderingToTexture) {
     const context = painter.context;
     const gl = context.gl;
     const fillPropertyName = 'fill-extrusion-pattern';
@@ -54768,7 +54913,7 @@ function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMo
             tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
             programConfiguration.updatePaintBuffers(crossfade);
         }
-        const projectionData = transform.getProjectionData({ overscaledTileID: coord });
+        const projectionData = transform.getProjectionData({ overscaledTileID: coord, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true });
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
         const translate = performance$1.translatePosition(transform, tile, layer.paint.get('fill-extrusion-translate'), layer.paint.get('fill-extrusion-translate-anchor'));
         const shouldUseVerticalGradient = layer.paint.get('fill-extrusion-vertical-gradient');
@@ -54779,9 +54924,10 @@ function drawExtrusionTiles(painter, source, layer, coords, depthMode, stencilMo
     }
 }
 
-function drawHillshade(painter, sourceCache, layer, tileIDs) {
+function drawHillshade(painter, sourceCache, layer, tileIDs, renderOptions) {
     if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent')
         return;
+    const { isRenderingToTexture } = renderOptions;
     const context = painter.context;
     const projection = painter.style.projection;
     const useSubdivision = projection.useSubdivision;
@@ -54798,17 +54944,17 @@ function drawHillshade(painter, sourceCache, layer, tileIDs) {
         if (useSubdivision) {
             // Two-pass rendering
             const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
-            renderHillshade(painter, sourceCache, layer, coords, stencilBorderless, depthMode, colorMode, false); // draw without borders
-            renderHillshade(painter, sourceCache, layer, coords, stencilBorders, depthMode, colorMode, true); // draw with borders
+            renderHillshade(painter, sourceCache, layer, coords, stencilBorderless, depthMode, colorMode, false, isRenderingToTexture); // draw without borders
+            renderHillshade(painter, sourceCache, layer, coords, stencilBorders, depthMode, colorMode, true, isRenderingToTexture); // draw with borders
         }
         else {
             // Simple rendering
             const [stencil, coords] = painter.stencilConfigForOverlap(tileIDs);
-            renderHillshade(painter, sourceCache, layer, coords, stencil, depthMode, colorMode, false);
+            renderHillshade(painter, sourceCache, layer, coords, stencil, depthMode, colorMode, false, isRenderingToTexture);
         }
     }
 }
-function renderHillshade(painter, sourceCache, layer, coords, stencilModes, depthMode, colorMode, useBorder) {
+function renderHillshade(painter, sourceCache, layer, coords, stencilModes, depthMode, colorMode, useBorder, isRenderingToTexture) {
     var _a;
     const projection = painter.style.projection;
     const context = painter.context;
@@ -54826,11 +54972,11 @@ function renderHillshade(painter, sourceCache, layer, coords, stencilModes, dept
         const terrainData = (_a = painter.style.map.terrain) === null || _a === void 0 ? void 0 : _a.getTerrainData(coord);
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
-        const globeWithTerrain = painter.style.map.terrain && painter.style.projection.name === 'globe';
         const projectionData = transform.getProjectionData({
             overscaledTileID: coord,
             aligned: align,
-            ignoreGlobeMatrix: globeWithTerrain
+            applyGlobeMatrix: !isRenderingToTexture,
+            applyTerrainMatrix: true
         });
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW, hillshadeUniformValues(painter, tile, layer), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
@@ -54885,13 +55031,14 @@ const cornerCoords = [
     new performance$1.Point(performance$1.EXTENT, performance$1.EXTENT),
     new performance$1.Point(0, performance$1.EXTENT),
 ];
-function drawRaster(painter, sourceCache, layer, tileIDs, isRenderingToTexture = false) {
+function drawRaster(painter, sourceCache, layer, tileIDs, renderOptions) {
     if (painter.renderPass !== 'translucent')
         return;
     if (layer.paint.get('raster-opacity') === 0)
         return;
     if (!tileIDs.length)
         return;
+    const { isRenderingToTexture } = renderOptions;
     const source = sourceCache.getSource();
     const projection = painter.style.projection;
     const useSubdivision = projection.useSubdivision;
@@ -54960,7 +55107,7 @@ function drawTiles(painter, sourceCache, layer, coords, stencilModes, useBorder,
             gl.texParameterf(gl.TEXTURE_2D, context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, context.extTextureFilterAnisotropicMax);
         }
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
-        const projectionData = transform.getProjectionData({ overscaledTileID: coord, aligned: align, ignoreGlobeMatrix: isRenderingToTexture });
+        const projectionData = transform.getProjectionData({ overscaledTileID: coord, aligned: align, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true });
         const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer, corners);
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');
         const stencilMode = stencilModes ? stencilModes[coord.overscaledZ] : StencilMode.disabled;
@@ -55008,18 +55155,18 @@ function getFadeValues(tile, parentTile, sourceCache, layer, transform, terrain)
     }
 }
 
-function drawBackground(painter, sourceCache, layer, coords) {
+function drawBackground(painter, sourceCache, layer, coords, renderOptions) {
     const color = layer.paint.get('background-color');
     const opacity = layer.paint.get('background-opacity');
     if (opacity === 0)
         return;
+    const { isRenderingToTexture } = renderOptions;
     const context = painter.context;
     const gl = context.gl;
     const projection = painter.style.projection;
     const transform = painter.transform;
     const tileSize = transform.tileSize;
     const image = layer.paint.get('background-pattern');
-    const globeWithTerrain = painter.style.map.terrain && painter.style.projection.name === 'globe';
     if (painter.isPatternMissing(image))
         return;
     const pass = (!image && color.a === 1 && opacity === 1 && painter.opaquePassEnabledForLayer()) ? 'opaque' : 'translucent';
@@ -55038,7 +55185,8 @@ function drawBackground(painter, sourceCache, layer, coords) {
     for (const tileID of tileIDs) {
         const projectionData = transform.getProjectionData({
             overscaledTileID: tileID,
-            ignoreGlobeMatrix: globeWithTerrain
+            applyGlobeMatrix: !isRenderingToTexture,
+            applyTerrainMatrix: true
         });
         const uniformValues = image ?
             backgroundPatternUniformValues(opacity, painter, image, { tileID, tileSize }, crossfade) :
@@ -55124,7 +55272,7 @@ function drawDebugTile(painter, sourceCache, coord) {
     }
     const tileLabel = `${tileIdText} ${tileSizeKb}kB`;
     drawTextToOverlay(painter, tileLabel);
-    const projectionData = painter.transform.getProjectionData({ overscaledTileID: coord });
+    const projectionData = painter.transform.getProjectionData({ overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true });
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, ColorMode.alphaBlended, CullFaceMode.disabled, debugUniformValues(performance$1.Color.transparent, scaleRatio), null, projectionData, id, painter.debugBuffer, painter.quadTriangleIndexBuffer, painter.debugSegments);
     program.draw(context, gl.LINE_STRIP, depthMode, stencilMode, colorMode, CullFaceMode.disabled, debugUniformValues(performance$1.Color.red), terrainData, projectionData, id, painter.debugBuffer, painter.tileBorderIndexBuffer, painter.debugSegments);
 }
@@ -55173,12 +55321,13 @@ function selectDebugSource(style, zoom) {
     return selectedSource;
 }
 
-function drawCustom(painter, sourceCache, layer) {
+function drawCustom(painter, sourceCache, layer, renderOptions) {
+    const { isRenderingGlobe } = renderOptions;
     const context = painter.context;
     const implementation = layer.implementation;
     const projection = painter.style.projection;
     const transform = painter.transform;
-    const projectionData = transform.getProjectionDataForCustomLayer();
+    const projectionData = transform.getProjectionDataForCustomLayer(isRenderingGlobe);
     const customLayerArgs = {
         farZ: transform.farZ,
         nearZ: transform.nearZ,
@@ -55237,7 +55386,7 @@ function drawDepth(painter, terrain) {
     context.clear({ color: performance$1.Color.transparent, depth: 1 });
     for (const tile of tiles) {
         const terrainData = terrain.getTerrainData(tile.tileID);
-        const projectionData = tr.getProjectionData({ overscaledTileID: tile.tileID, ignoreTerrainMatrix: true });
+        const projectionData = tr.getProjectionData({ overscaledTileID: tile.tileID, applyTerrainMatrix: false, applyGlobeMatrix: true });
         const uniformValues = terrainDepthUniformValues(terrain.getMeshFrameDelta(tr.zoom));
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
@@ -55269,15 +55418,15 @@ function drawCoords(painter, terrain) {
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, coords.texture);
         const uniformValues = terrainCoordsUniformValues(255 - terrain.coordsIndex.length, terrain.getMeshFrameDelta(tr.zoom));
-        const projectionData = tr.getProjectionData({ overscaledTileID: tile.tileID, ignoreTerrainMatrix: true });
+        const projectionData = tr.getProjectionData({ overscaledTileID: tile.tileID, applyTerrainMatrix: false, applyGlobeMatrix: true });
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
         terrain.coordsIndex.push(tile.tileID.key);
     }
     context.bindFramebuffer.set(null);
     context.viewport.set([0, 0, painter.width, painter.height]);
 }
-function drawTerrain(painter, terrain, tiles) {
-    var _a;
+function drawTerrain(painter, terrain, tiles, renderOptions) {
+    const { isRenderingGlobe } = renderOptions;
     const context = painter.context;
     const gl = context.gl;
     const tr = painter.transform;
@@ -55294,8 +55443,8 @@ function drawTerrain(painter, terrain, tiles) {
         gl.bindTexture(gl.TEXTURE_2D, texture.texture);
         const eleDelta = terrain.getMeshFrameDelta(tr.zoom);
         const fogMatrix = tr.calculateFogMatrix(tile.tileID.toUnwrapped());
-        const uniformValues = terrainUniformValues(eleDelta, fogMatrix, painter.style.sky, tr.pitch, ((_a = painter.style.projection) === null || _a === void 0 ? void 0 : _a.name) === 'globe');
-        const projectionData = tr.getProjectionData({ overscaledTileID: tile.tileID, ignoreTerrainMatrix: true });
+        const uniformValues = terrainUniformValues(eleDelta, fogMatrix, painter.style.sky, tr.pitch, isRenderingGlobe);
+        const projectionData = tr.getProjectionData({ overscaledTileID: tile.tileID, applyTerrainMatrix: false, applyGlobeMatrix: true });
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }
@@ -55347,7 +55496,7 @@ function drawAtmosphere(painter, sky, light) {
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadOnly, [0, 1]);
     const transform = painter.transform;
     const sunPos = getSunPos(light, painter.transform);
-    const projectionData = transform.getProjectionData({ overscaledTileID: null });
+    const projectionData = transform.getProjectionData({ overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true });
     const atmosphereBlend = sky.properties.get('atmosphere-blend') * projectionData.projectionTransition;
     if (atmosphereBlend === 0) {
         // Don't draw anything if atmosphere is fully transparent
@@ -55519,7 +55668,7 @@ class Painter {
             const stencilRef = tileStencilRefs[tileID.key];
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true, 'stencil');
-            const projectionData = transform.getProjectionData({ overscaledTileID: tileID });
+            const projectionData = transform.getProjectionData({ overscaledTileID: tileID, applyGlobeMatrix: true, applyTerrainMatrix: true });
             program.draw(context, gl.TRIANGLES, DepthMode.disabled, 
             // Tests will always pass, and ref value will be written to stencil buffer.
             new StencilMode({ func: gl.ALWAYS, mask: 0 }, stencilRef, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE), ColorMode.disabled, renderToTexture ? CullFaceMode.disabled : CullFaceMode.backCCW, null, terrainData, projectionData, '$clipping', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
@@ -55541,7 +55690,7 @@ class Painter {
         for (const tileID of tileIDs) {
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true, true, 'raster');
-            const projectionData = transform.getProjectionData({ overscaledTileID: tileID });
+            const projectionData = transform.getProjectionData({ overscaledTileID: tileID, applyGlobeMatrix: true, applyTerrainMatrix: true });
             program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, ColorMode.disabled, CullFaceMode.backCCW, null, terrainData, projectionData, '$clipping', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
         }
     }
@@ -55662,6 +55811,7 @@ class Painter {
         const coordsAscending = {};
         const coordsDescending = {};
         const coordsDescendingSymbol = {};
+        const renderOptions = { isRenderingToTexture: false, isRenderingGlobe: style.projection.name === 'globe' };
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
             if (sourceCache.used) {
@@ -55697,7 +55847,7 @@ class Painter {
             const coords = coordsDescending[layer.source];
             if (layer.type !== 'custom' && !coords.length)
                 continue;
-            this.renderLayer(this, sourceCaches[layer.source], layer, coords);
+            this.renderLayer(this, sourceCaches[layer.source], layer, coords, renderOptions);
         }
         // Execute offscreen GPU tasks of the projection manager
         this.style.projection.updateGPUdependent({
@@ -55724,7 +55874,7 @@ class Painter {
                 const sourceCache = sourceCaches[layer.source];
                 const coords = coordsAscending[layer.source];
                 this._renderTileClippingMasks(layer, coords, false);
-                this.renderLayer(this, sourceCache, layer, coords);
+                this.renderLayer(this, sourceCache, layer, coords, renderOptions);
             }
         }
         // Translucent pass ===============================================
@@ -55734,13 +55884,13 @@ class Painter {
         for (this.currentLayer = 0; this.currentLayer < layerIds.length; this.currentLayer++) {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const sourceCache = sourceCaches[layer.source];
-            if (this.renderToTexture && this.renderToTexture.renderLayer(layer))
+            if (this.renderToTexture && this.renderToTexture.renderLayer(layer, renderOptions))
                 continue;
             if (!this.opaquePassEnabledForLayer() && !globeDepthRendered) {
                 globeDepthRendered = true;
                 // Render the globe sphere into the depth buffer - but only if globe is enabled and terrain is disabled.
                 // There should be no need for explicitly writing tile depths when terrain is enabled.
-                if (this.style.projection.name === 'globe' && !this.style.map.terrain) {
+                if (renderOptions.isRenderingGlobe && !this.style.map.terrain) {
                     this._renderTilesDepthBuffer();
                 }
             }
@@ -55749,10 +55899,10 @@ class Painter {
             // separate clipping masks
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
             this._renderTileClippingMasks(layer, coordsAscending[layer.source], false);
-            this.renderLayer(this, sourceCache, layer, coords);
+            this.renderLayer(this, sourceCache, layer, coords, renderOptions);
         }
         // Render atmosphere, only for Globe projection
-        if (this.style.projection.name === 'globe') {
+        if (renderOptions.isRenderingGlobe) {
             drawAtmosphere(this, this.style.sky, this.style.light);
         }
         if (this.options.showTileBoundaries) {
@@ -55792,43 +55942,41 @@ class Painter {
         drawDepth(this, this.style.map.terrain);
         drawCoords(this, this.style.map.terrain);
     }
-    renderLayer(painter, sourceCache, layer, coords, isRenderingToTexture = false) {
+    renderLayer(painter, sourceCache, layer, coords, renderOptions) {
         if (layer.isHidden(this.transform.zoom))
             return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length)
             return;
         this.id = layer.id;
-        switch (layer.type) {
-            case 'symbol':
-                drawSymbols(painter, sourceCache, layer, coords, this.style.placement.variableOffsets);
-                break;
-            case 'circle':
-                drawCircles(painter, sourceCache, layer, coords);
-                break;
-            case 'heatmap':
-                drawHeatmap(painter, sourceCache, layer, coords);
-                break;
-            case 'line':
-                drawLine(painter, sourceCache, layer, coords);
-                break;
-            case 'fill':
-                drawFill(painter, sourceCache, layer, coords);
-                break;
-            case 'fill-extrusion':
-                drawFillExtrusion(painter, sourceCache, layer, coords);
-                break;
-            case 'hillshade':
-                drawHillshade(painter, sourceCache, layer, coords);
-                break;
-            case 'raster':
-                drawRaster(painter, sourceCache, layer, coords, isRenderingToTexture);
-                break;
-            case 'background':
-                drawBackground(painter, sourceCache, layer, coords);
-                break;
-            case 'custom':
-                drawCustom(painter, sourceCache, layer);
-                break;
+        if (performance$1.isSymbolStyleLayer(layer)) {
+            drawSymbols(painter, sourceCache, layer, coords, this.style.placement.variableOffsets, renderOptions);
+        }
+        else if (performance$1.isCircleStyleLayer(layer)) {
+            drawCircles(painter, sourceCache, layer, coords, renderOptions);
+        }
+        else if (performance$1.isHeatmapStyleLayer(layer)) {
+            drawHeatmap(painter, sourceCache, layer, coords, renderOptions);
+        }
+        else if (performance$1.isLineStyleLayer(layer)) {
+            drawLine(painter, sourceCache, layer, coords, renderOptions);
+        }
+        else if (performance$1.isFillStyleLayer(layer)) {
+            drawFill(painter, sourceCache, layer, coords, renderOptions);
+        }
+        else if (performance$1.isFillExtrusionStyleLayer(layer)) {
+            drawFillExtrusion(painter, sourceCache, layer, coords, renderOptions);
+        }
+        else if (performance$1.isHillshadeStyleLayer(layer)) {
+            drawHillshade(painter, sourceCache, layer, coords, renderOptions);
+        }
+        else if (performance$1.isRasterStyleLayer(layer)) {
+            drawRaster(painter, sourceCache, layer, coords, renderOptions);
+        }
+        else if (performance$1.isBackgroundStyleLayer(layer)) {
+            drawBackground(painter, sourceCache, layer, coords, renderOptions);
+        }
+        else if (performance$1.isCustomStyleLayer(layer)) {
+            drawCustom(painter, sourceCache, layer, renderOptions);
         }
     }
     saveTileTexture(texture) {
@@ -56839,12 +56987,12 @@ class DragHandler {
             this.reset(e);
             return;
         }
-        const movePoint = point['length'] ? point[0] : point;
+        const movePoint = Array.isArray(point) ? point[0] : point;
         if (!this._moved && movePoint.dist(lastPoint) < this._clickTolerance)
             return;
         this._moved = true;
         this._lastPoint = movePoint;
-        return this._move(lastPoint, movePoint);
+        return this._move(lastPoint, movePoint, new performance$1.Point(window.innerWidth / 2, window.innerHeight / 2));
     }
     dragEnd(e) {
         if (!this.isEnabled() || !this._lastPoint)
@@ -56950,7 +57098,7 @@ const assignEvents$1 = (handler) => {
         e.preventDefault();
     };
 };
-const generateMousePanHandler = ({ enable, clickTolerance, }) => {
+function generateMousePanHandler({ enable, clickTolerance }) {
     const mouseMoveStateManager = new MouseMoveStateManager({
         checkCorrectEvent: (e) => DOM.mouseButton(e) === LEFT_BUTTON && !e.ctrlKey,
     });
@@ -56962,23 +57110,31 @@ const generateMousePanHandler = ({ enable, clickTolerance, }) => {
         enable,
         assignEvents: assignEvents$1,
     });
-};
-const generateMouseRotationHandler = ({ enable, clickTolerance, bearingDegreesPerPixelMoved = 0.8 }) => {
+}
+;
+function generateMouseRotationHandler({ enable, clickTolerance, aroundCenter = true }) {
     const mouseMoveStateManager = new MouseMoveStateManager({
         checkCorrectEvent: (e) => (DOM.mouseButton(e) === LEFT_BUTTON && e.ctrlKey) ||
             (DOM.mouseButton(e) === RIGHT_BUTTON && !e.ctrlKey),
     });
     return new DragHandler({
         clickTolerance,
-        move: (lastPoint, point) => ({ bearingDelta: (point.x - lastPoint.x) * bearingDegreesPerPixelMoved }),
+        move: (lastPoint, currentPoint, center) => {
+            if (aroundCenter) {
+                // Avoid rotation related to y axis since it is "saved" for pitch
+                return { bearingDelta: performance$1.getAngleDelta(new performance$1.Point(lastPoint.x, currentPoint.y), currentPoint, center) };
+            }
+            return { bearingDelta: (currentPoint.x - lastPoint.x) * 0.8 };
+        },
         // prevent browser context menu when necessary; we don't allow it with rotation
         // because we can't discern rotation gesture start from contextmenu on Mac
         moveStateManager: mouseMoveStateManager,
         enable,
         assignEvents: assignEvents$1,
     });
-};
-const generateMousePitchHandler = ({ enable, clickTolerance, pitchDegreesPerPixelMoved = -0.5 }) => {
+}
+;
+function generateMousePitchHandler({ enable, clickTolerance, pitchDegreesPerPixelMoved = -0.5 }) {
     const mouseMoveStateManager = new MouseMoveStateManager({
         checkCorrectEvent: (e) => (DOM.mouseButton(e) === LEFT_BUTTON && e.ctrlKey) ||
             (DOM.mouseButton(e) === RIGHT_BUTTON),
@@ -56992,21 +57148,29 @@ const generateMousePitchHandler = ({ enable, clickTolerance, pitchDegreesPerPixe
         enable,
         assignEvents: assignEvents$1,
     });
-};
-const generateMouseRollHandler = ({ enable, clickTolerance, rollDegreesPerPixelMoved = 0.8 }) => {
+}
+;
+function generateMouseRollHandler({ enable, clickTolerance, rollDegreesPerPixelMoved = 0.3 }) {
     const mouseMoveStateManager = new MouseMoveStateManager({
         checkCorrectEvent: (e) => (DOM.mouseButton(e) === RIGHT_BUTTON && e.ctrlKey),
     });
     return new DragHandler({
         clickTolerance,
-        move: (lastPoint, point) => ({ rollDelta: (point.x - lastPoint.x) * rollDegreesPerPixelMoved }),
+        move: (lastPoint, currentPoint, center) => {
+            let rollDelta = (currentPoint.x - lastPoint.x) * rollDegreesPerPixelMoved;
+            if (currentPoint.y < center.y) {
+                rollDelta = -rollDelta;
+            }
+            return { rollDelta };
+        },
         // prevent browser context menu when necessary; we don't allow it with roll
         // because we can't discern roll gesture start from contextmenu on Mac
         moveStateManager: mouseMoveStateManager,
         enable,
         assignEvents: assignEvents$1,
     });
-};
+}
+;
 
 /**
  * A `TouchPanHandler` allows the user to pan the map using touch gestures.
@@ -57775,7 +57939,7 @@ class ScrollZoomHandler {
         if (this._type === 'wheel' && startZoom && easing && lastWheelEventTimeDiff) {
             const t = Math.min(lastWheelEventTimeDiff / 200, 1);
             const k = easing(t);
-            zoom = performance$1.interpolate.number(startZoom, targetZoom, k);
+            zoom = performance$1.interpolateFactory.number(startZoom, targetZoom, k);
             if (t < 1) {
                 if (!this._frameId) {
                     this._frameId = true;
@@ -59574,7 +59738,7 @@ class Camera extends performance$1.Evented {
             this._elevationStart += k * (pitch1 - pitch2);
             this._elevationTarget = elevation;
         }
-        this.transform.setElevation(performance$1.interpolate.number(this._elevationStart, this._elevationTarget, k));
+        this.transform.setElevation(performance$1.interpolateFactory.number(this._elevationStart, this._elevationTarget, k));
     }
     _finalizeElevation() {
         this._elevationFreeze = false;
@@ -59858,13 +60022,13 @@ class Camera extends performance$1.Evented {
             const scale = 1 / w(s);
             const centerFactor = u(s);
             if (this._rotating) {
-                tr.setBearing(performance$1.interpolate.number(startBearing, bearing, k));
+                tr.setBearing(performance$1.interpolateFactory.number(startBearing, bearing, k));
             }
             if (this._pitching) {
-                tr.setPitch(performance$1.interpolate.number(startPitch, pitch, k));
+                tr.setPitch(performance$1.interpolateFactory.number(startPitch, pitch, k));
             }
             if (this._rolling) {
-                tr.setRoll(performance$1.interpolate.number(startRoll, roll, k));
+                tr.setRoll(performance$1.interpolateFactory.number(startRoll, roll, k));
             }
             if (this._padding) {
                 tr.interpolatePadding(startPadding, padding, k);
@@ -60047,7 +60211,7 @@ class AttributionControl {
         this._map.off('drag', this._updateCompactMinimize);
         this._map = undefined;
         this._compact = undefined;
-        this._attribHTML = undefined;
+        this._sanitizedAttributionHTML = undefined;
     }
     _setElementTitle(element, title) {
         const str = this._map._getUIString(`AttributionControl.${title}`);
@@ -60100,11 +60264,11 @@ class AttributionControl {
         });
         // check if attribution string is different to minimize DOM changes
         const attribHTML = attributions.join(' | ');
-        if (attribHTML === this._attribHTML)
+        if (attribHTML === this._sanitizedAttributionHTML)
             return;
-        this._attribHTML = attribHTML;
+        this._sanitizedAttributionHTML = DOM.sanitize(attribHTML);
         if (attributions.length) {
-            this._innerContainer.innerHTML = attribHTML;
+            this._innerContainer.innerHTML = this._sanitizedAttributionHTML;
             this._container.classList.remove('maplibregl-attrib-empty');
         }
         else {
@@ -60889,11 +61053,13 @@ class RenderToTexture {
      * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
      * a symbol-layer is in between of fill-layers.
      * @param layer - the layer to render
+     * @param renderOptions - flags describing how to render the layer
      * @returns if true layer is rendered to texture, otherwise false
      */
-    renderLayer(layer) {
+    renderLayer(layer, renderOptions) {
         if (layer.isHidden(this.painter.transform.zoom))
             return false;
+        const options = Object.assign(Object.assign({}, renderOptions), { isRenderingToTexture: true });
         const type = layer.type;
         const painter = this.painter;
         const isLastLayer = this._renderableLayerIds[this._renderableLayerIds.length - 1] === layer.id;
@@ -60916,7 +61082,7 @@ class RenderToTexture {
             for (const tile of this._renderableTiles) {
                 // if render pool is full draw current tiles to screen and free pool
                 if (this.pool.isFull()) {
-                    drawTerrain(this.painter, this.terrain, this._rttTiles);
+                    drawTerrain(this.painter, this.terrain, this._rttTiles, options);
                     this._rttTiles = [];
                     this.pool.freeAllObjects();
                 }
@@ -60943,12 +61109,12 @@ class RenderToTexture {
                     const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
                     painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
                     painter._renderTileClippingMasks(layer, coords, true);
-                    painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords, true);
+                    painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords, options);
                     if (layer.source)
                         tile.rttCoords[layer.source] = this._coordsAscendingStr[layer.source][tile.tileID.key];
                 }
             }
-            drawTerrain(this.painter, this.terrain, this._rttTiles);
+            drawTerrain(this.painter, this.terrain, this._rttTiles, options);
             this._rttTiles = [];
             this.pool.freeAllObjects();
             return LAYERS[type];
@@ -63541,17 +63707,24 @@ const assignEvents = (handler) => {
     handler.touchmoveWindow = handler.dragMove;
     handler.touchend = handler.dragEnd;
 };
-const generateOneFingerTouchRotationHandler = ({ enable, clickTolerance, bearingDegreesPerPixelMoved = 0.8 }) => {
+function generateOneFingerTouchRotationHandler({ enable, clickTolerance, aroundCenter = true }) {
     const touchMoveStateManager = new OneFingerTouchMoveStateManager();
     return new DragHandler({
         clickTolerance,
-        move: (lastPoint, point) => ({ bearingDelta: (point.x - lastPoint.x) * bearingDegreesPerPixelMoved }),
+        move: (lastPoint, currentPoint, center) => {
+            if (aroundCenter) {
+                // Avoid rotation related to y axis since it is "saved" for pitch
+                return { bearingDelta: performance$1.getAngleDelta(new performance$1.Point(lastPoint.x, currentPoint.y), currentPoint, center) };
+            }
+            return { bearingDelta: (currentPoint.x - lastPoint.x) * 0.8 };
+        },
         moveStateManager: touchMoveStateManager,
         enable,
         assignEvents,
     });
-};
-const generateOneFingerTouchPitchHandler = ({ enable, clickTolerance, pitchDegreesPerPixelMoved = -0.5 }) => {
+}
+;
+function generateOneFingerTouchPitchHandler({ enable, clickTolerance, pitchDegreesPerPixelMoved = -0.5 }) {
     const touchMoveStateManager = new OneFingerTouchMoveStateManager();
     return new DragHandler({
         clickTolerance,
@@ -63560,7 +63733,8 @@ const generateOneFingerTouchPitchHandler = ({ enable, clickTolerance, pitchDegre
         enable,
         assignEvents,
     });
-};
+}
+;
 
 const defaultOptions$3 = {
     showCompass: true,
@@ -63747,7 +63921,7 @@ class MouseRotateWrapper {
         const mapRotateTolerance = map.dragRotate._mouseRotate.getClickTolerance();
         const mapPitchTolerance = map.dragRotate._mousePitch.getClickTolerance();
         this.element = element;
-        this.mouseRotate = generateMouseRotationHandler({ clickTolerance: mapRotateTolerance, enable: true });
+        this.mouseRotate = generateMouseRotationHandler({ clickTolerance: mapRotateTolerance, enable: true, aroundCenter: false });
         this.touchRotate = generateOneFingerTouchRotationHandler({ clickTolerance: mapRotateTolerance, enable: true });
         this.map = map;
         if (pitch) {
@@ -65253,10 +65427,14 @@ function updateScale(map, container, options) {
     // container with maximum length (Default) as 100px.
     // Using spherical law of cosines approximation, the real distance is
     // found between the two coordinates.
-    const maxWidth = options && options.maxWidth || 100;
+    // Minimum maxWidth is calculated for the scale box.
+    const optWidth = options && options.maxWidth || 100;
     const y = map._container.clientHeight / 2;
-    const left = map.unproject([0, y]);
-    const right = map.unproject([maxWidth, y]);
+    const x = map._container.clientWidth / 2;
+    const left = map.unproject([x - optWidth / 2, y]);
+    const right = map.unproject([x + optWidth / 2, y]);
+    const globeWidth = Math.round(map.project(right).x - map.project(left).x);
+    const maxWidth = Math.min(optWidth, globeWidth, map._container.clientWidth);
     const maxMeters = left.distanceTo(right);
     // The real distance corresponding to 100px scale length is rounded off to
     // near pretty number and the scale length for the same is found out.
@@ -66282,6 +66460,7 @@ function setWorkerUrl(value) { performance$1.config.WORKER_URL = value; }
 function importScriptInWorkers(workerUrl) { return getGlobalDispatcher().broadcast("IS" /* MessageType.importScript */, workerUrl); }
 
 exports.AJAXError = performance$1.AJAXError;
+exports.Event = performance$1.Event;
 exports.Evented = performance$1.Evented;
 exports.LngLat = performance$1.LngLat;
 exports.MercatorCoordinate = performance$1.MercatorCoordinate;

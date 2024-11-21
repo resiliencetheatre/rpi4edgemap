@@ -773,6 +773,9 @@ export type Listener = (a: any) => any;
 export type Listeners = {
 	[_: string]: Array<Listener>;
 };
+/**
+ * The event class
+ */
 declare class Event$1 {
 	readonly type: string;
 	constructor(type: string, data?: any);
@@ -3491,9 +3494,10 @@ declare class RenderToTexture {
 	 * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
 	 * a symbol-layer is in between of fill-layers.
 	 * @param layer - the layer to render
+	 * @param renderOptions - flags describing how to render the layer
 	 * @returns if true layer is rendered to texture, otherwise false
 	 */
-	renderLayer(layer: StyleLayer): boolean;
+	renderLayer(layer: StyleLayer, renderOptions: RenderOptions): boolean;
 }
 export type RenderPass = "offscreen" | "opaque" | "translucent";
 export type PainterOptions = {
@@ -3504,6 +3508,10 @@ export type PainterOptions = {
 	zooming: boolean;
 	moving: boolean;
 	fadeDuration: number;
+};
+export type RenderOptions = {
+	isRenderingToTexture: boolean;
+	isRenderingGlobe: boolean;
 };
 declare class Painter {
 	context: Context;
@@ -3601,7 +3609,7 @@ declare class Painter {
 	 * to accurate (that is, the camera has not moved much since it was updated last).
 	 */
 	maybeDrawDepthAndCoords(requireExact: boolean): void;
-	renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, isRenderingToTexture?: boolean): void;
+	renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, renderOptions: RenderOptions): void;
 	saveTileTexture(texture: Texture): void;
 	getTileTexture(size: number): Texture;
 	/**
@@ -4751,13 +4759,13 @@ export type ProjectionDataParams = {
 	 */
 	aligned?: boolean;
 	/**
-	 * Set to true if the terrain matrix should be ignored
+	 * Set to true if the terrain matrix should be applied (i.e. when rendering terrain)
 	 */
-	ignoreTerrainMatrix?: boolean;
+	applyTerrainMatrix?: boolean;
 	/**
-	 * Set to true if the globe matrix should be ignored (i.e. when rendering to texture for terrain)
+	 * Set to true if the globe matrix should be applied (i.e. when rendering globe)
 	 */
-	ignoreGlobeMatrix?: boolean;
+	applyGlobeMatrix?: boolean;
 };
 export interface CoveringTilesDetailsProvider {
 	/**
@@ -5219,7 +5227,7 @@ export interface IReadonlyTransform extends ITransformGetters {
 	/**
 	 * Return projection data such that coordinates in mercator projection in range 0..1 will get projected to the map correctly.
 	 */
-	getProjectionDataForCustomLayer(): ProjectionData;
+	getProjectionDataForCustomLayer(applyGlobeMatrix: boolean): ProjectionData;
 	/**
 	 * Returns a tile-specific projection matrix. Used for symbol placement fast-path for mercator transform.
 	 */
@@ -9078,7 +9086,13 @@ declare abstract class Camera extends Evented {
 		easeId?: string;
 		noMoveStart?: boolean;
 	}, eventData?: any): this;
-	_prepareEase(eventData: any, noMoveStart: boolean, currently?: any): void;
+	_prepareEase(eventData: any, noMoveStart: boolean, currently?: {
+		moving?: boolean;
+		zooming?: boolean;
+		rotating?: boolean;
+		pitching?: boolean;
+		rolling?: boolean;
+	}): void;
 	_prepareElevation(center: LngLat): void;
 	_updateElevation(k: number): void;
 	_finalizeElevation(): void;
@@ -9443,7 +9457,7 @@ export declare class AttributionControl implements IControl {
 	_innerContainer: HTMLElement;
 	_compactButton: HTMLElement;
 	_editLink: HTMLAnchorElement;
-	_attribHTML: string;
+	_sanitizedAttributionHTML: string;
 	styleId: string;
 	styleOwner: string;
 	/**
@@ -13649,6 +13663,7 @@ export declare class GeoJSONSource extends Evented implements Source {
 	_removed: boolean;
 	/** @internal */
 	constructor(id: string, options: GeoJSONSourceOptions, dispatcher: Dispatcher, eventedParent: Evented);
+	private _pixelsToTileUnits;
 	load(): Promise<void>;
 	onAdd(map: Map$1): void;
 	/**
@@ -14259,6 +14274,7 @@ export {
 	DiffCommand,
 	DiffOperations,
 	ErrorEvent$1 as ErrorEvent,
+	Event$1 as Event,
 	Feature,
 	FeatureFilter,
 	FeatureState,
