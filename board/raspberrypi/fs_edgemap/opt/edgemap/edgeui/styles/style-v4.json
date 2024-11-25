@@ -39,8 +39,8 @@
         "encoding": "terrarium"
         }
     },
-    "sprite": "local://./edgeui/styles/sprite",
-    "glyphs": "fonts/{fontstack}/{range}.pbf",
+    "sprite": "local://./edgeui/sprites/v4/light",
+    "glyphs": "local://./edgeui/fonts/{fontstack}/{range}.pbf",
     "layers": [
         {
             "id": "background",

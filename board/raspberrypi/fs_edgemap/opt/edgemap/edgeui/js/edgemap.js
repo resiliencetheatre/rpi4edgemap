@@ -865,10 +865,10 @@ function hideTails() {
 // Options to change map style on fly.
 // NOTE: Not in use, since style change loses symbols
 function setDarkStyle() {
-	map.setStyle(style_FI_debug);
+	map.setStyle("styles/style-v4-dark.json");
 }
 function setNormalStyle() {
-	map.setStyle(style_FI);
+	map.setStyle("styles/style-v4.json");
 }
 
 function centerMap(lat,lon) {
@@ -1547,11 +1547,7 @@ function toggleHillShadow() {
             map.setTerrain(null);
         } else {
             map.setLayoutProperty("hills", 'visibility', 'visible');
-            
-            map.setTerrain({
-              source: 'terrain', // the source containing your raster-dem data
-              exaggeration: 1         // optional exaggeration of terrain
-            });
+            map.setTerrain({ source: 'terrainSource' });
         }   
     }
 }

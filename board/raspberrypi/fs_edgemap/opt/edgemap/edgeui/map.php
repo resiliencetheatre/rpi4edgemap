@@ -87,18 +87,8 @@
              <div class="tooltip" id="reticulumTooltip">Reticulum message socket connected</div>
             <img id="meshtasticMsgSocketStatus" class="has-tooltip" src="icons/meshtastic-message-green.png" width=20px;>
              <div class="tooltip" id="meshtasticTooltip">Meshtastic message socket connected</div>
-                <table border=0>
-                    <tr>
-                        <td rowspan="2">
-                            <img id="securePttStatus" class="has-tooltip" src="icons/ptt-green.png" width=20px;>
-                            <div class="tooltip" id="meshtasticTooltip">SecurePTT status socket connected</div>
-                        </td>
-                        <td id="securePttTx" class="mapSecurepttTransmissionStatus">TX</div></td>
-                    </tr>
-                    <tr>
-                        <td id="securePttRx" class="mapSecurepttTransmissionStatus">RX</div></td>
-                    </tr>
-                </table>             
+            <img id="securePttStatus" class="has-tooltip" src="icons/ptt-green.png" width=20px;>
+             <div class="tooltip" id="meshtasticTooltip">SecurePTT status socket connected</div>
             <img id="gpsSocketStatus" class="has-tooltip" src="icons/gnss-green.png" width=20px;>
              <div class="tooltip" id="meshtasticTooltip">Local GNSS socket connected</div>
             <img id="meshtasticStatus" class="has-tooltip" src="icons/meshtastic-green.png" width=20px;>
@@ -119,7 +109,10 @@
             <img id="trackingIndicatorRed"  src="icons/tracking-red.png" width=20px;>
                  
         </div>
-        
+        <table style="display: none;">
+            <tr><td id="securePttTx" class="mapSecurepttTransmissionStatus">TX</div></td> <td> </td></tr>  
+            <tr><td id="securePttRx" class="mapSecurepttTransmissionStatus">RX</div></td> <td></td></tr>
+        </table>
     </center>
     </div>
     
@@ -1522,6 +1515,8 @@
             // showTails();
         }
         console.log("Map loaded.");
+        // TODO: Is there an issue to rotate globe projection when terrain
+        // is enabled? 
         map.setTerrain(null);
         loadCallSign();
         if ( reticulumFeatureEnabled ) {
@@ -1751,9 +1746,11 @@
                     );
                     if (visibility === 'visible') {
                         map.setLayoutProperty("hills", 'visibility', 'none');
+                        map.setTerrain(null);
                     } else {
                         map.setLayoutProperty("hills", 'visibility', 'visible');
-                    }   
+                        map.setTerrain({ source: 'terrainSource' });
+                    }
                 }
             }
         }

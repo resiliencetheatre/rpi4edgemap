@@ -28,7 +28,7 @@
             "type": "raster",
             "url": "pmtiles://satellite_4.pmtiles"
         },
-        "terrain": {
+        "terrainSource": {
         "type": "raster-dem",
         "url": "pmtiles://terrarium_z9.pmtiles",
         "encoding": "terrarium"
@@ -39,8 +39,9 @@
         "encoding": "terrarium"
         }
     },
-    "sprite": "local://./edgeui/styles/sprite",
-    "glyphs": "fonts/{fontstack}/{range}.pbf",
+
+    "sprite": "local://./edgeui/sprites/v4/light",
+    "glyphs": "local://./edgeui/fonts/{fontstack}/{range}.pbf",
     
     "layers": [
         {
@@ -10910,17 +10911,6 @@
             }
         },
         {
-            "id": "hills",
-            "type": "hillshade",
-            "source": "hillshadow",
-            "layout": {
-                "visibility": "none"
-            },
-            "paint": {
-                "hillshade-shadow-color": "#473B24"
-            }
-        },
-        {
             "id": "building-3d",
             "type": "fill-extrusion",
             "source": "protomaps",
@@ -10959,21 +10949,25 @@
                 "fill-extrusion-opacity": 0.9
             }
         }
+        ,
+        {
+            "id": "hills",
+            "type": "hillshade",
+            "source": "hillshadow",
+            "layout": {
+                "visibility": "none"
+            },
+            "paint": {
+                "hillshade-shadow-color": "#473B24"
+            }
+        }
         
         
         
-        
-    ]
-    
-    
-    
-    
-    
-    
-    ,
+
+    ],
     "terrain": {
-        "source": "terrain",
+        "source": "terrainSource",
         "exaggeration": 1
-    },
-    "id": "protomaps"
+    }
 }
