@@ -1,0 +1,16 @@
+[Unit]
+Description=macsec key broadcast daemon
+After=network.target sys-devices-virtual-net-end0.device multi-user.target
+Wants=macsec-receiver.service
+
+[Service]
+User=root
+WorkingDirectory=/opt/macsec
+ExecStartPre=sleep 5
+ExecStart=/usr/bin/python3 /opt/macsec/macpipe.py -s
+Restart=always
+RestartSec=5
+TimeoutStartSec=5
+
+[Install]
+WantedBy=multi-user.target

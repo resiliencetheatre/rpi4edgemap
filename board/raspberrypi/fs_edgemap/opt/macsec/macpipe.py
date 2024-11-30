@@ -105,8 +105,9 @@ def run_sudo_command(command: str) -> str:
     """
     try:
         # Use 'sudo' to run the command with elevated privileges
+        # NOTE: On Edgemap RPi4 image we removed 'sudo' here.
         result = subprocess.run(
-            f"sudo {command}",
+            f"{command}",
             shell=True,
             text=True,
             capture_output=True,
