@@ -1,0 +1,10 @@
+[Unit]
+Description=set suid bit for poweroff
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=chmod u+s /sbin/poweroff
+
+[Install]
+WantedBy=multi-user.target
