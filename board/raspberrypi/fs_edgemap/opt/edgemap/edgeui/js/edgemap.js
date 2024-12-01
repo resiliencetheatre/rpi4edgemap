@@ -137,6 +137,23 @@ class radioList {
 }
 
 
+function toggleStyle() {
+    // Get the current URL
+    const url = new URL(window.location.href);
+
+    // Get the current value of the 'style' parameter
+    const currentStyle = url.searchParams.get('style');
+
+    // Determine the new value (toggle between 'bright' and 'dark')
+    const newStyle = currentStyle === 'bright' ? 'dark' : 'bright';
+
+    // Update the 'style' parameter in the URL
+    url.searchParams.set('style', newStyle);
+
+    // Reload the page with the updated URL
+    window.location.href = url.toString();
+}
+
 // reticulum node list
 class reticulumList {
         constructor() {

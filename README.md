@@ -354,3 +354,6 @@ DEVICES="/dev/ttyUSB1"
 
 Daemon (gpsd) and 'gpsreader' is started automatically after you plug GPS in USB port.
 
+## Links
+
+* https://jvns.ca/blog/2024/11/29/why-pipes-get-stuck-buffering/

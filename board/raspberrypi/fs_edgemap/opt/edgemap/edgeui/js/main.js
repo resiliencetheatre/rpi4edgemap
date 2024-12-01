@@ -133,14 +133,14 @@ var menuItems = [
                 icon: '#svg-icon-about'
             },
             {
+                id   : 'style',
+                title: 'Style',
+                icon: '#svg-icon-toggle'
+            },
+            {
                 id   : 'distress',
                 title: 'Distress',
                 icon: '#svg-icon-distress'
-            },
-            {
-                id   : 'wipe',
-                title: 'Wipe',
-                icon: '#svg-icon-wipe'
             },
             {
                 id   : 'poweroff',
@@ -260,6 +260,12 @@ window.onload = function ()
             }
             if ( item.id == "pos_random" ) {
                 systemControl("pos_random");
+            }
+            if ( item.id == "style" ) {
+                toggleStyle();
+            }
+            if ( item.id == "distress" ) {
+                systemControl("distress");
             }
             
             

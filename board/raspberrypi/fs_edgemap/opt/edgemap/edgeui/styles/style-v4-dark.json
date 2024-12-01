@@ -10931,7 +10931,7 @@
                 "fill-extrusion-color": [
                      "interpolate",
                       ["linear"],
-                      ["get", "height"], 0, "lightgray", 200, "royalblue", 400, "lightblue"
+                      ["get", "height"], 0, "gray", 200, "royalblue", 400, "lightblue"
                 ],
                 "fill-extrusion-height": [
                       "interpolate",

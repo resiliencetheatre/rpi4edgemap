@@ -399,17 +399,31 @@
     [3] https://protomaps.com/
 
 */
-    
-    var map = new maplibregl.Map({
-      container: 'map',
-      zoom: 1,
-      minZoom: 1,
-      maxPitch: 85,
-      hash: true,
-      style: "styles/style.json"
-    });
-    
-    const edgemapUiVersion = "v0.75";
+    // Set map style based on URL parameter
+    const url = new URL(window.location.href);
+    const style_parameter = url.searchParams.get('style');
+    if ( style_parameter == "dark" ) 
+    {
+        var map = new maplibregl.Map({
+          container: 'map',
+          zoom: 1,
+          minZoom: 1,
+          maxPitch: 85,
+          hash: true,
+          style: "styles/style-v4-dark.json"
+        });
+    } else {    
+        var map = new maplibregl.Map({
+          container: 'map',
+          zoom: 1,
+          minZoom: 1,
+          maxPitch: 85,
+          hash: true,
+          style: "styles/style-v4.json"
+        });
+    }
+
+    const edgemapUiVersion = "v0.76";
     var intialZoomLevel=1;
 	var symbolSize = 30;
     
@@ -1809,15 +1823,17 @@
     <svg id="svg-icon-settings" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="#00ff00" d="m9.25 22l-.4-3.2q-.325-.125-.612-.3t-.563-.375L4.7 19.375l-2.75-4.75l2.575-1.95Q4.5 12.5 4.5 12.338v-.675q0-.163.025-.338L1.95 9.375l2.75-4.75l2.975 1.25q.275-.2.575-.375t.6-.3l.4-3.2h5.5l.4 3.2q.325.125.613.3t.562.375l2.975-1.25l2.75 4.75l-2.575 1.95q.025.175.025.338v.674q0 .163-.05.338l2.575 1.95l-2.75 4.75l-2.95-1.25q-.275.2-.575.375t-.6.3l-.4 3.2zm2.8-6.5q1.45 0 2.475-1.025T15.55 12t-1.025-2.475T12.05 8.5q-1.475 0-2.488 1.025T8.55 12t1.013 2.475T12.05 15.5"/></svg>
     <svg id="svg-icon-timer" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 56 56"><path fill="#00FF00" d="M28 51.906c13.055 0 23.906-10.828 23.906-23.906c0-13.055-10.828-23.906-23.883-23.906c-1.242 0-1.851.75-1.851 1.968v9.094c0 1.008.68 1.828 1.71 1.828c1.032 0 1.735-.82 1.735-1.828V8.148C39.93 8.968 47.898 17.5 47.898 28A19.84 19.84 0 0 1 28 47.922c-11.063 0-19.945-8.86-19.922-19.922c.023-4.922 1.781-9.398 4.711-12.844c.726-.914.773-2.015 0-2.836c-.774-.843-2.086-.773-2.93.282C6.273 16.773 4.094 22.164 4.094 28c0 13.078 10.828 23.906 23.906 23.906m3.75-20.297c1.851-1.922 1.477-4.547-.75-6.093l-12.4-8.649c-1.171-.82-2.39.399-1.57 1.57l8.649 12.399c1.547 2.227 4.171 2.625 6.07.773"/></svg>
     <svg id="svg-icon-transmit-off" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#ff0000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m10 14l2-2m2-2l7-7M10.718 6.713L21 3l-3.715 10.289m-1.063 2.941L14.5 21a.55.55 0 0 1-1 0L10 14l-7-3.5a.55.55 0 0 1 0-1l4.772-1.723M3 3l18 18"/></svg>
-    
-    
     <svg id="svg-icon-2-min" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#00ff00" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8a4 4 0 1 1 8 0c0 1.098-.564 2.025-1.159 2.815L8 20h8"/></svg>
     <svg id="svg-icon-4-min" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#00ff00" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 20V5L7 16h10"/></svg>
     <svg id="svg-icon-10-min" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#00ff00" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 20V4L3 9m13 11a4 4 0 0 0 4-4V8a4 4 0 1 0-8 0v8a4 4 0 0 0 4 4"/></svg>
-    
-    
     <svg id="svg-icon-manual" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#0096FF" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 12h2m16 0h2M4 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0m12 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0m-8.5-1.5L15 5"/></svg>
     <svg id="svg-icon-random" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><path fill="#FFA500" fill-rule="evenodd" d="M465.023 135.32L376.68 465.023L46.977 376.68L135.32 46.977zm-52.256 30.17L165.49 99.233L99.233 346.51l247.277 66.257zM317.08 316.538c17.07 4.574 27.201 22.121 22.627 39.192c-4.574 17.07-22.121 27.201-39.192 22.627c-17.07-4.574-27.201-22.12-22.627-39.192c4.574-17.07 22.12-27.201 39.192-22.627m-52.798-91.448c17.071 4.575 27.202 22.121 22.628 39.192s-22.121 27.202-39.192 22.628s-27.202-22.121-22.628-39.192s22.121-27.202 39.192-22.628m-52.797-91.447c17.07 4.574 27.201 22.12 22.627 39.192c-4.574 17.07-22.12 27.201-39.192 22.627c-17.07-4.574-27.201-22.12-22.627-39.192c4.574-17.07 22.121-27.201 39.192-22.627"/></svg>
+    
+
+    
+    <svg id="svg-icon-toggle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+	<path fill="#0F0" d="M7.5 2c-1.79 1.15-3 3.18-3 5.5s1.21 4.35 3.03 5.5C4.46 13 2 10.54 2 7.5A5.5 5.5 0 0 1 7.5 2m11.57 1.5l1.43 1.43L4.93 20.5L3.5 19.07zm-6.18 2.43L11.41 5L9.97 6l.42-1.7L9 3.24l1.75-.12l.58-1.65L12 3.1l1.73.03l-1.35 1.13zm-3.3 3.61l-1.16-.73l-1.12.78l.34-1.32l-1.09-.83l1.36-.09l.45-1.29l.51 1.27l1.36.03l-1.05.87zM19 13.5a5.5 5.5 0 0 1-5.5 5.5c-1.22 0-2.35-.4-3.26-1.07l7.69-7.69c.67.91 1.07 2.04 1.07 3.26m-4.4 6.58l2.77-1.15l-.24 3.35zm4.33-2.7l1.15-2.77l2.2 2.54zm1.15-4.96l-1.14-2.78l3.34.24zM9.63 18.93l2.77 1.15l-2.53 2.19z" />
+    </svg>
     
 </div>
 
