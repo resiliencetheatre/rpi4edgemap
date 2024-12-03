@@ -1046,6 +1046,96 @@ class ReticulumMeshChat:
                 },
             })
 
+        # pings an lxmf.delivery destination by sending empty data and waiting for the recipient to send a proof back
+        # the lxmf router proves all received packets, then drops them if they can't be decoded as lxmf messages
+        # this allows us to ping/probe any active lxmf.delivery destination and get rtt/snr/rssi data on demand
+        # https://github.com/markqvist/LXMF/blob/9ff76c0473e9d4107e079f266dd08144bb74c7c8/LXMF/LXMRouter.py#L234
+        # https://github.com/markqvist/LXMF/blob/9ff76c0473e9d4107e079f266dd08144bb74c7c8/LXMF/LXMRouter.py#L1374
+        @routes.get("/api/v1/ping/{destination_hash}/lxmf.delivery")
+        async def index(request):
+
+            # get path params
+            destination_hash = request.match_info.get("destination_hash", "")
+
+            # convert destination hash to bytes
+            destination_hash = bytes.fromhex(destination_hash)
+
+            # determine how long until we should time out
+            timeout_seconds = int(request.query.get("timeout", 15))
+            timeout_after_seconds = time.time() + timeout_seconds
+
+            # request path if we don't have it
+            if not RNS.Transport.has_path(destination_hash):
+                RNS.Transport.request_path(destination_hash)
+
+            # wait until we have a path, or give up after the configured timeout
+            while not RNS.Transport.has_path(destination_hash) and time.time() < timeout_after_seconds:
+                await asyncio.sleep(0.1)
+
+            # find destination identity
+            destination_identity = RNS.Identity.recall(destination_hash)
+            if destination_identity is None:
+                return web.json_response({
+                    "message": "Ping failed. Could not find path to destination.",
+                }, status=503)
+
+            # create outbound destination
+            request_destination = RNS.Destination(
+                destination_identity,
+                RNS.Destination.OUT,
+                RNS.Destination.SINGLE,
+                "lxmf",
+                "delivery",
+            )
+
+            # send empty packet to destination
+            packet = RNS.Packet(request_destination, b"")
+            receipt = packet.send()
+
+            # wait until delivered, or give up after time out
+            while receipt.status != RNS.PacketReceipt.DELIVERED and time.time() < timeout_after_seconds:
+                await asyncio.sleep(0.1)
+
+            # ping failed if not delivered
+            if receipt.status != RNS.PacketReceipt.DELIVERED:
+                return web.json_response({
+                    "message": f"Ping failed. Timed out after {timeout_seconds} seconds.",
+                }, status=503)
+
+            # get number of hops to destination
+            hops = RNS.Transport.hops_to(destination_hash)
+
+            # get rssi
+            rssi = receipt.proof_packet.rssi
+            if rssi is None:
+                rssi = self.reticulum.get_packet_rssi(receipt.proof_packet.packet_hash)
+
+            # get snr
+            snr = receipt.proof_packet.snr
+            if snr is None:
+                snr = self.reticulum.get_packet_snr(receipt.proof_packet.packet_hash)
+
+            # get signal quality
+            quality = receipt.proof_packet.q
+            if quality is None:
+                quality = self.reticulum.get_packet_q(receipt.proof_packet.packet_hash)
+
+            # get and format round trip time
+            rtt = receipt.get_rtt()
+            rtt_milliseconds = round(rtt * 1000, 3)
+            rtt_duration_string = f"{rtt_milliseconds} ms"
+
+            return web.json_response({
+                "message": f"Valid reply from {receipt.destination.hash.hex()}: hops={hops} time={rtt_duration_string}",
+                "ping_result": {
+                    "rtt": rtt,
+                    "hops": hops,
+                    "rssi": rssi,
+                    "snr": snr,
+                    "quality": quality,
+                },
+            })
+
         # get custom destination display name
         @routes.get("/api/v1/destination/{destination_hash}/custom-display-name")
         async def index(request):
@@ -1164,6 +1254,11 @@ class ReticulumMeshChat:
             # get request body as json
             data = await request.json()
 
+            # get delivery method
+            delivery_method = None
+            if "delivery_method" in data:
+                delivery_method = data["delivery_method"]
+
             # get data from json
             destination_hash = data["lxmf_message"]["destination_hash"]
             content = data["lxmf_message"]["content"]
@@ -1205,7 +1300,8 @@ class ReticulumMeshChat:
                     content=content,
                     image_field=image_field,
                     audio_field=audio_field,
-                    file_attachments_field=file_attachments_field
+                    file_attachments_field=file_attachments_field,
+                    delivery_method=delivery_method
                 )
 
                 return web.json_response({
@@ -2053,7 +2149,8 @@ class ReticulumMeshChat:
     async def send_message(self, destination_hash: str, content: str,
                            image_field: LxmfImageField = None,
                            audio_field: LxmfAudioField = None,
-                           file_attachments_field: LxmfFileAttachmentsField = None) -> LXMF.LXMessage:
+                           file_attachments_field: LxmfFileAttachmentsField = None,
+                           delivery_method: str = None) -> LXMF.LXMessage:
 
         # convert destination hash to bytes
         destination_hash = bytes.fromhex(destination_hash)
@@ -2081,14 +2178,27 @@ class ReticulumMeshChat:
         # create destination for recipients lxmf delivery address
         lxmf_destination = RNS.Destination(destination_identity, RNS.Destination.OUT, RNS.Destination.SINGLE, "lxmf", "delivery")
 
-        # send messages over a direct link by default
-        desired_delivery_method = LXMF.LXMessage.DIRECT
-        if not self.message_router.delivery_link_available(destination_hash) and RNS.Identity.current_ratchet_id(destination_hash) != None:
-            # since there's no link established to the destination, it's faster to send opportunistically
-            # this is because it takes several packets to establish a link, and then we still have to send the message over it
-            # oppotunistic mode will send the message in a single packet (if the message is small enough, otherwise it falls back to a direct link)
-            # we will only do this if an encryption ratchet is available, so single packet delivery is more secure
+        # determine how the user wants to send the message
+        desired_delivery_method = None
+        if delivery_method == "direct":
+            desired_delivery_method = LXMF.LXMessage.DIRECT
+        elif delivery_method == "opportunistic":
             desired_delivery_method = LXMF.LXMessage.OPPORTUNISTIC
+        elif delivery_method == "propagated":
+            desired_delivery_method = LXMF.LXMessage.PROPAGATED
+
+        # determine how to send the message if the user didn't provide a method
+        if desired_delivery_method is None:
+
+            # send messages over a direct link by default
+            desired_delivery_method = LXMF.LXMessage.DIRECT
+            if not self.message_router.delivery_link_available(destination_hash) and RNS.Identity.current_ratchet_id(destination_hash) != None:
+
+                # since there's no link established to the destination, it's faster to send opportunistically
+                # this is because it takes several packets to establish a link, and then we still have to send the message over it
+                # oppotunistic mode will send the message in a single packet (if the message is small enough, otherwise it falls back to a direct link)
+                # we will only do this if an encryption ratchet is available, so single packet delivery is more secure
+                desired_delivery_method = LXMF.LXMessage.OPPORTUNISTIC
 
         # create lxmf message
         lxmf_message = LXMF.LXMessage(lxmf_destination, self.local_lxmf_destination, content, desired_method=desired_delivery_method)

@@ -4,7 +4,7 @@
 #
 ################################################################################
 # PYTHON_MESHTASTIC_VERSION = 2.5.0
-PYTHON_MESHTASTIC_VERSION = 2.5.4
+PYTHON_MESHTASTIC_VERSION = 2.5.5
 PYTHON_MESHTASTIC_SITE = https://github.com/meshtastic/python.git
 PYTHON_MESHTASTIC_SITE_METHOD = git
 PYTHON_MESHTASTIC_LICENSE = GNU General Public License v3 (GPLv3)
