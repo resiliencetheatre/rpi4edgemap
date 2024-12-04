@@ -1119,6 +1119,7 @@
         
         // Send based on socket connection
         sendRetiCulumAndMeshtasticMessage( msgPayload );
+        localSensorMarkerCreate( msgPayload );
         // meshtasticMsgSocket.send( msgPayload );
         
         getElementItem('#msgChannelLog').innerHTML += msgPayload  + '<br>';

@@ -136,6 +136,34 @@ class radioList {
         }
 }
 
+// Create sensor marker for local map when sending them
+function localSensorMarkerCreate(messageData) {
+    var incomingMessage = messageData;
+    var trimmedString = incomingMessage.substring(0, 200);
+    const msgArray=trimmedString.split("|");
+    const msgFrom =  msgArray[0];
+    const msgType =  msgArray[1];
+    const msgLocation =  msgArray[2];
+    const msgMessage =  msgArray[3];
+
+    if ( msgArray.length == 4 ) 
+    {
+        //
+        // Sensor marker: [FROM]|sensorMarker|[LAT,LON]|[markedId],[markerStatus],[symbol code]
+        //
+        if ( msgType == "sensorMarker" ) {
+            const location = msgLocation;
+            const locationNumbers = location.replace(/[\])}[{(]/g, '');
+            const locationArray = locationNumbers.split(",");   
+            const sensorDataArray = msgMessage.split(",");
+            const sensorId = sensorDataArray[0];
+            const sensorStatus = sensorDataArray[1];
+            const sensorSymbol = sensorDataArray[2];
+            createSensorMarker(locationArray[0], locationArray[1],sensorId,sensorStatus,sensorSymbol);
+        }
+    }
+}
+
 
 function toggleStyle() {
     // Get the current URL
