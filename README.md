@@ -27,9 +27,27 @@ Image contains TLS encryption for Web UI connection and offers experimental vide
 
 ### Local display support & QT
 
-![localdisplay](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/hyperpixel.png?raw=true)
+![localdisplay](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/waveshare-display.png?raw=true)
 
-QT 5.11.5 is enabled for build and it allows us to do small and simple local [user interface](https://github.com/resiliencetheatre/qrencode-ui) to [Hyperpixel 4](https://shop.pimoroni.com/products/hyperpixel-4?variant=12569485443155) touch screen. This feature is currently proof of concept placeholder and contains no usable functionality. You could take this further with ease by using QT Creator and configuring it to use toolchain from buildroot environment. 
+QT 5.11.5 is enabled for build and it allows us to do small and simple local 
+[user interface](https://github.com/resiliencetheatre/qrencode-ui) to
+[Hyperpixel 4](https://shop.pimoroni.com/products/hyperpixel-4?variant=12569485443155) touch screen. 
+
+This feature is currently proof of concept placeholder and contains no usable functionality. 
+You could take this further with ease by using QT Creator and configuring it to use toolchain 
+from buildroot environment. 
+
+If you wish to use [Waveshare 4.3" DSI LCD case](https://www.waveshare.com/wiki/4.3inch_DSI_LCD), include following
+configuration to `/opt/boot/config.txt` 
+
+```
+# Waveshare 4.3" DSI LCD case
+dtoverlay=vc4-kms-v3d
+dtoverlay=vc4-kms-dsi-7inch
+dtparam=i2c_arm=on
+
+```
+
 
 ### Meshtastic 
 
@@ -172,15 +190,15 @@ git clone https://github.com/resiliencetheatre/rpi4edgemap.git
 git clone https://git.buildroot.net/buildroot
 cd buildroot/
 # We checkout verified version on master branch
-git checkout 66f66bbdb50a65ed27660bbe4f9c1598f94b0c42
+git checkout ed590a22e24bdc714d75005f7fe7a3ad3b001c4d
 ```
 
-You can use latest master or checkout version `66f66bbdb50a65ed27660bbe4f9c1598f94b0c42` as above,
-which I've tested (Nov 14th, 2024). Please note that buildroot version, kernel and other system
+You can use latest master or checkout version `ed590a22e24bdc714d75005f7fe7a3ad3b001c4d` as above,
+which I've tested (Dec 4th, 2024). Please note that buildroot version, kernel and other system
 components needs to be in 'sync' and this is an art in embedded design.
 
 Modify buildroot standard `rpi-firmware` package file and change 
-firmware version tag to match kernel version (6.11.7) we're using. 
+firmware version tag to match kernel version (6.11.10) we're using. 
 
 ```
 # package/rpi-firmware/rpi-firmware.mk
