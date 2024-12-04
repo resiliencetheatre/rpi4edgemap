@@ -27,7 +27,7 @@ Image contains TLS encryption for Web UI connection and offers experimental vide
 
 ### Local display support & QT
 
-![localdisplay](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/waveshare-display.png?raw=true)
+![localdisplay](https://github.com/resiliencetheatre/rpi4edgemap/blob/meshtastic/doc/waveshare-display.png?raw=true)
 
 QT 5.11.5 is enabled for build and it allows us to do small and simple local 
 [user interface](https://github.com/resiliencetheatre/qrencode-ui) to
