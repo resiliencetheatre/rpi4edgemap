@@ -10,5 +10,5 @@ ExecStartPre=sleep 5
 ExecStart=/usr/bin/python3 /opt/macsec/macpipe.py -r
 Restart=always
 RestartSec=5
-TimeoutStartSec=5
+TimeoutStartSec=10
 

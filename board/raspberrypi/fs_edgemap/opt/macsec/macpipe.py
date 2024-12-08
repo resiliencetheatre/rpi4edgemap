@@ -193,7 +193,8 @@ def receive_ethernet_frames(iface, filter_function=None, timeout=10):
     # ether proto 0x0806 for ARP packets
     # ether broadcast for broadcast packets
     # packets = sniff(iface=iface, filter="ether broadcast", prn=filter_function, timeout=timeout)
-    packets = sniff(iface=iface, filter="ether broadcast", prn=process_packet, timeout=timeout)
+    # packets = sniff(iface=iface, filter="ether broadcast", prn=process_packet, timeout=timeout)
+    packets = sniff(iface=iface, prn=process_packet, timeout=timeout)
     return packets
 
 
