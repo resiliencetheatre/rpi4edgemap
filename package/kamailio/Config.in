@@ -1,0 +1,4 @@
+config BR2_PACKAGE_KAMAILIO
+        bool "kamailio"
+        help 
+              Kamailio - The Open Source SIP Server
