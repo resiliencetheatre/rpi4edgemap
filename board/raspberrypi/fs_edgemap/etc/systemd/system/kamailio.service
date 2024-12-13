@@ -1,0 +1,18 @@
+[Unit]
+Description=Kamailio - the Open Source SIP Server
+After=multi-user.target
+
+[Service]
+Type=forking
+WorkingDirectory=/opt/kamailio
+PIDFile=/var/run/kamailio/kamailio.pid
+KillMode=process
+Environment='CFGFILE=/etc/kamailio/kamailio.cfg'
+ExecStart=/usr/sbin/kamailio -P /var/run/kamailio/kamailio.pid -f $CFGFILE -m 64 -M 8
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=10
+AmbientCapabilities=CAP_CHOWN
+
+# [Install]
+# WantedBy=multi-user.target
