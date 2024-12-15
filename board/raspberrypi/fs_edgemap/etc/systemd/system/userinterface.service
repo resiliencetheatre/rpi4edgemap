@@ -1,0 +1,14 @@
+[Unit]
+Description=user interface
+After=multi-user.target bootstrap.service macsec.service
+
+[Service]
+WorkingDirectory=/opt/qt-widget/bin/
+KillMode=process
+ExecStart=/opt/qt-widget/bin/qt-widget
+Restart=always
+RestartSec=10
+TimeoutStartSec=10
+
+# [Install]
+# WantedBy=multi-user.target

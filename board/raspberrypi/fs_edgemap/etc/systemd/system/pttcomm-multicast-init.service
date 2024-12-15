@@ -1,0 +1,16 @@
+# 10.0.0.83/pttcomm.service 
+[Unit]
+Description=pttcomm multicast init
+After=multi-user.target
+ 
+[Service]
+WorkingDirectory=/opt/secureptt-multicast
+ExecStartPre=/opt/secureptt-multicast/init-multicast.sh
+ExecStart=/usr/bin/pttcomm -l
+Type=simple
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+

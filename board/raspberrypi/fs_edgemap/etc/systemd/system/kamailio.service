@@ -5,7 +5,6 @@ After=multi-user.target
 [Service]
 Type=forking
 WorkingDirectory=/opt/kamailio
-PIDFile=/var/run/kamailio/kamailio.pid
 KillMode=process
 Environment='CFGFILE=/etc/kamailio/kamailio.cfg'
 ExecStart=/usr/sbin/kamailio -P /var/run/kamailio/kamailio.pid -f $CFGFILE -m 64 -M 8
