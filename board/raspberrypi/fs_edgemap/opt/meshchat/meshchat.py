@@ -74,6 +74,7 @@ class ReticulumMeshChat:
             database.CustomDestinationDisplayName,
             database.LxmfMessage,
             database.LxmfConversationReadState,
+            database.LxmfUserIcon,
         ])
 
         # init config
@@ -1432,6 +1433,16 @@ class ReticulumMeshChat:
                 else:
                     other_user_hash = source_hash
 
+                # find lxmf user icon from database
+                lxmf_user_icon = None
+                db_lxmf_user_icon = database.LxmfUserIcon.get_or_none(database.LxmfUserIcon.destination_hash == other_user_hash)
+                if db_lxmf_user_icon is not None:
+                    lxmf_user_icon = {
+                        "icon_name": db_lxmf_user_icon.icon_name,
+                        "foreground_colour": db_lxmf_user_icon.foreground_colour,
+                        "background_colour": db_lxmf_user_icon.background_colour,
+                    }
+
                 # add to conversations
                 conversations.append({
                     "display_name": self.get_lxmf_conversation_name(other_user_hash),
@@ -1439,6 +1450,7 @@ class ReticulumMeshChat:
                     "destination_hash": other_user_hash,
                     "is_unread": self.is_lxmf_conversation_unread(other_user_hash),
                     "failed_messages_count": self.lxmf_conversation_failed_messages_count(other_user_hash),
+                    "lxmf_user_icon": lxmf_user_icon,
                     # we say the conversation was updated when the latest message was created
                     # otherwise this will go crazy when sending a message, as the updated_at on the latest message changes very frequently
                     "updated_at": created_at,
@@ -1518,6 +1530,10 @@ class ReticulumMeshChat:
         if "display_name" in data and data["display_name"] != "":
             self.config.display_name.set(data["display_name"])
 
+        # update theme in config
+        if "theme" in data and data["theme"] != "":
+            self.config.theme.set(data["theme"])
+
         # update auto announce interval
         if "auto_announce_interval_seconds" in data:
 
@@ -1588,6 +1604,23 @@ class ReticulumMeshChat:
                 else:
                     print(f"unhandled field: {field}")
         return data
+    def convert_nomadnet_field_data_to_map(self, field_data):
+        data = {}
+        if field_data is not None or "{}":
+            try:
+                json_data = field_data 
+                if isinstance(json_data, dict):
+                    # add the prefixed keys to the result dictionary
+                    data = {f"field_{key}": value for key, value in json_data.items()}
+                else:
+                    return None
+            except Exception as e:
+                print(f"skipping invalid field data: {e}")
+        
+        return data
+
+
+
 
     # handle data received from websocket client
     async def on_websocket_data_received(self, client, data):
@@ -1663,7 +1696,9 @@ class ReticulumMeshChat:
             # get data from websocket client
             destination_hash = data["nomadnet_page_download"]["destination_hash"]
             page_path = data["nomadnet_page_download"]["page_path"]
-
+            field_data = data["nomadnet_page_download"]["field_data"]
+       
+            combined_data = {}
             # parse data from page path
             # example: hash:/page/index.mu`field1=123|field2=456
             page_data = None
@@ -1673,8 +1708,19 @@ class ReticulumMeshChat:
                 page_path_to_download = page_path_parts[0]
                 page_data = self.convert_nomadnet_string_data_to_map(page_path_parts[1])
 
+            # Field data
+            field_data = self.convert_nomadnet_field_data_to_map(field_data)
+
+            # Combine page data and field data
+            if page_data is not None:
+                combined_data.update(page_data)
+            if field_data is not None:
+                combined_data.update(field_data)
+
+
             # convert destination hash to bytes
             destination_hash = bytes.fromhex(destination_hash)
+
 
             # handle successful page download
             def on_page_download_success(page_content):
@@ -1715,7 +1761,7 @@ class ReticulumMeshChat:
             # todo: handle page download progress
 
             # download the page
-            downloader = NomadnetPageDownloader(destination_hash, page_path_to_download, page_data, on_page_download_success, on_page_download_failure, on_page_download_progress)
+            downloader = NomadnetPageDownloader(destination_hash, page_path_to_download, combined_data, on_page_download_success, on_page_download_failure, on_page_download_progress)
             await downloader.download()
 
         # unhandled type
@@ -1754,6 +1800,7 @@ class ReticulumMeshChat:
             "auto_announce_enabled": self.config.auto_announce_enabled.get(),
             "auto_announce_interval_seconds": self.config.auto_announce_interval_seconds.get(),
             "last_announced_at": self.config.last_announced_at.get(),
+            "theme": self.config.theme.get(),
             "auto_resend_failed_messages_when_announce_received": self.config.auto_resend_failed_messages_when_announce_received.get(),
             "allow_auto_resending_failed_messages_with_attachments": self.config.allow_auto_resending_failed_messages_with_attachments.get(),
             "auto_send_failed_messages_to_propagation_node": self.config.auto_send_failed_messages_to_propagation_node.get(),
@@ -2000,6 +2047,26 @@ class ReticulumMeshChat:
             "updated_at": db_lxmf_message.updated_at,
         }
 
+    # updates the lxmf user icon for the provided destination hash
+    def update_lxmf_user_icon(self, destination_hash: str, icon_name: str, foreground_colour: str, background_colour: str):
+
+        # log
+        print(f"updating lxmf user icon for {destination_hash} to icon_name={icon_name}, foreground_colour={foreground_colour}, background_colour={background_colour}")
+
+        # prepare data to insert or update
+        data = {
+            "destination_hash": destination_hash,
+            "icon_name": icon_name,
+            "foreground_colour": foreground_colour,
+            "background_colour": background_colour,
+            "updated_at": datetime.now(timezone.utc),
+        }
+
+        # upsert to database
+        query = database.LxmfUserIcon.insert(data)
+        query = query.on_conflict(conflict_target=[database.LxmfUserIcon.destination_hash], update=data)
+        query.execute()
+
     # handle an lxmf delivery from reticulum
     # NOTE: cant be async, as Reticulum doesn't await it
     def on_lxmf_delivery(self, lxmf_message: LXMF.LXMessage):
@@ -2007,6 +2074,20 @@ class ReticulumMeshChat:
 
             # upsert lxmf message to database
             self.db_upsert_lxmf_message(lxmf_message)
+
+            # update lxmf user icon if icon appearance field is available
+            try:
+                message_fields = lxmf_message.get_fields()
+                if LXMF.FIELD_ICON_APPEARANCE in message_fields:
+                    icon_appearance = message_fields[LXMF.FIELD_ICON_APPEARANCE]
+                    icon_name = icon_appearance[0]
+                    foreground_colour = "#" + icon_appearance[1].hex()
+                    background_colour = "#" + icon_appearance[2].hex()
+                    self.update_lxmf_user_icon(lxmf_message.source_hash.hex(), icon_name, foreground_colour, background_colour)
+            except Exception as e:
+                print("failed to update lxmf user icon from lxmf message")
+                print(e)
+                pass
 
             # find message from database
             db_lxmf_message = database.LxmfMessage.get_or_none(database.LxmfMessage.hash == lxmf_message.hash.hex())
@@ -2649,6 +2730,7 @@ class Config:
     auto_announce_enabled = BoolConfig("auto_announce_enabled", False)
     auto_announce_interval_seconds = IntConfig("auto_announce_interval_seconds", 0)
     last_announced_at = IntConfig("last_announced_at", None)
+    theme = StringConfig("theme", "light")
     auto_resend_failed_messages_when_announce_received = BoolConfig("auto_resend_failed_messages_when_announce_received", True)
     allow_auto_resending_failed_messages_with_attachments = BoolConfig("allow_auto_resending_failed_messages_with_attachments", False)
     auto_send_failed_messages_to_propagation_node = BoolConfig("auto_send_failed_messages_to_propagation_node", False)
@@ -2659,7 +2741,8 @@ class Config:
     lxmf_preferred_propagation_node_last_synced_at = IntConfig("lxmf_preferred_propagation_node_last_synced_at", None)
     lxmf_local_propagation_node_enabled = BoolConfig("lxmf_local_propagation_node_enabled", False)
 
-
+# FIXME: we should probably set this as an instance variable of ReticulumMeshChat so it has a proper home, and pass it in to the constructor?
+nomadnet_cached_links = {}
 class NomadnetDownloader:
 
     def __init__(self, destination_hash: bytes, path: str, data: str|None, on_download_success: Callable[[bytes], None], on_download_failure: Callable[[str], None], on_progress_update: Callable[[float], None], timeout: int|None = None):
@@ -2675,6 +2758,14 @@ class NomadnetDownloader:
 
     # setup link to destination and request download
     async def download(self, path_lookup_timeout: int = 15, link_establishment_timeout: int = 15):
+
+        # use existing established link if it's active
+        if self.destination_hash in nomadnet_cached_links:
+            link = nomadnet_cached_links[self.destination_hash]
+            if link.status is RNS.Link.ACTIVE:
+                print("[NomadnetDownloader] using existing link for request")
+                self.link_established(link)
+                return
 
         # determine when to timeout
         timeout_after_seconds = time.time() + path_lookup_timeout
@@ -2705,6 +2796,7 @@ class NomadnetDownloader:
         )
 
         # create link to destination
+        print("[NomadnetDownloader] establishing new link for request")
         link = RNS.Link(destination, established_callback=self.link_established)
 
         # determine when to timeout
@@ -2720,6 +2812,9 @@ class NomadnetDownloader:
 
     # link to destination was established, we should now request the download
     def link_established(self, link):
+
+        # cache link for using in future requests
+        nomadnet_cached_links[self.destination_hash] = link
 
         # request download over link
         link.request(

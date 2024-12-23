@@ -1,0 +1,15 @@
+[Unit]
+Description=babeld mesh network
+After=multi-user.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/mesh
+ExecStartPre=/opt/mesh/mesh.sh
+ExecStart=babeld -g 33123 wlan0
+Restart=always
+RestartSec=10
+TimeoutStartSec=10
+
+# [Install]
+# WantedBy=multi-user.target

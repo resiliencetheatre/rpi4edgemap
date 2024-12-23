@@ -1,0 +1,743 @@
+<template>
+    <div class="flex w-full h-full bg-gray-100 dark:bg-zinc-950" :class="{'dark': config?.theme === 'dark'}">
+        <div class="mx-auto my-auto w-full max-w-xl p-4">
+
+            <!-- in active call -->
+            <div v-if="isWebsocketConnected" class="w-full">
+                <div class="border rounded-xl bg-white shadow w-full">
+                    <div class="flex border-b border-gray-300 text-gray-700 p-2">
+                        <div class="my-auto mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+                            </svg>
+                        </div>
+                        <div class="my-auto">Active Call</div>
+                    </div>
+                    <div class="border-b border-gray-300 text-gray-700 p-2">
+
+                        <div class="mb-2">
+                            <div class="mb-1 text-sm font-medium text-gray-900">Call Hash</div>
+                            <div class="text-xs text-gray-600">{{ audioCall?.hash || "Unknown" }}</div>
+                        </div>
+
+                        <div class="mb-2">
+                            <div class="mb-1 text-sm font-medium text-gray-900">Remote Identity Hash</div>
+                            <div class="text-xs text-gray-600">{{ audioCall?.remote_identity_hash || "Unknown" }}</div>
+                        </div>
+
+                        <div class="mb-2">
+                            <div class="mb-1 text-sm font-medium text-gray-900">Remote Destination Hash</div>
+                            <div class="text-xs text-gray-600">{{ audioCall?.remote_destination_hash || "Unknown" }}</div>
+                        </div>
+
+                        <div class="mb-2">
+                            <div class="mb-1 text-sm font-medium text-gray-900">Path</div>
+                            <div class="text-xs text-gray-600">
+                                <span v-if="audioCall?.path">{{ audioCall.path.hops }} {{ audioCall.path.hops === 1 ? 'hop' : 'hops' }} away via {{ audioCall.path.next_hop_interface }}</span>
+                                <span v-else>Unknown</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <div class="mb-1 text-sm font-medium text-gray-900">TX Bytes</div>
+                            <div class="text-xs text-gray-600">{{ formatBytes(txBytes) }}</div>
+                        </div>
+
+                        <div class="mb-2">
+                            <div class="mb-1 text-sm font-medium text-gray-900">RX Bytes</div>
+                            <div class="text-xs text-gray-600">{{ formatBytes(rxBytes) }}</div>
+                        </div>
+
+                        <div class="mb-2">
+                            <div class="mb-1 text-sm font-medium text-gray-900">Incoming Audio</div>
+                            <div class="text-xs text-gray-600">{{ remoteAudioCodec || "Unknown" }}</div>
+                        </div>
+
+                        <div>
+                            <div class="mb-1 text-sm font-medium text-gray-900">Outgoing Audio</div>
+                            <select v-model="codecMode" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                <option value="MODE_3200">Codec2 3200</option>
+                                <option value="MODE_2400">Codec2 2400</option>
+                                <option value="MODE_1600">Codec2 1600</option>
+                                <option value="MODE_1400">Codec2 1400</option>
+                                <option value="MODE_1300">Codec2 1300</option>
+                                <option value="MODE_1200">Codec2 1200</option>
+                                <option value="MODE_700C">Codec2 700C</option>
+                                <option value="MODE_450">Codec2 450</option>
+                                <option value="MODE_450PWB">Codec2 450PWB</option>
+                            </select>
+                        </div>
+
+                    </div>
+                    <div class="flex text-gray-900 p-2">
+
+                        <!-- toggle mic -->
+                        <button @click="isMicMuted = !isMicMuted" type="button" :class="[ isMicMuted ? 'bg-red-500 hover:bg-red-400 focus-visible:outline-red-500' : 'bg-gray-500 hover:bg-gray-400 focus-visible:outline-gray-500' ]" class="my-auto inline-flex items-center gap-x-1 rounded-full p-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">
+                            <svg v-if="isMicMuted" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256" class="w-5 h-5">
+                                <path d="M213.38,229.92a8,8,0,0,1-11.3-.54l-30.92-34A78.83,78.83,0,0,1,136,207.59V240a8,8,0,0,1-16,0V207.6A80.11,80.11,0,0,1,48,128a8,8,0,0,1,16,0,64.07,64.07,0,0,0,64,64,63.41,63.41,0,0,0,32.21-8.68l-11.1-12.2A48,48,0,0,1,80,128V95.09L42.08,53.38A8,8,0,0,1,53.92,42.62l160,176A8,8,0,0,1,213.38,229.92Zm-24.19-63.13a7.88,7.88,0,0,0,3.51.82,8,8,0,0,0,7.19-4.49A79.16,79.16,0,0,0,208,128a8,8,0,0,0-16,0,63.32,63.32,0,0,1-6.48,28.09A8,8,0,0,0,189.19,166.79Zm-27.33-29.22A8,8,0,0,0,175.74,133a49.49,49.49,0,0,0,.26-5V64A48,48,0,0,0,84,44.87a8,8,0,0,0,1.41,8.57Z"></path>
+                            </svg>
+                            <svg v-else xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256" class="w-5 h-5">
+                                <path d="M80,128V64a48,48,0,0,1,96,0v64a48,48,0,0,1-96,0Zm128,0a8,8,0,0,0-16,0,64,64,0,0,1-128,0,8,8,0,0,0-16,0,80.11,80.11,0,0,0,72,79.6V240a8,8,0,0,0,16,0V207.6A80.11,80.11,0,0,0,208,128Z"></path>
+                            </svg>
+                        </button>
+
+                        <!-- toggle sound -->
+                        <button @click="isSoundMuted = !isSoundMuted" type="button" :class="[ isSoundMuted ? 'bg-red-500 hover:bg-red-400 focus-visible:outline-red-500' : 'bg-gray-500 hover:bg-gray-400 focus-visible:outline-gray-500' ]" class="ml-1 my-auto inline-flex items-center gap-x-1 rounded-full p-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">
+                            <svg v-if="isSoundMuted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                <path d="M10.047 3.062a.75.75 0 0 1 .453.688v12.5a.75.75 0 0 1-1.264.546L5.203 13H2.667a.75.75 0 0 1-.7-.48A6.985 6.985 0 0 1 1.5 10c0-.887.165-1.737.468-2.52a.75.75 0 0 1 .7-.48h2.535l4.033-3.796a.75.75 0 0 1 .811-.142ZM13.78 7.22a.75.75 0 1 0-1.06 1.06L14.44 10l-1.72 1.72a.75.75 0 0 0 1.06 1.06l1.72-1.72 1.72 1.72a.75.75 0 1 0 1.06-1.06L16.56 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L15.5 8.94l-1.72-1.72Z" />
+                            </svg>
+                            <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                <path d="M10.5 3.75a.75.75 0 0 0-1.264-.546L5.203 7H2.667a.75.75 0 0 0-.7.48A6.985 6.985 0 0 0 1.5 10c0 .887.165 1.737.468 2.52.111.29.39.48.7.48h2.535l4.033 3.796a.75.75 0 0 0 1.264-.546V3.75ZM16.45 5.05a.75.75 0 0 0-1.06 1.061 5.5 5.5 0 0 1 0 7.778.75.75 0 0 0 1.06 1.06 7 7 0 0 0 0-9.899Z" />
+                                <path d="M14.329 7.172a.75.75 0 0 0-1.061 1.06 2.5 2.5 0 0 1 0 3.536.75.75 0 0 0 1.06 1.06 4 4 0 0 0 0-5.656Z" />
+                            </svg>
+                        </button>
+
+                        <!-- leave call -->
+                        <button @click="leaveCall" type="button" class="ml-auto mr-1 my-auto inline-flex items-center gap-x-1 rounded-full bg-blue-500 p-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                <path fill-rule="evenodd" d="M7.793 2.232a.75.75 0 0 1-.025 1.06L3.622 7.25h10.003a5.375 5.375 0 0 1 0 10.75H10.75a.75.75 0 0 1 0-1.5h2.875a3.875 3.875 0 0 0 0-7.75H3.622l4.146 3.957a.75.75 0 0 1-1.036 1.085l-5.5-5.25a.75.75 0 0 1 0-1.085l5.5-5.25a.75.75 0 0 1 1.06.025Z" clip-rule="evenodd" />
+                            </svg>
+                            <span>Leave Call</span>
+                        </button>
+
+                        <!-- hangup call -->
+                        <button @click="hangupCall(audioCall.hash)" type="button" class="my-auto inline-flex items-center gap-x-1 rounded-full bg-red-500 p-2 text-sm font-semibold text-white shadow-sm hover:bg-red-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 rotate-[135deg] translate-y-0.5">
+                                <path fill-rule="evenodd" d="M2 3.5A1.5 1.5 0 0 1 3.5 2h1.148a1.5 1.5 0 0 1 1.465 1.175l.716 3.223a1.5 1.5 0 0 1-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 0 0 6.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 0 1 1.767-1.052l3.223.716A1.5 1.5 0 0 1 18 15.352V16.5a1.5 1.5 0 0 1-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 0 1 2.43 8.326 13.019 13.019 0 0 1 2 5V3.5Z" clip-rule="evenodd" />
+                            </svg>
+                            <span>Hang Up</span>
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- no call active -->
+            <div v-else class="w-full space-y-2">
+
+                <!-- dialer -->
+                <div class="border rounded-xl bg-white shadow w-full overflow-hidden dark:border-zinc-900">
+                    <div class="flex border-b border-gray-300 text-gray-700 p-2 dark:bg-zinc-800 dark:text-white">
+                        <div class="my-auto mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 dark:text-white">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+                            </svg>
+                        </div>
+                        <div class="my-auto">Start a new Call</div>
+                    </div>
+                    <div class="flex border-b border-gray-300 text-gray-900 p-2 space-x-2 dark:bg-zinc-700 dark:text-zinc-100 dark:border-zinc-800">
+                        <div class="flex-1">
+                            <input v-model="destinationHash" type="text" placeholder="Enter Destination Hash" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100">
+                        </div>
+                        <button @click="initiateCall(destinationHash)" :disabled="isInitiatingCall" type="button" :class="[ isInitiatingCall ? 'bg-gray-400 focus-visible:outline-gray-500' : 'bg-green-500 hover:bg-green-400 focus-visible:outline-green-500' ]" class="my-auto inline-flex items-center gap-x-1 rounded-md p-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">
+                        <span v-if="isInitiatingCall">
+                            <span>Calling...</span>
+                        </span>
+                            <span v-else>Initiate Call</span>
+                        </button>
+                    </div>
+                    <div class="flex p-1 dark:bg-zinc-700 dark:border-zinc-600">
+                        <div>
+                            <div class='dark:text-white'>My Destination Hash</div>
+                            <div class="text-sm text-gray-700 dark:text-zinc-100">{{ myAudioCallAddressHash || "Unknown" }}</div>
+                        </div>
+                        <div class="ml-auto my-auto mr-1">
+                            <a @click="announce" href="javascript:void(0)" class="rounded-full">
+                                <div class="flex text-gray-700 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded-full">
+                                    <div>
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" />
+                                        </svg>
+                                    </div>
+                                    <div class="my-auto mx-1 text-sm">Announce</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- active calls -->
+                <div v-if="activeAudioCalls.length > 0" class="border rounded-xl bg-white shadow w-full overflow-hidden  dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100">
+                    <div class="flex border-b border-gray-300 text-gray-700 p-2 dark:text-zinc-100">
+                        <div class="my-auto mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                            </svg>
+                        </div>
+                        <div class="my-auto">Active Calls</div>
+                    </div>
+                    <div class="divide-y">
+                        <div v-for="audioCall in activeAudioCalls" class="flex p-2">
+                            <div class="mr-2 my-auto">
+                                <div class="bg-gray-100 p-2 rounded-full">
+                                    <svg v-if="audioCall.is_outbound" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                        <path d="M3.5 2A1.5 1.5 0 0 0 2 3.5V5c0 1.149.15 2.263.43 3.326a13.022 13.022 0 0 0 9.244 9.244c1.063.28 2.177.43 3.326.43h1.5a1.5 1.5 0 0 0 1.5-1.5v-1.148a1.5 1.5 0 0 0-1.175-1.465l-3.223-.716a1.5 1.5 0 0 0-1.767 1.052l-.267.933c-.117.41-.555.643-.95.48a11.542 11.542 0 0 1-6.254-6.254c-.163-.395.07-.833.48-.95l.933-.267a1.5 1.5 0 0 0 1.052-1.767l-.716-3.223A1.5 1.5 0 0 0 4.648 2H3.5ZM16.5 4.56l-3.22 3.22a.75.75 0 1 1-1.06-1.06l3.22-3.22h-2.69a.75.75 0 0 1 0-1.5h4.5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0V4.56Z" />
+                                    </svg>
+                                    <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                        <path d="M3.5 2A1.5 1.5 0 0 0 2 3.5V5c0 1.149.15 2.263.43 3.326a13.022 13.022 0 0 0 9.244 9.244c1.063.28 2.177.43 3.326.43h1.5a1.5 1.5 0 0 0 1.5-1.5v-1.148a1.5 1.5 0 0 0-1.175-1.465l-3.223-.716a1.5 1.5 0 0 0-1.767 1.052l-.267.933c-.117.41-.555.643-.95.48a11.542 11.542 0 0 1-6.254-6.254c-.163-.395.07-.833.48-.95l.933-.267a1.5 1.5 0 0 0 1.052-1.767l-.716-3.223A1.5 1.5 0 0 0 4.648 2H3.5ZM16.72 2.22a.75.75 0 1 1 1.06 1.06L14.56 6.5h2.69a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 1 1.5 0v2.69l3.22-3.22Z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div>
+                                <div>{{ audioCall.remote_destination_hash || "Unknown" }}</div>
+                                <div class="text-sm text-gray-500 dark:text-zinc-100">
+                                    <span v-if="audioCall.is_outbound">Outgoing Call...</span>
+                                    <span v-else>Incoming Call...</span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2 ml-auto my-auto mx-2">
+
+                                <!-- rejoin call -->
+                                <button v-if="audioCall.is_active" title="Join Call" @click="joinCall(audioCall.hash)" type="button" class="my-auto inline-flex items-center gap-x-1 rounded-full bg-green-500 p-2 text-sm font-semibold text-white shadow-sm hover:bg-green-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                        <path fill-rule="evenodd" d="M2 3.5A1.5 1.5 0 0 1 3.5 2h1.148a1.5 1.5 0 0 1 1.465 1.175l.716 3.223a1.5 1.5 0 0 1-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 0 0 6.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 0 1 1.767-1.052l3.223.716A1.5 1.5 0 0 1 18 15.352V16.5a1.5 1.5 0 0 1-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 0 1 2.43 8.326 13.019 13.019 0 0 1 2 5V3.5Z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+
+                                <!-- hangup call -->
+                                <button v-if="audioCall.is_active" title="Hangup Call" @click="hangupCall(audioCall.hash)" type="button" class="my-auto inline-flex items-center gap-x-1 rounded-full bg-red-500 p-2 text-sm font-semibold text-white shadow-sm hover:bg-red-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 rotate-[135deg] translate-y-0.5">
+                                        <path fill-rule="evenodd" d="M2 3.5A1.5 1.5 0 0 1 3.5 2h1.148a1.5 1.5 0 0 1 1.465 1.175l.716 3.223a1.5 1.5 0 0 1-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 0 0 6.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 0 1 1.767-1.052l3.223.716A1.5 1.5 0 0 1 18 15.352V16.5a1.5 1.5 0 0 1-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 0 1 2.43 8.326 13.019 13.019 0 0 1 2 5V3.5Z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- call history -->
+                <div v-if="inactiveAudioCalls.length > 0" class="border rounded-xl bg-white shadow w-full overflow-hidden dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100">
+                    <div class="flex border-b border-gray-300 text-gray-700 p-2">
+                        <div class="my-auto mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                            </svg>
+                        </div>
+                        <div class="my-auto">Call History</div>
+                        <div class="ml-auto">
+                            <button @click="clearCallHistory" type="button" class="my-auto inline-flex items-center gap-x-1 rounded-md bg-gray-500 px-2 py-1 text-sm font-semibold text-white shadow-sm hover:bg-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500">
+                                Clear All
+                            </button>
+                        </div>
+                    </div>
+                    <div class="divide-y">
+                        <div v-for="audioCall in inactiveAudioCalls" class="group flex p-2">
+                            <div class="mr-2 my-auto">
+                                <div class="bg-gray-100 p-2 rounded-full">
+                                    <svg v-if="audioCall.is_outbound" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                        <path d="M3.5 2A1.5 1.5 0 0 0 2 3.5V5c0 1.149.15 2.263.43 3.326a13.022 13.022 0 0 0 9.244 9.244c1.063.28 2.177.43 3.326.43h1.5a1.5 1.5 0 0 0 1.5-1.5v-1.148a1.5 1.5 0 0 0-1.175-1.465l-3.223-.716a1.5 1.5 0 0 0-1.767 1.052l-.267.933c-.117.41-.555.643-.95.48a11.542 11.542 0 0 1-6.254-6.254c-.163-.395.07-.833.48-.95l.933-.267a1.5 1.5 0 0 0 1.052-1.767l-.716-3.223A1.5 1.5 0 0 0 4.648 2H3.5ZM16.5 4.56l-3.22 3.22a.75.75 0 1 1-1.06-1.06l3.22-3.22h-2.69a.75.75 0 0 1 0-1.5h4.5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0V4.56Z" />
+                                    </svg>
+                                    <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                        <path d="M3.5 2A1.5 1.5 0 0 0 2 3.5V5c0 1.149.15 2.263.43 3.326a13.022 13.022 0 0 0 9.244 9.244c1.063.28 2.177.43 3.326.43h1.5a1.5 1.5 0 0 0 1.5-1.5v-1.148a1.5 1.5 0 0 0-1.175-1.465l-3.223-.716a1.5 1.5 0 0 0-1.767 1.052l-.267.933c-.117.41-.555.643-.95.48a11.542 11.542 0 0 1-6.254-6.254c-.163-.395.07-.833.48-.95l.933-.267a1.5 1.5 0 0 0 1.052-1.767l-.716-3.223A1.5 1.5 0 0 0 4.648 2H3.5ZM16.72 2.22a.75.75 0 1 1 1.06 1.06L14.56 6.5h2.69a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 1 1.5 0v2.69l3.22-3.22Z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div>
+                                <div>Destination: {{ audioCall.remote_destination_hash || "Unknown" }}</div>
+                                <div class="text-sm text-gray-500">Call Hash: {{ audioCall.hash }}</div>
+                            </div>
+                            <div class="hidden group-hover:flex space-x-2 ml-auto my-auto mx-2">
+
+                                <!-- delete call -->
+                                <button @click="deleteCall(audioCall.hash)" type="button" class="my-auto inline-flex items-center gap-x-1 rounded-full bg-gray-100 p-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                        <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                                    </svg>
+                                </button>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</template>
+
+<script>
+import protobuf from "protobufjs";
+export default {
+    name: 'CallPage',
+    data() {
+        return {
+
+            config: null,
+
+            audioCall: null,
+            audioCalls: [],
+
+            myAudioCallAddressHash: null,
+
+            destinationHash: null,
+            isInitiatingCall: false,
+
+            isWebsocketConnected: false,
+            callHash: null,
+            txBytes: 0,
+            rxBytes: 0,
+
+            isMicMuted: false,
+            isSoundMuted: false,
+            codecMode: "MODE_1200", // seems to be the smallest size with the best quality from my testing
+            sampleRate: 8000,
+
+            remoteAudioCodec: null,
+
+            audioContext: null,
+            mediaStreamSource: null,
+            audioWorkletNode: null,
+            microphoneMediaStream: null,
+
+        };
+    },
+    mounted: function() {
+
+        // update config
+        this.getConfig();
+
+        // update calls list
+        this.updateCallsList();
+
+        // update calls list every 3 seconds
+        setInterval(() => {
+            this.updateCallsList();
+        }, 3000);
+
+        // parse url params
+        var queryParams = new URLSearchParams(location.search);
+        var queryDestinationHash = queryParams.get('destination_hash');
+
+        // autofill destination hash to call when query param provided in url
+        if(queryDestinationHash){
+            this.destinationHash = queryDestinationHash;
+        }
+
+    },
+    methods: {
+        async initiateCall(destinationHash) {
+
+            // do nothing if already initiating call
+            // todo: support cancelling in progress call initiation
+            if(this.isInitiatingCall){
+                alert("Call is already initiating...");
+                return;
+            }
+
+            // make sure call hash provided
+            if(!destinationHash) {
+                alert("Enter destination hash to call.");
+                return;
+            }
+
+            // show loading
+            this.isInitiatingCall = true;
+
+            try {
+
+                // initiate call
+                const response = await axios.get(`/api/v1/calls/initiate/${destinationHash}`, {
+                    params: {
+                        timeout: 15, // how long to attempt to initiate call
+                    },
+                });
+
+                // get audio call from response
+                const audioCall = response.data.audio_call;
+
+                // join call
+                await this.joinCall(audioCall.hash);
+
+            } catch(e) {
+
+                console.log(e);
+
+                // show error message from response, or fallback to default
+                const message = e.response?.data?.message ?? "failed to initiate call";
+                alert(message);
+
+            } finally {
+                // hide loading
+                this.isInitiatingCall = false;
+            }
+
+        },
+        async joinCall(callHash) {
+
+            // update ui
+            this.callHash = callHash;
+            this.remoteAudioCodec = null;
+
+            // reset stats
+            this.txBytes = 0;
+            this.rxBytes = 0;
+
+            // load protobufs
+            const root = await protobuf.load("assets/proto/audio_call.proto");
+            const AudioCallPayload = root.lookupType("AudioCallPayload");
+            const Codec2AudioMode = root.lookupEnum("Codec2Audio.Mode");
+
+            // connect to websocket
+            this.ws = new WebSocket(location.origin.replace(/^http/, 'ws') + `/api/v1/calls/${callHash}/audio`);
+
+            this.ws.addEventListener('open', async () => {
+
+                // we are now connected
+                this.isWebsocketConnected = true;
+
+                await this.updateCall(callHash);
+
+                // send mic audio over call
+                await this.startRecordingMicrophone((codec2Mode, encoded) => {
+
+                    // do nothing if websocket closed
+                    if(this.ws.readyState !== WebSocket.OPEN){
+                        return;
+                    }
+
+                    // do nothing when audio muted
+                    if(this.isMicMuted){
+                        return;
+                    }
+
+                    // encode audio call payload as protobuf
+                    const audioCallPayload = AudioCallPayload.encode(AudioCallPayload.fromObject({
+                        audioData: {
+                            codec2Audio: {
+                                mode: "MODE_" + codec2Mode, // convert to value expected by protobuf
+                                encoded: encoded, // must be passed in as a Uint8Array
+                            },
+                        },
+                    })).finish();
+
+                    // send payload to websocket
+                    this.ws.send(audioCallPayload);
+
+                    // update stats
+                    this.txBytes += audioCallPayload.length;
+
+                });
+
+            });
+
+            this.ws.addEventListener('close', () => {
+                this.isWebsocketConnected = false;
+                this.leaveCall();
+                this.updateCallsList();
+            });
+
+            this.ws.addEventListener('error', (error) => {
+                console.log(error);
+            });
+
+            // listen to audio from call
+            this.ws.onmessage = async (event) => {
+
+                // get audio call payload bytes from websocket message
+                const payload = new Uint8Array(await event.data.arrayBuffer());
+
+                // update stats
+                this.rxBytes += payload.length;
+
+                // decode audio call payload
+                const audioCallPayload = AudioCallPayload.decode(payload);
+
+                // handle audio data
+                const audioData = audioCallPayload.audioData;
+                if(audioData){
+
+                    // handle codec2 encoded audio
+                    const codec2Audio = audioData.codec2Audio;
+                    if(codec2Audio){
+
+                        // get mode and encoded audio from protobuf
+                        const mode = Codec2AudioMode.valuesById[codec2Audio.mode].replace("MODE_", "");
+                        const encoded = new Uint8Array(codec2Audio.encoded);
+
+                        // update ui
+                        this.remoteAudioCodec = "Codec2 Mode " + mode;
+
+                        // do nothing if muted
+                        if(this.isSoundMuted){
+                            return;
+                        }
+
+                        // decode codec2 audio
+                        const decoded = await Codec2Lib.runDecode(mode, encoded);
+
+                        // convert decoded codec2 to wav audio
+                        const wavAudio = await Codec2Lib.rawToWav(decoded);
+
+                        // play wav audio buffer
+                        let audioCtx = new AudioContext()
+                        const audioBuffer = await audioCtx.decodeAudioData(wavAudio.buffer);
+                        const sampleSource = audioCtx.createBufferSource();
+                        sampleSource.buffer = audioBuffer;
+                        sampleSource.connect(audioCtx.destination)
+                        sampleSource.start(0);
+
+                    }
+
+                }
+
+            };
+
+        },
+        async hangupCall(callHash) {
+
+            // confirm user wants to hang up call
+            if(!confirm("Are you sure you want to hang up this call?")){
+                return;
+            }
+
+            try {
+
+                // hangup call
+                await axios.get(`/api/v1/calls/${callHash}/hangup`);
+
+                // reload calls list
+                await this.updateCallsList();
+
+                // disconnect websocket
+                this.ws.close();
+
+            } catch(e) {
+                // ignore error hanging up call
+            }
+
+        },
+        leaveCall: function() {
+
+            // disconnect websocket
+            if(this.ws){
+                this.ws.close();
+            }
+
+            // disconnect media stream source
+            if(this.mediaStreamSource){
+                this.mediaStreamSource.disconnect();
+            }
+
+            // stop using microphone
+            if(this.microphoneMediaStream){
+                this.microphoneMediaStream.getTracks().forEach(track => track.stop());
+            }
+
+            // disconnect the audio worklet node
+            if(this.audioWorkletNode){
+                this.audioWorkletNode.disconnect();
+            }
+
+            // close audio context
+            if(this.audioContext && this.audioContext.state !== "closed"){
+                this.audioContext.close();
+            }
+
+        },
+        async startRecordingMicrophone(onAudioAvailable) {
+            try {
+
+                // load audio worklet module
+                this.audioContext = new AudioContext({ sampleRate: this.sampleRate });
+                await this.audioContext.audioWorklet.addModule('assets/js/codec2-emscripten/processor.js');
+                this.audioWorkletNode = new AudioWorkletNode(this.audioContext, 'audio-processor');
+
+                // handle audio received from audio worklet
+                this.audioWorkletNode.port.onmessage = async (event) => {
+
+                    // convert audio received from worklet processor to wav
+                    const buffer = this.encodeWAV(event.data, this.sampleRate);
+
+                    // convert codec mode string from ui, to expected mode
+                    const codecMode = this.codecMode.replace("MODE_", "");
+
+                    // convert wav audio to codec2
+                    const rawBuffer = await Codec2Lib.audioFileToRaw(buffer, "audio.wav");
+                    const encoded = await Codec2Lib.runEncode(codecMode, rawBuffer);
+
+                    // pass encoded audio to callback
+                    onAudioAvailable(codecMode, new Uint8Array(encoded.buffer));
+
+                };
+
+                // request access to the microphone
+                this.microphoneMediaStream = await navigator.mediaDevices.getUserMedia({
+                    audio: true,
+                });
+
+                // send mic audio to audio worklet
+                this.mediaStreamSource = this.audioContext.createMediaStreamSource(this.microphoneMediaStream);
+                this.mediaStreamSource.connect(this.audioWorkletNode);
+
+            } catch(e) {
+                alert(e);
+                console.log(e);
+            }
+        },
+        encodeWAV: function(samples, sampleRate = 8000, numChannels = 1) {
+
+            const buffer = new ArrayBuffer(44 + samples.length * 2);
+            const view = new DataView(buffer);
+
+            // RIFF chunk descriptor
+            this.writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + samples.length * 2, true); // file length
+            this.writeString(view, 8, 'WAVE');
+
+            // fmt sub-chunk
+            this.writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true); // sub-chunk size
+            view.setUint16(20, 1, true); // audio format (1 = PCM)
+            view.setUint16(22, numChannels, true); // number of channels
+            view.setUint32(24, sampleRate, true); // sample rate
+            view.setUint32(28, sampleRate * numChannels * 2, true); // byte rate
+            view.setUint16(32, numChannels * 2, true); // block align
+            view.setUint16(34, 16, true); // bits per sample
+
+            // data sub-chunk
+            this.writeString(view, 36, 'data');
+            view.setUint32(40, samples.length * 2, true); // data chunk length
+
+            // write the PCM samples
+            this.floatTo16BitPCM(view, 44, samples);
+
+            return buffer;
+
+        },
+        writeString: function(view, offset, string) {
+            for(let i = 0; i < string.length; i++){
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        },
+        floatTo16BitPCM: function(output, offset, input) {
+            for(let i = 0; i < input.length; i++, offset += 2){
+                const s = Math.max(-1, Math.min(1, input[i]));
+                output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+            }
+        },
+        formatBytes: function(bytes) {
+
+            if(bytes === 0){
+                return '0 Bytes';
+            }
+
+            const k = 1024;
+            const decimals = 0;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
+
+        },
+        async getConfig() {
+            try {
+
+                // fetch calls
+                const response = await axios.get("/api/v1/config");
+
+                // update ui
+                this.config = response.data.config;
+                this.myAudioCallAddressHash = response.data.config.audio_call_address_hash;
+
+            } catch(e) {
+                // do nothing on error
+                console.error(e);
+            }
+        },
+        async updateCallsList() {
+            try {
+
+                // fetch calls
+                const response = await axios.get("/api/v1/calls");
+
+                // update ui
+                this.audioCalls = response.data.audio_calls;
+
+            } catch(e) {
+                // do nothing on error
+            }
+        },
+        async updateCall(callHash) {
+
+            // clear previous call
+            this.audioCall = null;
+
+            try {
+
+                // fetch call
+                const response = await window.axios.get(`/api/v1/calls/${callHash}`);
+
+                // update ui
+                this.audioCall = response.data.audio_call;
+
+            } catch(e) {
+                console.log(e);
+            }
+
+        },
+        async deleteCall(callHash) {
+
+            // confirm user wants to delete call
+            if(!confirm("Are you sure you want to delete this call?")){
+                return;
+            }
+
+            try {
+
+                // delete call
+                await window.axios.delete(`/api/v1/calls/${callHash}`);
+
+                // update ui
+                await this.updateCallsList()
+
+            } catch(e) {
+                // do nothing on error
+            }
+
+        },
+        async clearCallHistory() {
+
+            // confirm user wants to clear call history
+            if(!confirm("Are you sure you want to clear your call history?")){
+                return;
+            }
+
+            try {
+
+                // clear call history
+                await window.axios.post(`/api/v1/calls/clear-call-history`);
+
+                // update ui
+                await this.updateCallsList()
+
+            } catch(e) {
+                // do nothing on error
+            }
+
+        },
+        async announce() {
+            try {
+                await window.axios.get(`/api/v1/announce`);
+            } catch(e) {
+                alert("failed to announce");
+                console.log(e);
+            }
+        },
+    },
+    computed: {
+        activeAudioCalls: function() {
+            return this.audioCalls.filter((audioCall) => {
+                return audioCall.is_active;
+            });
+        },
+        inactiveAudioCalls: function() {
+            return this.audioCalls.filter((audioCall) => {
+                return !audioCall.is_active;
+            });
+        },
+    },
+}
+</script>

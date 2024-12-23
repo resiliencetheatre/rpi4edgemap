@@ -1,8 +1,14 @@
+import axios from 'axios';
 import { createApp, defineAsyncComponent } from 'vue';
 import { createRouter, createWebHashHistory } from 'vue-router';
 import vClickOutside from "click-outside-vue3";
+import "./style.css";
+import "./fonts/RobotoMonoNerdFont/font.css";
 
 import App from './components/App.vue';
+
+// provide axios globally
+window.axios = axios;
 
 const router = createRouter({
     history: createWebHashHistory(),
