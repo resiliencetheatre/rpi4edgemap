@@ -54,13 +54,7 @@
         {
             "id": "earth",
             "type": "fill",
-            "filter": [
-                "==",
-                [
-                    "geometry-type"
-                ],
-                "Polygon"
-            ],
+            "filter": ["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]],
             "source": "protomaps",
             "source-layer": "earth",
             "paint": {
@@ -434,13 +428,7 @@
         {
             "id": "water",
             "type": "fill",
-            "filter": [
-                "==",
-                [
-                    "geometry-type"
-                ],
-                "Polygon"
-            ],
+            "filter": ["in", ["geometry-type"], ["literal", ["Polygon", "MultiPolygon"]]],
             "source": "protomaps",
             "source-layer": "water",
             "paint": {
