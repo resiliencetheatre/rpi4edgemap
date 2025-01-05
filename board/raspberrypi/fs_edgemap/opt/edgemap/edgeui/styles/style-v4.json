@@ -28,7 +28,7 @@
             "type": "raster",
             "url": "pmtiles://satellite_4.pmtiles"
         },
-        "terrain": {
+        "terrainSource": {
         "type": "raster-dem",
         "url": "pmtiles://terrarium_z9.pmtiles",
         "encoding": "terrarium"
@@ -10950,7 +10950,7 @@
     
     ,
     "terrain": {
-        "source": "terrain",
+        "source": "terrainSource",
         "exaggeration": 1
     },
     "id": "protomaps"
