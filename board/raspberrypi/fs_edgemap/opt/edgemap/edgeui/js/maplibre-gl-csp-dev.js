@@ -1,6 +1,6 @@
 /**
  * MapLibre GL JS
- * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.0.0/LICENSE.txt
+ * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.0.1/LICENSE.txt
  */
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -10,7 +10,7 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 var name = "maplibre-gl";
 var description = "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library";
-var version$2 = "5.0.0";
+var version$2 = "5.0.1";
 var main = "dist/maplibre-gl.js";
 var style = "dist/maplibre-gl.css";
 var license = "BSD-3-Clause";
@@ -33,7 +33,7 @@ var dependencies = {
 	"@mapbox/unitbezier": "^0.0.1",
 	"@mapbox/vector-tile": "^1.3.1",
 	"@mapbox/whoots-js": "^3.1.0",
-	"@maplibre/maplibre-gl-style-spec": "^22.0.1",
+	"@maplibre/maplibre-gl-style-spec": "^23.0.0",
 	"@types/geojson": "^7946.0.15",
 	"@types/geojson-vt": "3.2.5",
 	"@types/mapbox__point-geometry": "^0.1.4",
@@ -66,7 +66,7 @@ var devDependencies = {
 	"@stylistic/eslint-plugin-ts": "^2.12.1",
 	"@types/benchmark": "^2.1.5",
 	"@types/d3": "^7.4.3",
-	"@types/diff": "^6.0.0",
+	"@types/diff": "^7.0.0",
 	"@types/earcut": "^2.1.4",
 	"@types/eslint": "^9.6.1",
 	"@types/gl": "^6.0.5",
@@ -75,28 +75,28 @@ var devDependencies = {
 	"@types/minimist": "^1.2.5",
 	"@types/murmurhash-js": "^1.0.6",
 	"@types/nise": "^1.4.5",
-	"@types/node": "^22.10.2",
+	"@types/node": "^22.10.5",
 	"@types/offscreencanvas": "^2019.7.3",
 	"@types/pixelmatch": "^5.2.6",
 	"@types/pngjs": "^6.0.5",
-	"@types/react": "^19.0.2",
+	"@types/react": "^19.0.4",
 	"@types/react-dom": "^19.0.2",
 	"@types/request": "^2.48.12",
 	"@types/shuffle-seed": "^1.1.3",
 	"@types/window-or-global": "^1.0.6",
-	"@typescript-eslint/eslint-plugin": "^8.19.0",
-	"@typescript-eslint/parser": "^8.19.0",
+	"@typescript-eslint/eslint-plugin": "^8.19.1",
+	"@typescript-eslint/parser": "^8.19.1",
 	"@vitest/coverage-v8": "2.2.0-beta.2",
 	"@vitest/ui": "2.2.0-beta.2",
 	address: "^2.0.3",
 	autoprefixer: "^10.4.20",
 	benchmark: "^2.1.4",
-	canvas: "^2.11.2",
+	canvas: "^3.0.1",
 	cspell: "^8.17.1",
 	cssnano: "^7.0.6",
 	d3: "^7.9.0",
 	"d3-queue": "^3.0.7",
-	"devtools-protocol": "^0.0.1400418",
+	"devtools-protocol": "^0.0.1404580",
 	diff: "^7.0.0",
 	"dts-bundle-generator": "^9.5.1",
 	eslint: "^9.17.0",
@@ -106,10 +106,10 @@ var devDependencies = {
 	"eslint-plugin-tsdoc": "0.4.0",
 	"eslint-plugin-vitest": "^0.5.4",
 	expect: "^29.7.0",
-	glob: "^11.0.0",
+	glob: "^11.0.1",
 	globals: "^15.14.0",
 	"is-builtin-module": "^4.0.0",
-	jsdom: "^25.0.1",
+	jsdom: "^26.0.0",
 	"junit-report-builder": "^5.1.1",
 	minimist: "^1.2.8",
 	"mock-geolocation": "^1.0.11",
@@ -124,10 +124,10 @@ var devDependencies = {
 	"postcss-cli": "^11.0.0",
 	"postcss-inline-svg": "^6.0.0",
 	"pretty-bytes": "^6.1.1",
-	puppeteer: "^23.11.1",
+	puppeteer: "^24.0.0",
 	react: "^19.0.0",
 	"react-dom": "^19.0.0",
-	rollup: "^4.29.1",
+	rollup: "^4.30.1",
 	"rollup-plugin-sourcemaps2": "^0.4.3",
 	rw: "^1.3.3",
 	semver: "^7.6.3",
@@ -140,9 +140,9 @@ var devDependencies = {
 	"ts-node": "^10.9.2",
 	tslib: "^2.8.1",
 	typedoc: "^0.27.6",
-	"typedoc-plugin-markdown": "^4.4.0",
+	"typedoc-plugin-markdown": "^4.4.1",
 	"typedoc-plugin-missing-exports": "^3.1.0",
-	typescript: "^5.7.2",
+	typescript: "^5.7.3",
 	vitest: "2.2.0-beta.2",
 	"vitest-webgl-canvas-mock": "^1.1.0"
 };
@@ -15450,179 +15450,7 @@ class Coercion {
     }
 }
 
-/**
- * Rearranges items so that all items in the [left, k] are the smallest.
- * The k-th element will have the (k - left + 1)-th smallest value in [left, right].
- *
- * @template T
- * @param {T[]} arr the array to partially sort (in place)
- * @param {number} k middle index for partial sorting (as defined above)
- * @param {number} [left=0] left index of the range to sort
- * @param {number} [right=arr.length-1] right index
- * @param {(a: T, b: T) => number} [compare = (a, b) => a - b] compare function
- */
-function quickselect(arr, k, left = 0, right = arr.length - 1, compare = defaultCompare) {
-
-    while (right > left) {
-        if (right - left > 600) {
-            const n = right - left + 1;
-            const m = k - left + 1;
-            const z = Math.log(n);
-            const s = 0.5 * Math.exp(2 * z / 3);
-            const sd = 0.5 * Math.sqrt(z * s * (n - s) / n) * (m - n / 2 < 0 ? -1 : 1);
-            const newLeft = Math.max(left, Math.floor(k - m * s / n + sd));
-            const newRight = Math.min(right, Math.floor(k + (n - m) * s / n + sd));
-            quickselect(arr, k, newLeft, newRight, compare);
-        }
-
-        const t = arr[k];
-        let i = left;
-        /** @type {number} */
-        let j = right;
-
-        swap$2(arr, left, k);
-        if (compare(arr[right], t) > 0) swap$2(arr, left, right);
-
-        while (i < j) {
-            swap$2(arr, i, j);
-            i++;
-            j--;
-            while (compare(arr[i], t) < 0) i++;
-            while (compare(arr[j], t) > 0) j--;
-        }
-
-        if (compare(arr[left], t) === 0) swap$2(arr, left, j);
-        else {
-            j++;
-            swap$2(arr, j, right);
-        }
-
-        if (j <= k) left = j + 1;
-        if (k <= j) right = j - 1;
-    }
-}
-
-/**
- * @template T
- * @param {T[]} arr
- * @param {number} i
- * @param {number} j
- */
-function swap$2(arr, i, j) {
-    const tmp = arr[i];
-    arr[i] = arr[j];
-    arr[j] = tmp;
-}
-
-/**
- * @template T
- * @param {T} a
- * @param {T} b
- * @returns {number}
- */
-function defaultCompare(a, b) {
-    return a < b ? -1 : a > b ? 1 : 0;
-}
-
-/**
- * Classifies an array of rings into polygons with outer rings and holes
- * @param rings - the rings to classify
- * @param maxRings - the maximum number of rings to include in a polygon, use 0 to include all rings
- * @returns an array of polygons with internal rings as holes
- */
-function classifyRings(rings, maxRings) {
-    const len = rings.length;
-    if (len <= 1)
-        return [rings];
-    const polygons = [];
-    let polygon;
-    let ccw;
-    for (const ring of rings) {
-        const area = calculateSignedArea(ring);
-        if (area === 0)
-            continue;
-        ring.area = Math.abs(area);
-        if (ccw === undefined)
-            ccw = area < 0;
-        if (ccw === area < 0) {
-            if (polygon)
-                polygons.push(polygon);
-            polygon = [ring];
-        }
-        else {
-            polygon.push(ring);
-        }
-    }
-    if (polygon)
-        polygons.push(polygon);
-    // Earcut performance degrades with the # of rings in a polygon. For this
-    // reason, we limit strip out all but the `maxRings` largest rings.
-    if (maxRings > 1) {
-        for (let j = 0; j < polygons.length; j++) {
-            if (polygons[j].length <= maxRings)
-                continue;
-            quickselect(polygons[j], maxRings, 1, polygons[j].length - 1, compareAreas);
-            polygons[j] = polygons[j].slice(0, maxRings);
-        }
-    }
-    return polygons;
-}
-function compareAreas(a, b) {
-    return b.area - a.area;
-}
-/**
- * Returns the signed area for the polygon ring.  Positive areas are exterior rings and
- * have a clockwise winding.  Negative areas are interior rings and have a counter clockwise
- * ordering.
- *
- * @param ring - Exterior or interior ring
- * @returns Signed area
- */
-function calculateSignedArea(ring) {
-    let sum = 0;
-    for (let i = 0, len = ring.length, j = len - 1, p1, p2; i < len; j = i++) {
-        p1 = ring[i];
-        p2 = ring[j];
-        sum += (p2.x - p1.x) * (p1.y + p2.y);
-    }
-    return sum;
-}
-/**
- * Returns if there are multiple outer rings.
- * The first ring is an outer ring. Its direction, cw or ccw, defines the direction of outer rings.
- *
- * @param rings - List of rings
- * @returns Are there multiple outer rings
- */
-function hasMultipleOuterRings(rings) {
-    // Following https://github.com/mapbox/vector-tile-js/blob/77851380b63b07fd0af3d5a3f144cc86fb39fdd1/lib/vectortilefeature.js#L197
-    const len = rings.length;
-    for (let i = 0, direction; i < len; i++) {
-        const area = calculateSignedArea(rings[i]);
-        if (area === 0)
-            continue;
-        if (direction === undefined) {
-            // Keep the direction of the first ring
-            direction = area < 0;
-        }
-        else if (direction === area < 0) {
-            // Same direction as the first ring -> a second outer ring
-            return true;
-        }
-    }
-    return false;
-}
-
 const geometryTypes = ['Unknown', 'Point', 'LineString', 'Polygon'];
-const simpleGeometryType = {
-    'Unknown': 'Unknown',
-    'Point': 'Point',
-    'MultiPoint': 'Point',
-    'LineString': 'LineString',
-    'MultiLineString': 'LineString',
-    'Polygon': 'Polygon',
-    'MultiPolygon': 'Polygon'
-};
 class EvaluationContext {
     constructor() {
         this.globals = null;
@@ -15636,32 +15464,8 @@ class EvaluationContext {
     id() {
         return this.feature && 'id' in this.feature ? this.feature.id : null;
     }
-    geometryDollarType() {
-        return this.feature ?
-            typeof this.feature.type === 'number' ? geometryTypes[this.feature.type] : simpleGeometryType[this.feature.type] :
-            null;
-    }
     geometryType() {
-        let geometryType = this.feature.type;
-        if (typeof geometryType !== 'number') {
-            return geometryType;
-        }
-        geometryType = geometryTypes[this.feature.type];
-        if (geometryType === 'Unknown') {
-            return geometryType;
-        }
-        const geom = this.geometry();
-        const len = geom.length;
-        if (len === 1) {
-            return geometryType;
-        }
-        if (geometryType !== 'Polygon') {
-            return `Multi${geometryType}`;
-        }
-        if (hasMultipleOuterRings(geom)) {
-            return 'MultiPolygon';
-        }
-        return 'Polygon';
+        return this.feature ? typeof this.feature.type === 'number' ? geometryTypes[this.feature.type] : this.feature.type : null;
     }
     geometry() {
         return this.feature && 'geometry' in this.feature ? this.feature.geometry : null;
@@ -17435,10 +17239,10 @@ class Within {
     }
     evaluate(ctx) {
         if (ctx.geometry() != null && ctx.canonicalID() != null) {
-            if (ctx.geometryDollarType() === 'Point') {
+            if (ctx.geometryType() === 'Point') {
                 return pointsWithinPolygons(ctx, this.geometries);
             }
-            else if (ctx.geometryDollarType() === 'LineString') {
+            else if (ctx.geometryType() === 'LineString') {
                 return linesWithinPolygons(ctx, this.geometries);
             }
         }
@@ -17520,6 +17324,144 @@ let TinyQueue$1 = class TinyQueue {
         data[pos] = item;
     }
 };
+
+/**
+ * Rearranges items so that all items in the [left, k] are the smallest.
+ * The k-th element will have the (k - left + 1)-th smallest value in [left, right].
+ *
+ * @template T
+ * @param {T[]} arr the array to partially sort (in place)
+ * @param {number} k middle index for partial sorting (as defined above)
+ * @param {number} [left=0] left index of the range to sort
+ * @param {number} [right=arr.length-1] right index
+ * @param {(a: T, b: T) => number} [compare = (a, b) => a - b] compare function
+ */
+function quickselect(arr, k, left = 0, right = arr.length - 1, compare = defaultCompare) {
+
+    while (right > left) {
+        if (right - left > 600) {
+            const n = right - left + 1;
+            const m = k - left + 1;
+            const z = Math.log(n);
+            const s = 0.5 * Math.exp(2 * z / 3);
+            const sd = 0.5 * Math.sqrt(z * s * (n - s) / n) * (m - n / 2 < 0 ? -1 : 1);
+            const newLeft = Math.max(left, Math.floor(k - m * s / n + sd));
+            const newRight = Math.min(right, Math.floor(k + (n - m) * s / n + sd));
+            quickselect(arr, k, newLeft, newRight, compare);
+        }
+
+        const t = arr[k];
+        let i = left;
+        /** @type {number} */
+        let j = right;
+
+        swap$2(arr, left, k);
+        if (compare(arr[right], t) > 0) swap$2(arr, left, right);
+
+        while (i < j) {
+            swap$2(arr, i, j);
+            i++;
+            j--;
+            while (compare(arr[i], t) < 0) i++;
+            while (compare(arr[j], t) > 0) j--;
+        }
+
+        if (compare(arr[left], t) === 0) swap$2(arr, left, j);
+        else {
+            j++;
+            swap$2(arr, j, right);
+        }
+
+        if (j <= k) left = j + 1;
+        if (k <= j) right = j - 1;
+    }
+}
+
+/**
+ * @template T
+ * @param {T[]} arr
+ * @param {number} i
+ * @param {number} j
+ */
+function swap$2(arr, i, j) {
+    const tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+}
+
+/**
+ * @template T
+ * @param {T} a
+ * @param {T} b
+ * @returns {number}
+ */
+function defaultCompare(a, b) {
+    return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/**
+ * Classifies an array of rings into polygons with outer rings and holes
+ * @param rings - the rings to classify
+ * @param maxRings - the maximum number of rings to include in a polygon, use 0 to include all rings
+ * @returns an array of polygons with internal rings as holes
+ */
+function classifyRings(rings, maxRings) {
+    const len = rings.length;
+    if (len <= 1)
+        return [rings];
+    const polygons = [];
+    let polygon;
+    let ccw;
+    for (const ring of rings) {
+        const area = calculateSignedArea(ring);
+        if (area === 0)
+            continue;
+        ring.area = Math.abs(area);
+        if (ccw === undefined)
+            ccw = area < 0;
+        if (ccw === area < 0) {
+            if (polygon)
+                polygons.push(polygon);
+            polygon = [ring];
+        }
+        else {
+            polygon.push(ring);
+        }
+    }
+    if (polygon)
+        polygons.push(polygon);
+    // Earcut performance degrades with the # of rings in a polygon. For this
+    // reason, we limit strip out all but the `maxRings` largest rings.
+    if (maxRings > 1) {
+        for (let j = 0; j < polygons.length; j++) {
+            if (polygons[j].length <= maxRings)
+                continue;
+            quickselect(polygons[j], maxRings, 1, polygons[j].length - 1, compareAreas);
+            polygons[j] = polygons[j].slice(0, maxRings);
+        }
+    }
+    return polygons;
+}
+function compareAreas(a, b) {
+    return b.area - a.area;
+}
+/**
+ * Returns the signed area for the polygon ring.  Positive areas are exterior rings and
+ * have a clockwise winding.  Negative areas are interior rings and have a counter clockwise
+ * ordering.
+ *
+ * @param ring - Exterior or interior ring
+ * @returns Signed area
+ */
+function calculateSignedArea(ring) {
+    let sum = 0;
+    for (let i = 0, len = ring.length, j = len - 1, p1, p2; i < len; j = i++) {
+        p1 = ring[i];
+        p2 = ring[j];
+        sum += (p2.x - p1.x) * (p1.y + p2.y);
+    }
+    return sum;
+}
 
 // This is taken from https://github.com/mapbox/cheap-ruler/ in order to take only the relevant parts
 // Values that define WGS84 ellipsoid model of the Earth
@@ -18538,7 +18480,7 @@ CompoundExpression.register(expressions$1, {
     'filter-type-==': [
         BooleanType,
         [StringType],
-        (ctx, [v]) => ctx.geometryDollarType() === v.value
+        (ctx, [v]) => ctx.geometryType() === v.value
     ],
     'filter-<': [
         BooleanType,
@@ -18625,7 +18567,7 @@ CompoundExpression.register(expressions$1, {
     'filter-type-in': [
         BooleanType,
         [array(StringType)],
-        (ctx, [v]) => v.value.indexOf(ctx.geometryDollarType()) >= 0
+        (ctx, [v]) => v.value.indexOf(ctx.geometryType()) >= 0
     ],
     'filter-id-in': [
         BooleanType,
@@ -19466,7 +19408,7 @@ function compare(a, b) {
 function geometryNeeded(filter) {
     if (!Array.isArray(filter))
         return false;
-    if (filter[0] === 'within' || filter[0] === 'distance' || filter[0] === 'geometry-type')
+    if (filter[0] === 'within' || filter[0] === 'distance')
         return true;
     for (let index = 1; index < filter.length; index++) {
         if (geometryNeeded(filter[index]))
@@ -19666,7 +19608,7 @@ function runtimeTypeChecks(expectedTypes) {
 function convertComparisonOp(property, value, op, expectedTypes) {
     let get;
     if (property === '$type') {
-        return convertInOp('$type', [value], op === '!=');
+        return [op, ['geometry-type'], value];
     }
     else if (property === '$id') {
         get = ['id'];
@@ -19699,10 +19641,6 @@ function convertInOp(property, values, negate = false) {
         return negate;
     let get;
     if (property === '$type') {
-        const len = values.length;
-        for (let i = 0; i < len; i++) {
-            values.push(`Multi${values[i]}`);
-        }
         get = ['geometry-type'];
     }
     else if (property === '$id') {
