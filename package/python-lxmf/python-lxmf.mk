@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-PYTHON_LXMF_VERSION = 0.5.7
+PYTHON_LXMF_VERSION = 0.6.0
 PYTHON_LXMF_SITE = $(call github,markqvist,LXMF,$(PYTHON_LXMF_VERSION))
 PYTHON_LXMF_LICENSE = MIT
 PYTHON_LXMF_LICENSE_FILES = LICENSE-PSF LICENSE

@@ -7,6 +7,10 @@ import "./fonts/RobotoMonoNerdFont/font.css";
 
 import App from './components/App.vue';
 
+// init vuetify
+import { createVuetify } from 'vuetify';
+const vuetify = createVuetify();
+
 // provide axios globally
 window.axios = axios;
 
@@ -61,14 +65,30 @@ const router = createRouter({
             component: defineAsyncComponent(() => import("./components/propagation-nodes/PropagationNodesPage.vue")),
         },
         {
+            name: "ping",
+            path: '/ping',
+            component: defineAsyncComponent(() => import("./components/ping/PingPage.vue")),
+        },
+        {
+            name: "profile.icon",
+            path: '/profile/icon',
+            component: defineAsyncComponent(() => import("./components/profile/ProfileIconPage.vue")),
+        },
+        {
             name: "settings",
             path: '/settings',
             component: defineAsyncComponent(() => import("./components/settings/SettingsPage.vue")),
+        },
+        {
+            name: "tools",
+            path: '/tools',
+            component: defineAsyncComponent(() => import("./components/tools/ToolsPage.vue")),
         },
     ],
 })
 
 createApp(App)
     .use(router)
+    .use(vuetify)
     .use(vClickOutside)
     .mount('#app');

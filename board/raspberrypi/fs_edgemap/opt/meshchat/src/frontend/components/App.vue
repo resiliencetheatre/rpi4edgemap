@@ -2,12 +2,10 @@
     <div :class="{'dark': config?.theme === 'dark'}" class="h-screen w-full flex flex-col">
 
         <!-- header -->
-        <div class="flex bg-white dark:bg-zinc-950 p-2 border-gray-300 dark:border-zinc-900 border-b">
+        <div class="flex bg-white dark:bg-zinc-950 p-2 border-gray-300 dark:border-zinc-900 border-b min-h-16">
             <div class="flex w-full">
-                <div class="hidden sm:flex my-auto border border-gray-300 rounded-md w-10 h-10 mr-3 shadow bg-gray-50">
-                    <div class="flex mx-auto my-auto">
-                        <img class="w-9 h-9" src="/assets/images/logo.png" />
-                    </div>
+                <div class="hidden sm:flex my-auto w-12 h-12 mr-2">
+                    <img class="w-12 h-12" src="/assets/images/logo-chat-bubble.png" />
                 </div>
                 <div class="my-auto">
                     <div @click="onAppNameClick" class="font-bold cursor-pointer text-gray-900 dark:text-zinc-100">Reticulum MeshChat</div>
@@ -103,6 +101,18 @@
                                 </SidebarLink>
                             </li>
 
+                            <!-- tools -->
+                            <li>
+                                <SidebarLink :to="{ name: 'tools' }">
+                                    <template v-slot:icon>
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z" />
+                                        </svg>
+                                    </template>
+                                    <template v-slot:text>Tools</template>
+                                </SidebarLink>
+                            </li>
+
                             <!-- settings -->
                             <li>
                                 <SidebarLink :to="{ name: 'settings' }">
@@ -136,13 +146,16 @@
                         <!-- my identity -->
                         <div v-if="config" class="bg-white border-t dark:border-zinc-900 dark:bg-zinc-950">
                             <div @click="isShowingMyIdentitySection = !isShowingMyIdentitySection" class="flex text-gray-700 p-2 cursor-pointer">
-                                <div class="my-auto mr-2 dark:text-white">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                    </svg>
+                                <div class="my-auto mr-2">
+                                    <RouterLink @click.stop :to="{ name: 'profile.icon' }">
+                                        <LxmfUserIcon
+                                            :icon-name="config?.lxmf_user_icon_name"
+                                            :icon-foreground-colour="config?.lxmf_user_icon_foreground_colour"
+                                            :icon-background-colour="config?.lxmf_user_icon_background_colour"/>
+                                    </RouterLink>
                                 </div>
                                 <div class="my-auto dark:text-white">My Identity</div>
-                                <div class="ml-auto">
+                                <div class="my-auto ml-auto">
                                     <button @click.stop="saveIdentitySettings" type="button" class="my-auto inline-flex items-center gap-x-1 rounded-md bg-gray-500 px-2 py-1 text-sm font-semibold text-white shadow-sm hover:bg-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500 
            dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700 dark:focus-visible:outline-zinc-500">
                                         Save
@@ -301,10 +314,12 @@ import GlobalState from "../js/GlobalState";
 import Utils from "../js/Utils";
 import GlobalEmitter from "../js/GlobalEmitter";
 import NotificationUtils from "../js/NotificationUtils";
+import LxmfUserIcon from "./LxmfUserIcon.vue";
 
 export default {
     name: 'App',
     components: {
+        LxmfUserIcon,
         SidebarLink,
     },
     data() {
