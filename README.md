@@ -48,7 +48,6 @@ dtparam=i2c_arm=on
 
 ```
 
-
 ### Meshtastic 
 
 By default this image contains message delivery over [Meshtastic](https://meshtastic.org/) LoRA radios. (This can be changed to IP bearer if you need more bandwidth to image transfers for example).
@@ -125,8 +124,6 @@ option. Both of these are currently under development and field testing.
 
 ![edgemap-phone](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/edgmap-with-phone.png?raw=true)
 
-
-
 ### SecurePTT
 
 SecurePTT branch contains possbility to use small scale demo of full duplex Push-To-Talk (PTT) with exclusive level of security, where PTT streams are encrypted with One-Time-Pad (OTP). This functionality can be configured to following modes, depending on use case:
@@ -181,7 +178,7 @@ If you choose to use browser based geolocation, configure installation to use TL
 To build edgemap firmware, you need to install Buildroot environment and clone this repository 
 as 'external tree' to buildroot. Make sure you check buildroot manual for required packages for your host, before building.
 
-Clone repositories 
+Clone repositories and checkout either tested buildroot commit or be brave and try with master. 
 
 ```
 mkdir ~/build-directory
@@ -190,15 +187,16 @@ git clone https://github.com/resiliencetheatre/rpi4edgemap.git
 git clone https://git.buildroot.net/buildroot
 cd buildroot/
 # We checkout verified version on master branch
-git checkout ed590a22e24bdc714d75005f7fe7a3ad3b001c4d
+git checkout 92945909f10175000c4e4f8d1425cb823cdf6336
 ```
 
-You can use latest master or checkout version `ed590a22e24bdc714d75005f7fe7a3ad3b001c4d` as above,
-which I've tested (Dec 4th, 2024). Please note that buildroot version, kernel and other system
+You can use latest master or checkout version `92945909f10175000c4e4f8d1425cb823cdf6336` as above,
+which I've tested at Jan 25th, 2025. Please note that buildroot version, kernel and other system
 components needs to be in 'sync' and this is an art in embedded design.
 
 Modify buildroot standard `rpi-firmware` package file and change 
-firmware version tag to match kernel version (6.11.10) we're using. 
+firmware version tag to match kernel version we're using. Note that you need to track
+firmware version from RPi repositories yourself if you face any issues with HW compatibility (or stick with this version). 
 
 ```
 # package/rpi-firmware/rpi-firmware.mk
@@ -233,7 +231,7 @@ Export BR2_EXTERNAL variable, make defconfig and start build with make:
 ```
 export BR2_EXTERNAL=~/build-directory/rpi4edgemap
 cd ~/build-directory/buildroot
-make rpi4_edgemap_6.11_defconfig
+make rpi4_edgemap_6.12_voip_defconfig
 make
 ```
 
