@@ -187,11 +187,11 @@ git clone https://github.com/resiliencetheatre/rpi4edgemap.git
 git clone https://git.buildroot.net/buildroot
 cd buildroot/
 # We checkout verified version on master branch
-git checkout 92945909f10175000c4e4f8d1425cb823cdf6336
+git checkout 65137580ca9ed060c59544b9859fc648e902c694
 ```
 
-You can use latest master or checkout version `92945909f10175000c4e4f8d1425cb823cdf6336` as above,
-which I've tested at Jan 25th, 2025. Please note that buildroot version, kernel and other system
+You can use latest master or checkout version `65137580ca9ed060c59544b9859fc648e902c694` as above,
+which I've tested at Feb 1st, 2025. Please note that buildroot version, kernel and other system
 components needs to be in 'sync' and this is an art in embedded design.
 
 Modify buildroot standard `rpi-firmware` package file and change 
