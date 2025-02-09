@@ -1,6 +1,6 @@
 /**
  * MapLibre GL JS
- * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.0.1/LICENSE.txt
+ * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.1.0/LICENSE.txt
  */
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -14200,7 +14200,7 @@ class Color {
                 }
                 const [r, g, b, alpha] = hclToRgb([
                     hue,
-                    chroma !== null && chroma !== void 0 ? chroma : interpolateNumber(chroma0, chroma1, t),
+                    chroma !== null && chroma !== undefined ? chroma : interpolateNumber(chroma0, chroma1, t),
                     interpolateNumber(light0, light1, t),
                     interpolateNumber(alphaF, alphaT, t),
                 ]);
@@ -14240,13 +14240,15 @@ class Collator {
     }
 }
 
+const VERTICAL_ALIGN_OPTIONS = ['bottom', 'center', 'top'];
 class FormattedSection {
-    constructor(text, image, scale, fontStack, textColor) {
+    constructor(text, image, scale, fontStack, textColor, verticalAlign) {
         this.text = text;
         this.image = image;
         this.scale = scale;
         this.fontStack = fontStack;
         this.textColor = textColor;
+        this.verticalAlign = verticalAlign;
     }
 }
 class Formatted {
@@ -14254,7 +14256,7 @@ class Formatted {
         this.sections = sections;
     }
     static fromString(unformatted) {
-        return new Formatted([new FormattedSection(unformatted, null, null, null, null)]);
+        return new Formatted([new FormattedSection(unformatted, null, null, null, null, null)]);
     }
     isEmpty() {
         if (this.sections.length === 0)
@@ -16158,10 +16160,20 @@ class FormatExpression {
                     if (!textColor)
                         return null;
                 }
+                let verticalAlign = null;
+                if (arg['vertical-align']) {
+                    if (typeof arg['vertical-align'] === 'string' && !VERTICAL_ALIGN_OPTIONS.includes(arg['vertical-align'])) {
+                        return context.error(`'vertical-align' must be one of: 'bottom', 'center', 'top' but found '${arg['vertical-align']}' instead.`);
+                    }
+                    verticalAlign = context.parse(arg['vertical-align'], 1, StringType);
+                    if (!verticalAlign)
+                        return null;
+                }
                 const lastExpression = sections[sections.length - 1];
                 lastExpression.scale = scale;
                 lastExpression.font = font;
                 lastExpression.textColor = textColor;
+                lastExpression.verticalAlign = verticalAlign;
             }
             else {
                 const content = context.parse(args[i], 1, ValueType);
@@ -16171,7 +16183,7 @@ class FormatExpression {
                 if (kind !== 'string' && kind !== 'value' && kind !== 'null' && kind !== 'resolvedImage')
                     return context.error('Formatted text type must be \'string\', \'value\', \'image\' or \'null\'.');
                 nextTokenMayBeObject = true;
-                sections.push({ content, scale: null, font: null, textColor: null });
+                sections.push({ content, scale: null, font: null, textColor: null, verticalAlign: null });
             }
         }
         return new FormatExpression(sections);
@@ -16180,9 +16192,9 @@ class FormatExpression {
         const evaluateSection = section => {
             const evaluatedContent = section.content.evaluate(ctx);
             if (typeOf(evaluatedContent) === ResolvedImageType) {
-                return new FormattedSection('', evaluatedContent, null, null, null);
+                return new FormattedSection('', evaluatedContent, null, null, null, section.verticalAlign ? section.verticalAlign.evaluate(ctx) : null);
             }
-            return new FormattedSection(valueToString(evaluatedContent), null, section.scale ? section.scale.evaluate(ctx) : null, section.font ? section.font.evaluate(ctx).join(',') : null, section.textColor ? section.textColor.evaluate(ctx) : null);
+            return new FormattedSection(valueToString(evaluatedContent), null, section.scale ? section.scale.evaluate(ctx) : null, section.font ? section.font.evaluate(ctx).join(',') : null, section.textColor ? section.textColor.evaluate(ctx) : null, section.verticalAlign ? section.verticalAlign.evaluate(ctx) : null);
         };
         return new Formatted(this.sections.map(evaluateSection));
     }
@@ -16197,6 +16209,9 @@ class FormatExpression {
             }
             if (section.textColor) {
                 fn(section.textColor);
+            }
+            if (section.verticalAlign) {
+                fn(section.verticalAlign);
             }
         }
     }
@@ -20106,7 +20121,7 @@ function validateString(options) {
 
 function validateRasterDEMSource(options) {
     var _a;
-    const sourceName = (_a = options.sourceName) !== null && _a !== void 0 ? _a : '';
+    const sourceName = (_a = options.sourceName) !== null && _a !== undefined ? _a : '';
     const rasterDEM = options.value;
     const styleSpec = options.styleSpec;
     const rasterDEMSpec = styleSpec.source_raster_dem;
@@ -30403,16 +30418,19 @@ class SectionOptions {
         this.scale = 1.0;
         this.fontStack = '';
         this.imageName = null;
+        this.verticalAlign = 'bottom';
     }
-    static forText(scale, fontStack) {
+    static forText(scale, fontStack, verticalAlign) {
         const textOptions = new SectionOptions();
         textOptions.scale = scale || 1;
         textOptions.fontStack = fontStack;
+        textOptions.verticalAlign = verticalAlign || 'bottom';
         return textOptions;
     }
-    static forImage(imageName) {
+    static forImage(imageName, verticalAlign) {
         const imageOptions = new SectionOptions();
         imageOptions.imageName = imageName;
+        imageOptions.verticalAlign = verticalAlign || 'bottom';
         return imageOptions;
     }
 }
@@ -30476,9 +30494,25 @@ class TaggedString {
     getMaxScale() {
         return this.sectionIndex.reduce((max, index) => Math.max(max, this.sections[index].scale), 0);
     }
+    getMaxImageSize(imagePositions) {
+        let maxImageWidth = 0;
+        let maxImageHeight = 0;
+        for (let i = 0; i < this.length(); i++) {
+            const section = this.getSection(i);
+            if (section.imageName) {
+                const imagePosition = imagePositions[section.imageName];
+                if (!imagePosition)
+                    continue;
+                const size = imagePosition.displaySize;
+                maxImageWidth = Math.max(maxImageWidth, size[0]);
+                maxImageHeight = Math.max(maxImageHeight, size[1]);
+            }
+        }
+        return { maxImageWidth, maxImageHeight };
+    }
     addTextSection(section, defaultFontStack) {
         this.text += section.text;
-        this.sections.push(SectionOptions.forText(section.scale, section.fontStack || defaultFontStack));
+        this.sections.push(SectionOptions.forText(section.scale, section.fontStack || defaultFontStack, section.verticalAlign));
         const index = this.sections.length - 1;
         for (let i = 0; i < section.text.length; ++i) {
             this.sectionIndex.push(index);
@@ -30496,7 +30530,7 @@ class TaggedString {
             return;
         }
         this.text += String.fromCharCode(nextImageSectionCharCode);
-        this.sections.push(SectionOptions.forImage(imageName));
+        this.sections.push(SectionOptions.forImage(imageName, section.verticalAlign));
         this.sectionIndex.push(this.sections.length - 1);
     }
     getNextImageSectionCharCode() {
@@ -30745,98 +30779,105 @@ function getAnchorAlignment(anchor) {
     }
     return { horizontalAlign, verticalAlign };
 }
+function calculateLineContentSize(imagePositions, line, layoutTextSizeFactor) {
+    const maxGlyphSize = line.getMaxScale() * ONE_EM;
+    const { maxImageWidth, maxImageHeight } = line.getMaxImageSize(imagePositions);
+    const horizontalLineContentHeight = Math.max(maxGlyphSize, maxImageHeight * layoutTextSizeFactor);
+    const verticalLineContentWidth = Math.max(maxGlyphSize, maxImageWidth * layoutTextSizeFactor);
+    return { verticalLineContentWidth, horizontalLineContentHeight };
+}
+function getVerticalAlignFactor(verticalAlign) {
+    switch (verticalAlign) {
+        case 'top':
+            return 0;
+        case 'center':
+            return 0.5;
+        default:
+            return 1;
+    }
+}
+function getRectAndMetrics(glyphPosition, glyphMap, section, codePoint) {
+    if (glyphPosition && glyphPosition.rect) {
+        return glyphPosition;
+    }
+    const glyphs = glyphMap[section.fontStack];
+    const glyph = glyphs && glyphs[codePoint];
+    if (!glyph)
+        return null;
+    const metrics = glyph.metrics;
+    return { rect: null, metrics };
+}
+function isLineVertical(writingMode, allowVerticalPlacement, codePoint) {
+    return !(writingMode === exports.WritingMode.horizontal ||
+        // Don't verticalize glyphs that have no upright orientation if vertical placement is disabled.
+        (!allowVerticalPlacement && !charHasUprightVerticalOrientation(codePoint)) ||
+        // If vertical placement is enabled, don't verticalize glyphs that
+        // are from complex text layout script, or whitespaces.
+        (allowVerticalPlacement && (whitespace[codePoint] || charInComplexShapingScript(codePoint))));
+}
 function shapeLines(shaping, glyphMap, glyphPositions, imagePositions, lines, lineHeight, textAnchor, textJustify, writingMode, spacing, allowVerticalPlacement, layoutTextSizeThisZoom) {
     let x = 0;
-    let y = SHAPING_DEFAULT_OFFSET;
+    let y = 0;
     let maxLineLength = 0;
     let maxLineHeight = 0;
     const justify = textJustify === 'right' ? 1 :
         textJustify === 'left' ? 0 : 0.5;
+    const layoutTextSizeFactor = ONE_EM / layoutTextSizeThisZoom;
     let lineIndex = 0;
     for (const line of lines) {
         line.trim();
         const lineMaxScale = line.getMaxScale();
-        const maxLineOffset = (lineMaxScale - 1) * ONE_EM;
         const positionedLine = { positionedGlyphs: [], lineOffset: 0 };
         shaping.positionedLines[lineIndex] = positionedLine;
         const positionedGlyphs = positionedLine.positionedGlyphs;
-        let lineOffset = 0.0;
+        let imageOffset = 0.0;
         if (!line.length()) {
             y += lineHeight; // Still need a line feed after empty line
             ++lineIndex;
             continue;
         }
+        const lineShapingSize = calculateLineContentSize(imagePositions, line, layoutTextSizeFactor);
         for (let i = 0; i < line.length(); i++) {
             const section = line.getSection(i);
             const sectionIndex = line.getSectionIndex(i);
             const codePoint = line.getCharCode(i);
-            let baselineOffset = 0.0;
-            let metrics = null;
-            let rect = null;
-            let imageName = null;
-            let verticalAdvance = ONE_EM;
-            const vertical = !(writingMode === exports.WritingMode.horizontal ||
-                // Don't verticalize glyphs that have no upright orientation if vertical placement is disabled.
-                (!allowVerticalPlacement && !charHasUprightVerticalOrientation(codePoint)) ||
-                // If vertical placement is enabled, don't verticalize glyphs that
-                // are from complex text layout script, or whitespaces.
-                (allowVerticalPlacement && (whitespace[codePoint] || charInComplexShapingScript(codePoint))));
+            const vertical = isLineVertical(writingMode, allowVerticalPlacement, codePoint);
+            let sectionAttributes;
             if (!section.imageName) {
-                const positions = glyphPositions[section.fontStack];
-                const glyphPosition = positions && positions[codePoint];
-                if (glyphPosition && glyphPosition.rect) {
-                    rect = glyphPosition.rect;
-                    metrics = glyphPosition.metrics;
-                }
-                else {
-                    const glyphs = glyphMap[section.fontStack];
-                    const glyph = glyphs && glyphs[codePoint];
-                    if (!glyph)
-                        continue;
-                    metrics = glyph.metrics;
-                }
-                // We don't know the baseline, but since we're laying out
-                // at 24 points, we can calculate how much it will move when
-                // we scale up or down.
-                baselineOffset = (lineMaxScale - section.scale) * ONE_EM;
+                sectionAttributes = shapeTextSection(section, codePoint, vertical, lineShapingSize, glyphMap, glyphPositions);
+                if (!sectionAttributes)
+                    continue;
             }
             else {
-                const imagePosition = imagePositions[section.imageName];
-                if (!imagePosition)
-                    continue;
-                imageName = section.imageName;
-                shaping.iconsInText = shaping.iconsInText || true;
-                rect = imagePosition.paddedRect;
-                const size = imagePosition.displaySize;
+                shaping.iconsInText = true;
                 // If needed, allow to set scale factor for an image using
                 // alias "image-scale" that could be alias for "font-scale"
                 // when FormattedSection is an image section.
-                section.scale = section.scale * ONE_EM / layoutTextSizeThisZoom;
-                metrics = { width: size[0],
-                    height: size[1],
-                    left: IMAGE_PADDING,
-                    top: -GLYPH_PBF_BORDER,
-                    advance: vertical ? size[1] : size[0] };
-                // Difference between one EM and an image size.
-                // Aligns bottom of an image to a baseline level.
-                const imageOffset = ONE_EM - size[1] * section.scale;
-                baselineOffset = maxLineOffset + imageOffset;
-                verticalAdvance = metrics.advance;
-                // Difference between height of an image and one EM at max line scale.
-                // Pushes current line down if an image size is over 1 EM at max line scale.
-                const offset = vertical ? size[0] * section.scale - ONE_EM * lineMaxScale :
-                    size[1] * section.scale - ONE_EM * lineMaxScale;
-                if (offset > 0 && offset > lineOffset) {
-                    lineOffset = offset;
-                }
+                section.scale = section.scale * layoutTextSizeFactor;
+                sectionAttributes = shapeImageSection(section, vertical, lineMaxScale, lineShapingSize, imagePositions);
+                if (!sectionAttributes)
+                    continue;
+                imageOffset = Math.max(imageOffset, sectionAttributes.imageOffset);
             }
+            const { rect, metrics, baselineOffset } = sectionAttributes;
+            positionedGlyphs.push({
+                glyph: codePoint,
+                imageName: section.imageName,
+                x,
+                y: y + baselineOffset + SHAPING_DEFAULT_OFFSET,
+                vertical,
+                scale: section.scale,
+                fontStack: section.fontStack,
+                sectionIndex,
+                metrics,
+                rect
+            });
             if (!vertical) {
-                positionedGlyphs.push({ glyph: codePoint, imageName, x, y: y + baselineOffset, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect });
                 x += metrics.advance * section.scale + spacing;
             }
             else {
                 shaping.verticalizable = true;
-                positionedGlyphs.push({ glyph: codePoint, imageName, x, y: y + baselineOffset, vertical, scale: section.scale, fontStack: section.fontStack, sectionIndex, metrics, rect });
+                const verticalAdvance = section.imageName ? metrics.advance : ONE_EM;
                 x += verticalAdvance * section.scale + spacing;
             }
         }
@@ -30844,36 +30885,84 @@ function shapeLines(shaping, glyphMap, glyphPositions, imagePositions, lines, li
         if (positionedGlyphs.length !== 0) {
             const lineLength = x - spacing;
             maxLineLength = Math.max(lineLength, maxLineLength);
-            justifyLine(positionedGlyphs, 0, positionedGlyphs.length - 1, justify, lineOffset);
+            justifyLine(positionedGlyphs, 0, positionedGlyphs.length - 1, justify);
         }
         x = 0;
-        const currentLineHeight = lineHeight * lineMaxScale + lineOffset;
-        positionedLine.lineOffset = Math.max(lineOffset, maxLineOffset);
+        const maxLineOffset = (lineMaxScale - 1) * ONE_EM;
+        positionedLine.lineOffset = Math.max(imageOffset, maxLineOffset);
+        const currentLineHeight = lineHeight * lineMaxScale + imageOffset;
         y += currentLineHeight;
         maxLineHeight = Math.max(currentLineHeight, maxLineHeight);
         ++lineIndex;
     }
     // Calculate the bounding box and justify / align text block.
-    const height = y - SHAPING_DEFAULT_OFFSET;
     const { horizontalAlign, verticalAlign } = getAnchorAlignment(textAnchor);
-    align(shaping.positionedLines, justify, horizontalAlign, verticalAlign, maxLineLength, maxLineHeight, lineHeight, height, lines.length);
-    shaping.top += -verticalAlign * height;
-    shaping.bottom = shaping.top + height;
+    align(shaping.positionedLines, justify, horizontalAlign, verticalAlign, maxLineLength, maxLineHeight, lineHeight, y, lines.length);
+    // Calculate the bounding box
+    // shaping.top & shaping.left already include text offset (text-radial-offset or text-offset)
+    shaping.top += -verticalAlign * y;
+    shaping.bottom = shaping.top + y;
     shaping.left += -horizontalAlign * maxLineLength;
     shaping.right = shaping.left + maxLineLength;
 }
+function shapeTextSection(section, codePoint, vertical, lineShapingSize, glyphMap, glyphPositions) {
+    const positions = glyphPositions[section.fontStack];
+    const glyphPosition = positions && positions[codePoint];
+    const rectAndMetrics = getRectAndMetrics(glyphPosition, glyphMap, section, codePoint);
+    if (rectAndMetrics === null)
+        return null;
+    let baselineOffset;
+    if (vertical) {
+        baselineOffset = lineShapingSize.verticalLineContentWidth - section.scale * ONE_EM;
+    }
+    else {
+        const verticalAlignFactor = getVerticalAlignFactor(section.verticalAlign);
+        baselineOffset = (lineShapingSize.horizontalLineContentHeight - section.scale * ONE_EM) * verticalAlignFactor;
+    }
+    return {
+        rect: rectAndMetrics.rect,
+        metrics: rectAndMetrics.metrics,
+        baselineOffset
+    };
+}
+function shapeImageSection(section, vertical, lineMaxScale, lineShapingSize, imagePositions) {
+    const imagePosition = imagePositions[section.imageName];
+    if (!imagePosition)
+        return null;
+    const rect = imagePosition.paddedRect;
+    const size = imagePosition.displaySize;
+    const metrics = { width: size[0],
+        height: size[1],
+        left: IMAGE_PADDING,
+        top: -GLYPH_PBF_BORDER,
+        advance: vertical ? size[1] : size[0] };
+    let baselineOffset;
+    if (vertical) {
+        baselineOffset = lineShapingSize.verticalLineContentWidth - size[1] * section.scale;
+    }
+    else {
+        const verticalAlignFactor = getVerticalAlignFactor(section.verticalAlign);
+        baselineOffset = (lineShapingSize.horizontalLineContentHeight - size[1] * section.scale) * verticalAlignFactor;
+    }
+    // Difference between height of an image and one EM at max line scale.
+    // Pushes current line down if an image size is over 1 EM at max line scale.
+    const imageOffset = (vertical ? size[0] : size[1]) * section.scale - ONE_EM * lineMaxScale;
+    return { rect, metrics, baselineOffset, imageOffset };
+}
 // justify right = 1, left = 0, center = 0.5
-function justifyLine(positionedGlyphs, start, end, justify, lineOffset) {
-    if (!justify && !lineOffset)
+function justifyLine(positionedGlyphs, start, end, justify) {
+    if (justify === 0)
         return;
     const lastPositionedGlyph = positionedGlyphs[end];
     const lastAdvance = lastPositionedGlyph.metrics.advance * lastPositionedGlyph.scale;
     const lineIndent = (positionedGlyphs[end].x + lastAdvance) * justify;
     for (let j = start; j <= end; j++) {
         positionedGlyphs[j].x -= lineIndent;
-        positionedGlyphs[j].y += lineOffset;
     }
 }
+/**
+ * Aligns the lines based on horizontal and vertical alignment.
+ */
 function align(positionedLines, justify, horizontalAlign, verticalAlign, maxLineLength, maxLineHeight, lineHeight, blockHeight, lineCount) {
     const shiftX = (justify - horizontalAlign) * maxLineLength;
     let shiftY = 0;
@@ -30881,7 +30970,7 @@ function align(positionedLines, justify, horizontalAlign, verticalAlign, maxLine
         shiftY = -blockHeight * verticalAlign - SHAPING_DEFAULT_OFFSET;
     }
     else {
-        shiftY = (-verticalAlign * lineCount + 0.5) * lineHeight;
+        shiftY = -verticalAlign * lineCount * lineHeight + 0.5 * lineHeight;
     }
     for (const line of positionedLines) {
         for (const positionedGlyph of line.positionedGlyphs) {
@@ -37812,7 +37901,7 @@ define('index', ['exports', './shared'], (function (exports, performance$1) { 'u
 
 var name = "maplibre-gl";
 var description = "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library";
-var version$2 = "5.0.1";
+var version$2 = "5.1.0";
 var main = "dist/maplibre-gl.js";
 var style = "dist/maplibre-gl.css";
 var license = "BSD-3-Clause";
@@ -37835,8 +37924,8 @@ var dependencies = {
 	"@mapbox/unitbezier": "^0.0.1",
 	"@mapbox/vector-tile": "^1.3.1",
 	"@mapbox/whoots-js": "^3.1.0",
-	"@maplibre/maplibre-gl-style-spec": "^23.0.0",
-	"@types/geojson": "^7946.0.15",
+	"@maplibre/maplibre-gl-style-spec": "^23.1.0",
+	"@types/geojson": "^7946.0.16",
 	"@types/geojson-vt": "3.2.5",
 	"@types/mapbox__point-geometry": "^0.1.4",
 	"@types/mapbox__vector-tile": "^1.3.4",
@@ -37865,11 +37954,11 @@ var devDependencies = {
 	"@rollup/plugin-strip": "^3.0.4",
 	"@rollup/plugin-terser": "^0.4.4",
 	"@rollup/plugin-typescript": "^12.1.2",
-	"@stylistic/eslint-plugin-ts": "^2.12.1",
+	"@stylistic/eslint-plugin-ts": "^3.0.0",
 	"@types/benchmark": "^2.1.5",
 	"@types/d3": "^7.4.3",
 	"@types/diff": "^7.0.0",
-	"@types/earcut": "^2.1.4",
+	"@types/earcut": "^3.0.0",
 	"@types/eslint": "^9.6.1",
 	"@types/gl": "^6.0.5",
 	"@types/glob": "^8.1.0",
@@ -37877,34 +37966,34 @@ var devDependencies = {
 	"@types/minimist": "^1.2.5",
 	"@types/murmurhash-js": "^1.0.6",
 	"@types/nise": "^1.4.5",
-	"@types/node": "^22.10.5",
+	"@types/node": "^22.12.0",
 	"@types/offscreencanvas": "^2019.7.3",
 	"@types/pixelmatch": "^5.2.6",
 	"@types/pngjs": "^6.0.5",
-	"@types/react": "^19.0.4",
-	"@types/react-dom": "^19.0.2",
+	"@types/react": "^19.0.8",
+	"@types/react-dom": "^19.0.3",
 	"@types/request": "^2.48.12",
 	"@types/shuffle-seed": "^1.1.3",
 	"@types/window-or-global": "^1.0.6",
-	"@typescript-eslint/eslint-plugin": "^8.19.1",
-	"@typescript-eslint/parser": "^8.19.1",
-	"@vitest/coverage-v8": "2.2.0-beta.2",
-	"@vitest/ui": "2.2.0-beta.2",
+	"@typescript-eslint/eslint-plugin": "^8.22.0",
+	"@typescript-eslint/parser": "^8.22.0",
+	"@vitest/coverage-v8": "3.0.3",
+	"@vitest/ui": "3.0.3",
 	address: "^2.0.3",
 	autoprefixer: "^10.4.20",
 	benchmark: "^2.1.4",
-	canvas: "^3.0.1",
-	cspell: "^8.17.1",
+	canvas: "^3.1.0",
+	cspell: "^8.17.2",
 	cssnano: "^7.0.6",
 	d3: "^7.9.0",
 	"d3-queue": "^3.0.7",
-	"devtools-protocol": "^0.0.1404580",
+	"devtools-protocol": "^0.0.1410712",
 	diff: "^7.0.0",
 	"dts-bundle-generator": "^9.5.1",
-	eslint: "^9.17.0",
+	eslint: "^9.19.0",
 	"eslint-plugin-html": "^8.1.2",
 	"eslint-plugin-import": "^2.31.0",
-	"eslint-plugin-react": "^7.37.3",
+	"eslint-plugin-react": "^7.37.4",
 	"eslint-plugin-tsdoc": "0.4.0",
 	"eslint-plugin-vitest": "^0.5.4",
 	expect: "^29.7.0",
@@ -37915,21 +38004,21 @@ var devDependencies = {
 	"junit-report-builder": "^5.1.1",
 	minimist: "^1.2.8",
 	"mock-geolocation": "^1.0.11",
-	"monocart-coverage-reports": "^2.11.5",
+	"monocart-coverage-reports": "^2.12.0",
 	nise: "^6.1.1",
 	"npm-font-open-sans": "^1.1.0",
 	"npm-run-all": "^4.1.5",
 	"pdf-merger-js": "^5.1.2",
 	pixelmatch: "^6.0.0",
 	pngjs: "^7.0.0",
-	postcss: "^8.4.49",
+	postcss: "^8.5.1",
 	"postcss-cli": "^11.0.0",
 	"postcss-inline-svg": "^6.0.0",
 	"pretty-bytes": "^6.1.1",
-	puppeteer: "^24.0.0",
+	puppeteer: "^24.1.1",
 	react: "^19.0.0",
 	"react-dom": "^19.0.0",
-	rollup: "^4.30.1",
+	rollup: "^4.32.1",
 	"rollup-plugin-sourcemaps2": "^0.4.3",
 	rw: "^1.3.3",
 	semver: "^7.6.3",
@@ -37937,15 +38026,15 @@ var devDependencies = {
 	"shuffle-seed": "^1.1.6",
 	"source-map-explorer": "^2.5.3",
 	st: "^3.0.1",
-	stylelint: "^16.12.0",
-	"stylelint-config-standard": "^36.0.1",
+	stylelint: "^16.14.1",
+	"stylelint-config-standard": "^37.0.0",
 	"ts-node": "^10.9.2",
 	tslib: "^2.8.1",
 	typedoc: "^0.27.6",
 	"typedoc-plugin-markdown": "^4.4.1",
 	"typedoc-plugin-missing-exports": "^3.1.0",
 	typescript: "^5.7.3",
-	vitest: "2.2.0-beta.2",
+	vitest: "3.0.3",
 	"vitest-webgl-canvas-mock": "^1.1.0"
 };
 var scripts = {
@@ -38030,13 +38119,16 @@ const browser = {
      * or a fallback to Date.now()
      */
     now,
+    frame(abortController, fn, reject) {
+        const frame = requestAnimationFrame(fn);
+        abortController.signal.addEventListener('abort', () => {
+            cancelAnimationFrame(frame);
+            reject(performance$1.createAbortError());
+        });
+    },
     frameAsync(abortController) {
         return new Promise((resolve, reject) => {
-            const frame = requestAnimationFrame(resolve);
-            abortController.signal.addEventListener('abort', () => {
-                cancelAnimationFrame(frame);
-                reject(performance$1.createAbortError());
-            });
+            this.frame(abortController, resolve, reject);
         });
     },
     getImageData(img, padding = 0) {
@@ -64123,15 +64215,18 @@ let Map$1 = class Map extends Camera {
     triggerRepaint() {
         if (this.style && !this._frameRequest) {
             this._frameRequest = new AbortController();
-            browser.frameAsync(this._frameRequest).then((paintStartTimeStamp) => {
+            browser.frame(this._frameRequest, (paintStartTimeStamp) => {
                 performance$1.PerformanceUtils.frame(paintStartTimeStamp);
                 this._frameRequest = null;
-                this._render(paintStartTimeStamp);
-            }).catch((error) => {
-                if (!performance$1.isAbortError(error) && !isFramebufferNotCompleteError(error)) {
-                    throw error;
+                try {
+                    this._render(paintStartTimeStamp);
                 }
-            });
+                catch (error) {
+                    if (!performance$1.isAbortError(error) && !isFramebufferNotCompleteError(error)) {
+                        throw error;
+                    }
+                }
+            }, () => { });
         }
     }
     /**
