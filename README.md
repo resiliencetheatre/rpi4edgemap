@@ -187,10 +187,10 @@ git clone https://github.com/resiliencetheatre/rpi4edgemap.git
 git clone https://git.buildroot.net/buildroot
 cd buildroot/
 # We checkout verified version on master branch
-git checkout 65137580ca9ed060c59544b9859fc648e902c694
+git checkout 4bf27608a77143650fa94994363b444d57db7842
 ```
 
-You can use latest master or checkout version `65137580ca9ed060c59544b9859fc648e902c694` as above,
+You can use latest master or checkout version `4bf27608a77143650fa94994363b444d57db7842` as above,
 which I've tested at Feb 1st, 2025. Please note that buildroot version, kernel and other system
 components needs to be in 'sync' and this is an art in embedded design.
 
@@ -200,7 +200,7 @@ firmware version from RPi repositories yourself if you face any issues with HW c
 
 ```
 # package/rpi-firmware/rpi-firmware.mk
-RPI_FIRMWARE_VERSION = 5476720d52cf579dc1627715262b30ba1242525e
+RPI_FIRMWARE_VERSION = 8a8adaf2f1d6836facdc1c66f4e838b2025ec851
 ```
 
 Disable hash check by deleting `rpi-firmware.hash` file:
@@ -211,6 +211,9 @@ rm package/rpi-firmware/rpi-firmware.hash
 ```
 
 Protobufs 28.3
+
+UPDATE: It seems that buildroot 4bf27608a77143650fa94994363b444d57db7842 builds image
+just fine without this patch. This was tested at Feb 9th 2025.
 
 This version uses protobufs 28.3 (for python-meshtastic) which is not yet
 in buildroot master branch and you need to patch your buildroot manually 
@@ -225,6 +228,8 @@ patch --directory=. --strip=1 < ../rpi4edgemap/buildroot-extras/v5-2-4-package-p
 Note that if you're using more recent upstream buildroot, this change might be incorporated 
 into your buildroot already. Check `package/protobuf/protobuf.mk` for version before applying
 patch above. 
+
+## Start build
 
 Export BR2_EXTERNAL variable, make defconfig and start build with make:
 
