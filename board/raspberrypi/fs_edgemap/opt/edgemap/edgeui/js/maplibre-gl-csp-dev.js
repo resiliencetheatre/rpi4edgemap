@@ -1,6 +1,6 @@
 /**
  * MapLibre GL JS
- * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.1.0/LICENSE.txt
+ * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.1.1/LICENSE.txt
  */
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -10,7 +10,7 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 var name = "maplibre-gl";
 var description = "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library";
-var version$2 = "5.1.0";
+var version$2 = "5.1.1";
 var main = "dist/maplibre-gl.js";
 var style = "dist/maplibre-gl.css";
 var license = "BSD-3-Clause";
@@ -63,10 +63,10 @@ var devDependencies = {
 	"@rollup/plugin-strip": "^3.0.4",
 	"@rollup/plugin-terser": "^0.4.4",
 	"@rollup/plugin-typescript": "^12.1.2",
-	"@stylistic/eslint-plugin-ts": "^3.0.0",
+	"@stylistic/eslint-plugin-ts": "^4.0.1",
 	"@types/benchmark": "^2.1.5",
 	"@types/d3": "^7.4.3",
-	"@types/diff": "^7.0.0",
+	"@types/diff": "^7.0.1",
 	"@types/earcut": "^3.0.0",
 	"@types/eslint": "^9.6.1",
 	"@types/gl": "^6.0.5",
@@ -75,31 +75,31 @@ var devDependencies = {
 	"@types/minimist": "^1.2.5",
 	"@types/murmurhash-js": "^1.0.6",
 	"@types/nise": "^1.4.5",
-	"@types/node": "^22.12.0",
+	"@types/node": "^22.13.4",
 	"@types/offscreencanvas": "^2019.7.3",
 	"@types/pixelmatch": "^5.2.6",
 	"@types/pngjs": "^6.0.5",
-	"@types/react": "^19.0.8",
-	"@types/react-dom": "^19.0.3",
+	"@types/react": "^19.0.10",
+	"@types/react-dom": "^19.0.4",
 	"@types/request": "^2.48.12",
 	"@types/shuffle-seed": "^1.1.3",
 	"@types/window-or-global": "^1.0.6",
-	"@typescript-eslint/eslint-plugin": "^8.22.0",
-	"@typescript-eslint/parser": "^8.22.0",
-	"@vitest/coverage-v8": "3.0.3",
-	"@vitest/ui": "3.0.3",
+	"@typescript-eslint/eslint-plugin": "^8.24.1",
+	"@typescript-eslint/parser": "^8.24.1",
+	"@vitest/coverage-v8": "3.0.5",
+	"@vitest/ui": "3.0.5",
 	address: "^2.0.3",
 	autoprefixer: "^10.4.20",
 	benchmark: "^2.1.4",
 	canvas: "^3.1.0",
-	cspell: "^8.17.2",
+	cspell: "^8.17.4",
 	cssnano: "^7.0.6",
 	d3: "^7.9.0",
 	"d3-queue": "^3.0.7",
-	"devtools-protocol": "^0.0.1410712",
+	"devtools-protocol": "^0.0.1422344",
 	diff: "^7.0.0",
 	"dts-bundle-generator": "^9.5.1",
-	eslint: "^9.19.0",
+	eslint: "^9.20.1",
 	"eslint-plugin-html": "^8.1.2",
 	"eslint-plugin-import": "^2.31.0",
 	"eslint-plugin-react": "^7.37.4",
@@ -107,30 +107,30 @@ var devDependencies = {
 	"eslint-plugin-vitest": "^0.5.4",
 	expect: "^29.7.0",
 	glob: "^11.0.1",
-	globals: "^15.14.0",
+	globals: "^16.0.0",
 	"is-builtin-module": "^4.0.0",
 	jsdom: "^26.0.0",
 	"junit-report-builder": "^5.1.1",
 	minimist: "^1.2.8",
 	"mock-geolocation": "^1.0.11",
-	"monocart-coverage-reports": "^2.12.0",
+	"monocart-coverage-reports": "^2.12.1",
 	nise: "^6.1.1",
 	"npm-font-open-sans": "^1.1.0",
 	"npm-run-all": "^4.1.5",
 	"pdf-merger-js": "^5.1.2",
 	pixelmatch: "^6.0.0",
 	pngjs: "^7.0.0",
-	postcss: "^8.5.1",
+	postcss: "^8.5.3",
 	"postcss-cli": "^11.0.0",
 	"postcss-inline-svg": "^6.0.0",
 	"pretty-bytes": "^6.1.1",
 	puppeteer: "^24.1.1",
 	react: "^19.0.0",
 	"react-dom": "^19.0.0",
-	rollup: "^4.32.1",
-	"rollup-plugin-sourcemaps2": "^0.4.3",
+	rollup: "^4.34.8",
+	"rollup-plugin-sourcemaps2": "^0.5.0",
 	rw: "^1.3.3",
-	semver: "^7.6.3",
+	semver: "^7.7.1",
 	sharp: "^0.33.5",
 	"shuffle-seed": "^1.1.6",
 	"source-map-explorer": "^2.5.3",
@@ -139,11 +139,11 @@ var devDependencies = {
 	"stylelint-config-standard": "^37.0.0",
 	"ts-node": "^10.9.2",
 	tslib: "^2.8.1",
-	typedoc: "^0.27.6",
-	"typedoc-plugin-markdown": "^4.4.1",
+	typedoc: "^0.27.7",
+	"typedoc-plugin-markdown": "^4.4.2",
 	"typedoc-plugin-missing-exports": "^3.1.0",
 	typescript: "^5.7.3",
-	vitest: "3.0.3",
+	vitest: "3.0.5",
 	"vitest-webgl-canvas-mock": "^1.1.0"
 };
 var scripts = {
@@ -22287,7 +22287,7 @@ const unicodeBlockLookup = {
     // 'Kangxi Radicals': (char) => char >= 0x2F00 && char <= 0x2FDF,
     'Ideographic Description Characters': (char) => char >= 0x2FF0 && char <= 0x2FFF,
     'CJK Symbols and Punctuation': (char) => char >= 0x3000 && char <= 0x303F,
-    // 'Hiragana': (char) => char >= 0x3040 && char <= 0x309F,
+    'Hiragana': (char) => char >= 0x3040 && char <= 0x309F,
     'Katakana': (char) => char >= 0x30A0 && char <= 0x30FF,
     // 'Bopomofo': (char) => char >= 0x3100 && char <= 0x312F,
     // 'Hangul Compatibility Jamo': (char) => char >= 0x3130 && char <= 0x318F,
@@ -22299,7 +22299,7 @@ const unicodeBlockLookup = {
     'CJK Compatibility': (char) => char >= 0x3300 && char <= 0x33FF,
     // 'CJK Unified Ideographs Extension A': (char) => char >= 0x3400 && char <= 0x4DBF,
     'Yijing Hexagram Symbols': (char) => char >= 0x4DC0 && char <= 0x4DFF,
-    // 'CJK Unified Ideographs': (char) => char >= 0x4E00 && char <= 0x9FFF,
+    'CJK Unified Ideographs': (char) => char >= 0x4E00 && char <= 0x9FFF,
     // 'Yi Syllables': (char) => char >= 0xA000 && char <= 0xA48F,
     // 'Yi Radicals': (char) => char >= 0xA490 && char <= 0xA4CF,
     // 'Lisu': (char) => char >= 0xA4D0 && char <= 0xA4FF,
@@ -22326,7 +22326,7 @@ const unicodeBlockLookup = {
     // 'Latin Extended-E': (char) => char >= 0xAB30 && char <= 0xAB6F,
     // 'Cherokee Supplement': (char) => char >= 0xAB70 && char <= 0xABBF,
     // 'Meetei Mayek': (char) => char >= 0xABC0 && char <= 0xABFF,
-    // 'Hangul Syllables': (char) => char >= 0xAC00 && char <= 0xD7AF,
+    'Hangul Syllables': (char) => char >= 0xAC00 && char <= 0xD7AF,
     // 'Hangul Jamo Extended-B': (char) => char >= 0xD7B0 && char <= 0xD7FF,
     // 'High Surrogates': (char) => char >= 0xD800 && char <= 0xDB7F,
     // 'High Private Use Surrogates': (char) => char >= 0xDB80 && char <= 0xDBFF,
@@ -33474,7 +33474,16 @@ class GlyphManager {
         // text, also include any other CJKV or siniform ideograph or hangul,
         // hiragana, or katakana character.
         return !!this.localIdeographFontFamily &&
-            /\p{Ideo}|\p{sc=Hang}|\p{sc=Hira}|\p{sc=Kana}/u.test(String.fromCodePoint(id));
+            (/\p{Ideo}|\p{sc=Hang}|\p{sc=Hira}|\p{sc=Kana}/u.test(String.fromCodePoint(id)) ||
+                // fallback: RegExp can't cover all cases. refer Issue #5420
+                unicodeBlockLookup['CJK Unified Ideographs'](id) ||
+                unicodeBlockLookup['Hangul Syllables'](id) ||
+                unicodeBlockLookup['Hiragana'](id) ||
+                unicodeBlockLookup['Katakana'](id) || // includes "ー"
+                // memo: these symbols are not all. others could be added if needed.
+                unicodeBlockLookup['CJK Symbols and Punctuation'](id) || // 、。〃〄々〆〇〈〉《》「...
+                unicodeBlockLookup['Halfwidth and Fullwidth Forms'](id) // ！？＂＃＄％＆...
+            );
     }
     _tinySDF(entry, stack, id) {
         const fontFamily = this.localIdeographFontFamily;
@@ -44601,7 +44610,7 @@ class MercatorCoveringTilesDetailsProvider {
     allowVariableZoom(transform, options) {
         const zfov = transform.fov * (Math.abs(Math.cos(transform.rollInRadians)) * transform.height + Math.abs(Math.sin(transform.rollInRadians)) * transform.width) / transform.height;
         const maxConstantZoomPitch = clamp$1(78.5 - zfov / 2, 0.0, 60.0);
-        return (!!options.terrain || transform.pitch > maxConstantZoomPitch || transform.padding.top >= 0.1);
+        return (!!options.terrain || transform.pitch > maxConstantZoomPitch);
     }
     allowWorldCopies() {
         return true;
@@ -46207,7 +46216,7 @@ function angularCoordinatesRadiansToVector(lngRadians, latRadians) {
  * @returns A 3D vector - coordinates of the projected point on a unit sphere.
  */
 function projectTileCoordinatesToSphere(inTileX, inTileY, tileIdX, tileIdY, tileIdZ) {
-    // This code could be assembled from 3 fuctions, but this is a hot path for symbol placement,
+    // This code could be assembled from 3 functions, but this is a hot path for symbol placement,
     // so for optimization purposes everything is inlined by hand.
     //
     // Non-inlined variant of this function would be this:
@@ -48035,6 +48044,7 @@ class VerticalPerspectiveCameraHelper {
         const optionsZoom = typeof options.zoom !== 'undefined';
         const startCenter = tr.center;
         const startZoom = tr.zoom;
+        const startPadding = tr.padding;
         const doPadding = !tr.isPaddingEqual(options.padding);
         // Obtain target center and zoom
         const constrainedCenter = tr.getConstrained(LngLat.convert(options.center || options.locationAtOffset), startZoom).center;
@@ -48042,9 +48052,6 @@ class VerticalPerspectiveCameraHelper {
         // Compute target center that respects offset by creating a temporary transform and calling its `setLocationAtPoint`.
         const clonedTr = tr.clone();
         clonedTr.setCenter(constrainedCenter);
-        if (doPadding) {
-            clonedTr.setPadding(options.padding);
-        }
         clonedTr.setZoom(targetZoom);
         clonedTr.setBearing(options.bearing);
         const clampedPoint = new Point(clamp$1(tr.centerPoint.x + options.offsetAsPoint.x, 0, tr.width), clamp$1(tr.centerPoint.y + options.offsetAsPoint.y, 0, tr.height));
@@ -48069,6 +48076,9 @@ class VerticalPerspectiveCameraHelper {
         const deltaLat = differenceOfAnglesDegrees(startCenter.lat, targetCenter.lat);
         const easeFunc = (k, scale, centerFactor, _pointAtOffset) => {
             const interpolatedCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, centerFactor);
+            if (doPadding) {
+                tr.interpolatePadding(startPadding, options.padding, k);
+            }
             const newCenter = k === 1 ? targetCenter : interpolatedCenter;
             tr.setCenter(newCenter.wrap());
             const interpolatedZoom = normalizedStartZoom + scaleZoom(scale);
@@ -53823,7 +53833,7 @@ class Hash {
         const bearing = +(hash[3] || 0);
         const pitch = +(hash[4] || 0);
         return zoom >= this._map.getMinZoom() && zoom <= this._map.getMaxZoom() &&
-            bearing >= 0 && bearing <= 180 &&
+            bearing >= -180 && bearing <= 180 &&
             pitch >= this._map.getMinPitch() && pitch <= this._map.getMaxPitch();
     }
     ;
@@ -61948,7 +61958,6 @@ class Marker extends Evented {
         this._rotation = options && options.rotation || 0;
         this._rotationAlignment = options && options.rotationAlignment || 'auto';
         this._pitchAlignment = options && options.pitchAlignment && options.pitchAlignment !== 'auto' ? options.pitchAlignment : this._rotationAlignment;
-        this.setOpacity(); // set default opacity
         this.setOpacity(options === null || options === void 0 ? void 0 : options.opacity, options === null || options === void 0 ? void 0 : options.opacityWhenCovered);
         if (!options || !options.element) {
             this._defaultMarker = true;
@@ -62454,7 +62463,8 @@ class Marker extends Evented {
      * @param opacityWhenCovered - Sets the `opacityWhenCovered` property of the marker.
      */
     setOpacity(opacity, opacityWhenCovered) {
-        if (opacity === undefined && opacityWhenCovered === undefined) {
+        // Reset opacity when called without params or from constructor
+        if (this._opacity === undefined || (opacity === undefined && opacityWhenCovered === undefined)) {
             this._opacity = '1';
             this._opacityWhenCovered = '0.2';
         }

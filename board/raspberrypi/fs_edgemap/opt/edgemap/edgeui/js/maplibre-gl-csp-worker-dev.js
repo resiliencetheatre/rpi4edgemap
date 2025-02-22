@@ -1,6 +1,6 @@
 /**
  * MapLibre GL JS
- * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.1.0/LICENSE.txt
+ * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.1.1/LICENSE.txt
  */
 var maplibregl = (function () {
 'use strict';
@@ -21800,7 +21800,7 @@ const unicodeBlockLookup = {
     // 'Kangxi Radicals': (char) => char >= 0x2F00 && char <= 0x2FDF,
     'Ideographic Description Characters': (char) => char >= 0x2FF0 && char <= 0x2FFF,
     'CJK Symbols and Punctuation': (char) => char >= 0x3000 && char <= 0x303F,
-    // 'Hiragana': (char) => char >= 0x3040 && char <= 0x309F,
+    'Hiragana': (char) => char >= 0x3040 && char <= 0x309F,
     'Katakana': (char) => char >= 0x30A0 && char <= 0x30FF,
     // 'Bopomofo': (char) => char >= 0x3100 && char <= 0x312F,
     // 'Hangul Compatibility Jamo': (char) => char >= 0x3130 && char <= 0x318F,
@@ -21812,7 +21812,7 @@ const unicodeBlockLookup = {
     'CJK Compatibility': (char) => char >= 0x3300 && char <= 0x33FF,
     // 'CJK Unified Ideographs Extension A': (char) => char >= 0x3400 && char <= 0x4DBF,
     'Yijing Hexagram Symbols': (char) => char >= 0x4DC0 && char <= 0x4DFF,
-    // 'CJK Unified Ideographs': (char) => char >= 0x4E00 && char <= 0x9FFF,
+    'CJK Unified Ideographs': (char) => char >= 0x4E00 && char <= 0x9FFF,
     // 'Yi Syllables': (char) => char >= 0xA000 && char <= 0xA48F,
     // 'Yi Radicals': (char) => char >= 0xA490 && char <= 0xA4CF,
     // 'Lisu': (char) => char >= 0xA4D0 && char <= 0xA4FF,
@@ -21839,7 +21839,7 @@ const unicodeBlockLookup = {
     // 'Latin Extended-E': (char) => char >= 0xAB30 && char <= 0xAB6F,
     // 'Cherokee Supplement': (char) => char >= 0xAB70 && char <= 0xABBF,
     // 'Meetei Mayek': (char) => char >= 0xABC0 && char <= 0xABFF,
-    // 'Hangul Syllables': (char) => char >= 0xAC00 && char <= 0xD7AF,
+    'Hangul Syllables': (char) => char >= 0xAC00 && char <= 0xD7AF,
     // 'Hangul Jamo Extended-B': (char) => char >= 0xD7B0 && char <= 0xD7FF,
     // 'High Surrogates': (char) => char >= 0xD800 && char <= 0xDB7F,
     // 'High Private Use Surrogates': (char) => char >= 0xDB80 && char <= 0xDBFF,
