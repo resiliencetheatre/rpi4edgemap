@@ -1,0 +1,1 @@
+import{_ as t,o,q as r,l as s}from"./_plugin-vue_export-helper-BSLEAqPR.js";const n={name:"DropDownMenuItem"},a={class:"cursor-pointer flex p-3 space-x-2 text-sm bg-white text-gray-500 hover:bg-gray-100 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"};function c(e,p,i,d,_,l){return o(),r("div",a,[s(e.$slots,"default")])}const f=t(n,[["render",c]]);export{f as D};
