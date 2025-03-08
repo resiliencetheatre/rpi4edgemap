@@ -1,6 +1,6 @@
 /**
  * MapLibre GL JS
- * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.1.1/LICENSE.txt
+ * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.2.0/LICENSE.txt
  */
 var maplibregl = (function () {
 'use strict';
@@ -21329,6 +21329,7 @@ class ThrottledInvoker {
     }
 }
 
+const addEventDefaultOptions = { once: true };
 /**
  * An implementation of the [Actor design pattern](https://en.wikipedia.org/wiki/Actor_model)
  * that maintains the relationship between asynchronous tasks and the objects
@@ -21369,24 +21370,29 @@ class Actor {
             // message from multiple other actors which could run in different execution context. A
             // linearly increasing ID could produce collisions.
             const id = Math.round((Math.random() * 1e18)).toString(36).substring(0, 10);
+            const subscription = abortController ? subscribe(abortController.signal, 'abort', () => {
+                subscription === null || subscription === void 0 ? void 0 : subscription.unsubscribe();
+                delete this.resolveRejects[id];
+                const cancelMessage = {
+                    id,
+                    type: '<cancel>',
+                    origin: location.origin,
+                    targetMapId: message.targetMapId,
+                    sourceMapId: this.mapId
+                };
+                this.target.postMessage(cancelMessage);
+                // In case of abort the current behavior is to keep the promise pending.
+            }, addEventDefaultOptions) : null;
             this.resolveRejects[id] = {
-                resolve,
-                reject
+                resolve: (value) => {
+                    subscription === null || subscription === void 0 ? void 0 : subscription.unsubscribe();
+                    resolve(value);
+                },
+                reject: (reason) => {
+                    subscription === null || subscription === void 0 ? void 0 : subscription.unsubscribe();
+                    reject(reason);
+                }
             };
-            if (abortController) {
-                abortController.signal.addEventListener('abort', () => {
-                    delete this.resolveRejects[id];
-                    const cancelMessage = {
-                        id,
-                        type: '<cancel>',
-                        origin: location.origin,
-                        targetMapId: message.targetMapId,
-                        sourceMapId: this.mapId
-                    };
-                    this.target.postMessage(cancelMessage);
-                    // In case of abort the current behavior is to keep the promise pending.
-                }, { once: true });
-            }
             const buffers = [];
             const messageToPost = Object.assign(Object.assign({}, message), { id, sourceMapId: this.mapId, origin: location.origin, data: serialize(message.data, buffers) });
             this.target.postMessage(messageToPost, { transfer: buffers });

@@ -1697,7 +1697,10 @@ export type MapGeoJSONFeature = GeoJSONFeature & {
 		[key: string]: any;
 	};
 };
-declare class GeoJSONFeature {
+/**
+ * A geojson feature
+ */
+export declare class GeoJSONFeature {
 	type: "Feature";
 	_geometry: GeoJSON.Geometry;
 	properties: {
@@ -12464,6 +12467,12 @@ export type PopupOptions = {
 	 * @defaultValue false
 	 */
 	subpixelPositioning?: boolean;
+	/**
+	 * Optional opacity when the location is behind the globe.
+	 * Note that if a number is provided, it will be converted to a string.
+	 * @defaultValue undefined
+	 */
+	locationOccludedOpacity?: number | string;
 };
 /**
  * A popup component.
@@ -12555,6 +12564,10 @@ export declare class Popup extends Evented {
 	 * @see [Show polygon information on click](https://maplibre.org/maplibre-gl-js/docs/examples/polygon-popup-on-click/)
 	 */
 	addTo(map: Map$1): this;
+	/**
+	 * Add opacity to popup if in globe projection and location is behind view
+	 */
+	_updateOpacity: () => void;
 	/**
 	 * @returns `true` if the popup is open, `false` if it is closed.
 	 */

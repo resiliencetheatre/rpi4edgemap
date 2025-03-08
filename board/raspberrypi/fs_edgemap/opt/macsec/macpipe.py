@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------
 # macpipe
 # 
-# Copyright (C) 2024  Resilience Theatre
+# Copyright (C) 2024-2025 Resilience Theatre
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,8 +21,7 @@
 #
 # Adjust macpipe.ini and then run:
 #
-# sudo python3 macpipe.py -s
-# sudo python3 macpipe.py -r 
+# sudo python3 macpipe.py
 # 
 # Uses some strange US based algorithm, check can you trust this math.
 # 
@@ -30,18 +29,7 @@
 #
 #  sudo apt install python3-scapy python3-cryptography
 #
-# Unused features:
-# 
-# * Reads fifo to encrypt/decrypt payload and writes result to fifo
-#
-# Remember you need to read fifo output (unused feature):
-#
-#  cat /tmp/encrypted_message
-#  cat /tmp/decrypted_message
-#
-#  BOLD: \033[1m \033[0m
-#  RED: \033[31m \033[0m
-#
+
 import os
 import sys
 import time
@@ -57,6 +45,7 @@ import uuid
 import subprocess
 import re
 from scapy.all import Ether, sendp, sniff
+import threading
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
@@ -66,10 +55,6 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 # Read ini file
 config = configparser.ConfigParser()
 config.read('macpipe.ini')
-g_fifo_decrypt_in = config['settings']['decrypt_fifo_in']
-g_fifo_decrypt_out = config['settings']['decrypt_fifo_out']
-g_fifo_encrypt_in = config['settings']['encrypt_fifo_in']
-g_fifo_encrypt_out = config['settings']['encrypt_fifo_out']
 g_my_macsec_address = config['settings']['my_address']
 g_my_macsec_interface = config['settings']['my_interface']
 g_password = config['settings']['shared_secret']
@@ -105,9 +90,8 @@ def run_sudo_command(command: str) -> str:
     """
     try:
         # Use 'sudo' to run the command with elevated privileges
-        # NOTE: On Edgemap RPi4 image we removed 'sudo' here.
         result = subprocess.run(
-            f"{command}",
+            f"sudo {command}",
             shell=True,
             text=True,
             capture_output=True,
@@ -193,8 +177,7 @@ def receive_ethernet_frames(iface, filter_function=None, timeout=10):
     # ether proto 0x0806 for ARP packets
     # ether broadcast for broadcast packets
     # packets = sniff(iface=iface, filter="ether broadcast", prn=filter_function, timeout=timeout)
-    # packets = sniff(iface=iface, filter="ether broadcast", prn=process_packet, timeout=timeout)
-    packets = sniff(iface=iface, prn=process_packet, timeout=timeout)
+    packets = sniff(iface=iface, filter="ether broadcast", prn=process_packet, timeout=timeout)
     return packets
 
 
@@ -217,14 +200,14 @@ def update_encryption_key(mac_address, encryption_key):
     for item in mac_key_store:
         if item[0] == mac_address and item[1] != encryption_key:
             # mac address is found, but encryption key has changed
-            print(f"New key for: {mac_address}")
+            print(f"New key for host: {mac_address}")
             item[1] = encryption_key  
             return 1
         if item[0] == mac_address:
             return 0
     
     # If MAC address not found, add a new entry
-    print(f"New mac and key: {mac_address}")
+    print(f"Detected host: {mac_address}")
     mac_key_store.append([mac_address, encryption_key])
     return 1
     
@@ -297,81 +280,7 @@ def decrypt_aes256(encoded_data: str, password: str) -> str:
         pass
         # print("Decrypt error.")
 
-# FIFO functions
-def create_fifo_pipe(pipe_path):
-    try:
-        os.mkfifo(pipe_path)
-        print(f"FIFO created {pipe_path}" )
-        
-    except OSError as e:
-        pass
-        # print(f"Error: {e}")
 
-def write_encrypted_message_to_fifo(message):
-    global g_fifo_encrypt_out
-    fifo_write = open(g_fifo_encrypt_out, 'w')
-    fifo_write.write(message + "\n") # NOTE: \n
-    fifo_write.flush()
-    fifo_write.close()
-
-def write_decrypted_message_to_fifo(message):
-    global g_fifo_decrypt_out
-    fifo_write = open(g_fifo_decrypt_out, 'w')
-    fifo_write.write(message + "\n") # NOTE: \n
-    fifo_write.flush()
-    fifo_write.close()
-
-def read_fifo_for_encryption():
-    global g_fifo_encrypt_in
-    
-    if not os.path.isfile(g_fifo_encrypt_in):
-        create_fifo_pipe(g_fifo_encrypt_in)
-    if not stat.S_ISFIFO(os.stat(g_fifo_encrypt_in).st_mode):
-        os.remove(g_fifo_encrypt_in)
-        create_fifo_pipe(g_fifo_encrypt_in)
-    
-    if not os.path.isfile(g_fifo_encrypt_out):
-        create_fifo_pipe(g_fifo_encrypt_out)
-    if not stat.S_ISFIFO(os.stat(g_fifo_encrypt_out).st_mode):
-        os.remove(g_fifo_encrypt_out)
-        create_fifo_pipe(g_fifo_encrypt_out)
-    
-    fifo_read=open(g_fifo_encrypt_in,'r')
-    
-    while True:
-        fifo_msg_in = fifo_read.readline()[:-1]
-
-        if not fifo_msg_in == "":
-            encrypted_payload = encrypt_aes256(fifo_msg_in, g_password)
-            write_encrypted_message_to_fifo(encrypted_payload)
-        else:
-            time.sleep(1)
-
-
-def read_fifo_for_decryption():
-    global g_fifo_decrypt_in
-    if not os.path.isfile(g_fifo_decrypt_in):
-        create_fifo_pipe(g_fifo_decrypt_in)
-    if not stat.S_ISFIFO(os.stat(g_fifo_decrypt_in).st_mode):
-        os.remove(g_fifo_decrypt_in)
-        create_fifo_pipe(g_fifo_decrypt_in)
-        
-    if not os.path.isfile(g_fifo_decrypt_out):
-        create_fifo_pipe(g_fifo_decrypt_out)
-    if not stat.S_ISFIFO(os.stat(g_fifo_decrypt_out).st_mode):
-        os.remove(g_fifo_decrypt_out)
-        create_fifo_pipe(g_fifo_decrypt_out)
-        
-    fifo_read=open(g_fifo_decrypt_in,'r')
-
-    while True:
-        fifo_msg_in = fifo_read.readline()[:-1]
-        if not fifo_msg_in == "":
-            # print(f'Input: {fifo_msg_in}')
-            decrypted_payload = decrypt_aes256(fifo_msg_in, g_password)
-            write_decrypted_message_to_fifo(decrypted_payload)
-        else:
-            time.sleep(1)
 
 def get_mac_address(interface_name):
     """
@@ -424,30 +333,21 @@ def generate_encryption_key(bit_length=128):
     
     return hex_key
 
-#
-# Run as encrypt
-#
-def encrypt():
-    read_fifo_for_encryption()
-    sys.exit()
-        
-#
-# Run as decrypt
-#
-def decrypt():
-    read_fifo_for_decryption()
-    sys.exit()
+
 
 #
 # Ethernet frame functions
 #
 def frame_receiver():
+	
     def display_packet(packet):
         pass
         # print(f"Received frame: {packet.summary()}")
-            
-    received_frames = receive_ethernet_frames(g_my_macsec_interface, display_packet)
-    # print(f"Received {len(received_frames)} frames.")
+    
+    while True:
+        received_frames = receive_ethernet_frames(g_my_macsec_interface, display_packet)
+        time.sleep(1)
+		# print(f"Received {len(received_frames)} frames.")
 
 #
 # Send my mac and key every 10 s
@@ -494,7 +394,7 @@ def write_shell_script(file_name):
 def init_my_macsec():
     global g_my_macsec_key
     g_my_macsec_key = generate_encryption_key(128)    
-    print("Initializing macsec interface. Remember to restart receiver as well (-r).")
+    print("Initializing macsec interface")
     shell_command(f"ip link set {g_my_macsec_interface} up ")
     shell_command("ip link delete macsec0 ")
     shell_command(f"ip link add link {g_my_macsec_interface} macsec0 type macsec encrypt on ")
@@ -524,55 +424,30 @@ def get_all_items():
 #
 # Start up
 #
-if __name__ == "__main__":
+def main():
     
     check_root_privileges()
-    
+	
     try:
-        parser = argparse.ArgumentParser(description="macpipe example")
-        parser.add_argument(
-            "-e",
-            "--encrypt",
-            action="store_true",
-            help="read fifo data for encryption (not in use)"
-        )
+        # Initialize MACsec before starting the sender
+        init_my_macsec()
+        time.sleep(5)
         
-        parser.add_argument(
-            "-d",
-            "--decrypt",
-            action="store_true",
-            help="read fifo data for decryption (not in use)"
-        )
+        # Create threads for receiving and sending frames
+        receiver_thread = threading.Thread(target=frame_receiver, daemon=True)
+        sender_thread = threading.Thread(target=frame_sender, daemon=True)
         
-        parser.add_argument(
-            "-r",
-            "--receive",
-            action="store_true",
-            help="Receives key broadcasts from other hosts. Requires you to run -s option first."
-        )
+        # Start the threads
+        receiver_thread.start()
+        sender_thread.start()
         
-        parser.add_argument(
-            "-s",
-            "--send",
-            action="store_true",
-            help="Init macsec and keeps broadcasting the key. "
-        )
-        
-        args = parser.parse_args()
-        if args.encrypt:
-            encrypt()
-        if args.decrypt: 
-            decrypt()
-        if args.receive:
-            while True:
-                frame_receiver()
-                time.sleep(1)
-            
-        if args.send:
-            init_my_macsec()
-            frame_sender()
-        
+        # Keep the main thread running to prevent exit
+        receiver_thread.join()
+        sender_thread.join()
         
     except KeyboardInterrupt:
-        print("")
+        print("\nExiting...")
         exit()
+
+if __name__ == "__main__":
+    main()

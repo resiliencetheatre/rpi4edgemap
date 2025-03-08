@@ -1,6 +1,6 @@
 /**
  * MapLibre GL JS
- * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.1.1/LICENSE.txt
+ * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.2.0/LICENSE.txt
  */
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -10,7 +10,7 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 var name = "maplibre-gl";
 var description = "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library";
-var version$2 = "5.1.1";
+var version$2 = "5.2.0";
 var main = "dist/maplibre-gl.js";
 var style = "dist/maplibre-gl.css";
 var license = "BSD-3-Clause";
@@ -63,7 +63,7 @@ var devDependencies = {
 	"@rollup/plugin-strip": "^3.0.4",
 	"@rollup/plugin-terser": "^0.4.4",
 	"@rollup/plugin-typescript": "^12.1.2",
-	"@stylistic/eslint-plugin-ts": "^4.0.1",
+	"@stylistic/eslint-plugin-ts": "^4.1.0",
 	"@types/benchmark": "^2.1.5",
 	"@types/d3": "^7.4.3",
 	"@types/diff": "^7.0.1",
@@ -75,7 +75,7 @@ var devDependencies = {
 	"@types/minimist": "^1.2.5",
 	"@types/murmurhash-js": "^1.0.6",
 	"@types/nise": "^1.4.5",
-	"@types/node": "^22.13.4",
+	"@types/node": "^22.13.8",
 	"@types/offscreencanvas": "^2019.7.3",
 	"@types/pixelmatch": "^5.2.6",
 	"@types/pngjs": "^6.0.5",
@@ -84,22 +84,22 @@ var devDependencies = {
 	"@types/request": "^2.48.12",
 	"@types/shuffle-seed": "^1.1.3",
 	"@types/window-or-global": "^1.0.6",
-	"@typescript-eslint/eslint-plugin": "^8.24.1",
-	"@typescript-eslint/parser": "^8.24.1",
-	"@vitest/coverage-v8": "3.0.5",
-	"@vitest/ui": "3.0.5",
+	"@typescript-eslint/eslint-plugin": "^8.25.0",
+	"@typescript-eslint/parser": "^8.25.0",
+	"@vitest/coverage-v8": "3.0.7",
+	"@vitest/ui": "3.0.7",
 	address: "^2.0.3",
 	autoprefixer: "^10.4.20",
 	benchmark: "^2.1.4",
 	canvas: "^3.1.0",
-	cspell: "^8.17.4",
+	cspell: "^8.17.5",
 	cssnano: "^7.0.6",
 	d3: "^7.9.0",
 	"d3-queue": "^3.0.7",
-	"devtools-protocol": "^0.0.1422344",
+	"devtools-protocol": "^0.0.1425554",
 	diff: "^7.0.0",
 	"dts-bundle-generator": "^9.5.1",
-	eslint: "^9.20.1",
+	eslint: "^9.21.0",
 	"eslint-plugin-html": "^8.1.2",
 	"eslint-plugin-import": "^2.31.0",
 	"eslint-plugin-react": "^7.37.4",
@@ -108,17 +108,17 @@ var devDependencies = {
 	expect: "^29.7.0",
 	glob: "^11.0.1",
 	globals: "^16.0.0",
-	"is-builtin-module": "^4.0.0",
+	"is-builtin-module": "^5.0.0",
 	jsdom: "^26.0.0",
 	"junit-report-builder": "^5.1.1",
 	minimist: "^1.2.8",
 	"mock-geolocation": "^1.0.11",
-	"monocart-coverage-reports": "^2.12.1",
+	"monocart-coverage-reports": "^2.12.2",
 	nise: "^6.1.1",
 	"npm-font-open-sans": "^1.1.0",
 	"npm-run-all": "^4.1.5",
 	"pdf-merger-js": "^5.1.2",
-	pixelmatch: "^6.0.0",
+	pixelmatch: "^7.1.0",
 	pngjs: "^7.0.0",
 	postcss: "^8.5.3",
 	"postcss-cli": "^11.0.0",
@@ -127,7 +127,7 @@ var devDependencies = {
 	puppeteer: "^24.1.1",
 	react: "^19.0.0",
 	"react-dom": "^19.0.0",
-	rollup: "^4.34.8",
+	rollup: "^4.34.9",
 	"rollup-plugin-sourcemaps2": "^0.5.0",
 	rw: "^1.3.3",
 	semver: "^7.7.1",
@@ -135,15 +135,15 @@ var devDependencies = {
 	"shuffle-seed": "^1.1.6",
 	"source-map-explorer": "^2.5.3",
 	st: "^3.0.1",
-	stylelint: "^16.14.1",
+	stylelint: "^16.15.0",
 	"stylelint-config-standard": "^37.0.0",
 	"ts-node": "^10.9.2",
 	tslib: "^2.8.1",
-	typedoc: "^0.27.7",
+	typedoc: "^0.27.9",
 	"typedoc-plugin-markdown": "^4.4.2",
 	"typedoc-plugin-missing-exports": "^3.1.0",
 	typescript: "^5.7.3",
-	vitest: "3.0.5",
+	vitest: "3.0.7",
 	"vitest-webgl-canvas-mock": "^1.1.0"
 };
 var scripts = {
@@ -9691,11 +9691,15 @@ const browser = {
      */
     now,
     frame(abortController, fn, reject) {
-        const frame = requestAnimationFrame(fn);
-        abortController.signal.addEventListener('abort', () => {
-            cancelAnimationFrame(frame);
-            reject(createAbortError());
+        const frameId = requestAnimationFrame((paintStartTimestamp) => {
+            unsubscribe();
+            fn(paintStartTimestamp);
         });
+        const { unsubscribe } = subscribe(abortController.signal, 'abort', () => {
+            unsubscribe();
+            cancelAnimationFrame(frameId);
+            reject(createAbortError());
+        }, false);
     },
     frameAsync(abortController) {
         return new Promise((resolve, reject) => {
@@ -33906,6 +33910,7 @@ class ThrottledInvoker {
     }
 }
 
+const addEventDefaultOptions = { once: true };
 /**
  * An implementation of the [Actor design pattern](https://en.wikipedia.org/wiki/Actor_model)
  * that maintains the relationship between asynchronous tasks and the objects
@@ -33946,24 +33951,29 @@ class Actor {
             // message from multiple other actors which could run in different execution context. A
             // linearly increasing ID could produce collisions.
             const id = Math.round((Math.random() * 1e18)).toString(36).substring(0, 10);
+            const subscription = abortController ? subscribe(abortController.signal, 'abort', () => {
+                subscription === null || subscription === void 0 ? void 0 : subscription.unsubscribe();
+                delete this.resolveRejects[id];
+                const cancelMessage = {
+                    id,
+                    type: '<cancel>',
+                    origin: location.origin,
+                    targetMapId: message.targetMapId,
+                    sourceMapId: this.mapId
+                };
+                this.target.postMessage(cancelMessage);
+                // In case of abort the current behavior is to keep the promise pending.
+            }, addEventDefaultOptions) : null;
             this.resolveRejects[id] = {
-                resolve,
-                reject
+                resolve: (value) => {
+                    subscription === null || subscription === void 0 ? void 0 : subscription.unsubscribe();
+                    resolve(value);
+                },
+                reject: (reason) => {
+                    subscription === null || subscription === void 0 ? void 0 : subscription.unsubscribe();
+                    reject(reason);
+                }
             };
-            if (abortController) {
-                abortController.signal.addEventListener('abort', () => {
-                    delete this.resolveRejects[id];
-                    const cancelMessage = {
-                        id,
-                        type: '<cancel>',
-                        origin: location.origin,
-                        targetMapId: message.targetMapId,
-                        sourceMapId: this.mapId
-                    };
-                    this.target.postMessage(cancelMessage);
-                    // In case of abort the current behavior is to keep the promise pending.
-                }, { once: true });
-            }
             const buffers = [];
             const messageToPost = Object.assign(Object.assign({}, message), { id, sourceMapId: this.mapId, origin: location.origin, data: serialize(message.data, buffers) });
             this.target.postMessage(messageToPost, { transfer: buffers });
@@ -63487,7 +63497,8 @@ const defaultOptions = {
     focusAfterOpen: true,
     className: '',
     maxWidth: '240px',
-    subpixelPositioning: false
+    subpixelPositioning: false,
+    locationOccludedOpacity: undefined,
 };
 const focusQuerySelector = [
     'a[href]',
@@ -63563,6 +63574,20 @@ class Popup extends Evented {
     constructor(options) {
         super();
         /**
+         * Add opacity to popup if in globe projection and location is behind view
+         */
+        this._updateOpacity = () => {
+            if (this.options.locationOccludedOpacity === undefined) {
+                return;
+            }
+            if (this._map.transform.isLocationOccluded(this.getLngLat())) {
+                this._container.style.opacity = `${this.options.locationOccludedOpacity}`;
+            }
+            else {
+                this._container.style.opacity = undefined;
+            }
+        };
+        /**
          * Removes the popup from the map it has been added to.
          *
          * @example
@@ -63578,6 +63603,9 @@ class Popup extends Evented {
             if (this._container) {
                 DOM.remove(this._container);
                 delete this._container;
+            }
+            if (this._closeButton) {
+                this._closeButton.removeEventListener('click', this._onClose);
             }
             if (this._map) {
                 this._map.off('move', this._update);
@@ -63674,6 +63702,7 @@ class Popup extends Evented {
             }
             DOM.setTransform(this._container, `${anchorTranslate[anchor]} translate(${offsetedPos.x}px,${offsetedPos.y}px)`);
             applyAnchorClass(this._container, anchor, 'popup');
+            this._updateOpacity();
         };
         this._onClose = () => {
             this.remove();
