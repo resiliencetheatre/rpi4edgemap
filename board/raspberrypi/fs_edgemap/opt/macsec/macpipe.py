@@ -91,7 +91,7 @@ def run_sudo_command(command: str) -> str:
     try:
         # Use 'sudo' to run the command with elevated privileges
         result = subprocess.run(
-            f"sudo {command}",
+            f"{command}",
             shell=True,
             text=True,
             capture_output=True,
@@ -177,7 +177,7 @@ def receive_ethernet_frames(iface, filter_function=None, timeout=10):
     # ether proto 0x0806 for ARP packets
     # ether broadcast for broadcast packets
     # packets = sniff(iface=iface, filter="ether broadcast", prn=filter_function, timeout=timeout)
-    packets = sniff(iface=iface, filter="ether broadcast", prn=process_packet, timeout=timeout)
+    packets = sniff(iface=iface, filter=None, prn=process_packet, timeout=timeout)
     return packets
 
 
