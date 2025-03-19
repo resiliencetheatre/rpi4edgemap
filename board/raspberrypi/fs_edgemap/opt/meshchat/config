@@ -62,7 +62,7 @@
   #   6: Debug logging
   #   7: Extreme logging
   
-  loglevel = 4
+  loglevel = 6
 
 
 # The interfaces section defines the physical and virtual
@@ -81,17 +81,30 @@
   # should be enabled by default in almost any OS. See
   # the Reticulum Manual for more configuration options.
   
-#  [[Default Interface]]
-#    type = AutoInterface
-#    enabled = Yes
-
+  [[Default Interface]]
+    type = AutoInterface
+    enabled = Yes
+  
   [[RNode LoRa Interface]]
     type = RNodeInterface
-    interface_enabled = True
+    interface_enabled = false
     port = /dev/ttyUSB0
     frequency = 867200000
     bandwidth = 125000
     txpower = 22
     spreadingfactor = 8
     codingrate = 5
-
+    name = RNode LoRa Interface
+    selected_interface_mode = 1
+    configured_bitrate = None
+  
+[[RNS Testnet Amsterdam]]
+    type = TCPClientInterface
+    interface_enabled = true
+    target_host = amsterdam.connect.reticulum.network
+    target_port = 4965
+  [[RNS Testnet BetweenTheBorders]]
+    type = TCPClientInterface
+    interface_enabled = true
+    target_host = reticulum.betweentheborders.com
+    target_port = 4242

@@ -413,7 +413,7 @@ function sendReticulumControlMessage(messagepayload) {
     console.log("Sending reticulum control message:" + messagepayload)
     if ( reticulumStatusSocketConnected ) {
         reticulumStatusSocket.send( messagepayload + '\n' );
-        // notifyMessage("Announce sent", 5000);
+        notifyMessage("Announce sent", 5000);
     }
 }
 

@@ -506,7 +506,8 @@
     var lastKnownCoordinates;
     
     // Development variable for enabling / disabling reticulum
-    var reticulumFeatureEnabled = 0
+    var reticulumFeatureEnabled = 1
+    var meshtasticFeatureEnabled = 0
     
     //
     // Other peers
@@ -597,9 +598,9 @@
     Highrate marker         7890    8890
     reticulum messaging     7990    8990 
     meshtastic messaging    7991    8991
-    Meshtastic status       7995    8995
+    meshtastic status       7995    8995
     SecurePTT status        7996    8996
-    Reticulum status        7997    8997
+    reticulum status        7997    8997
     */
 
     // Websocket for locally attached GPS
@@ -905,185 +906,187 @@
     // == MESHTASTIC ==
     // ================
     
-    //
-    // meshtasticMsgSocket (8991)
-    // 
-    if ( wsProtocol == "ws://" )
-        meshtasticMsgSocket = new WebSocket(wsProtocol+wsHost+':7991');
-    if ( wsProtocol == "wss://" )
-        meshtasticMsgSocket = new WebSocket(wsProtocol+wsHost+':8991');
+    if ( meshtasticFeatureEnabled ) {
     
-    //
-    // meshtasticMsgSocket connect (8991)
-    //
-    meshtasticMsgSocket.onopen = function(event) {
-        document.getElementById('meshtasticMsgSocketStatus').style="display:block; padding-left: 5px; padding-top:5px;"; 
-        document.getElementById('meshtasticMsgSocketStatusRed').style="display:none;";
-        meshtasticMsgSocketConnected = true;
-    };
-    //
-    // meshtasticMsgSocket disconnect (8991)
-    //
-    meshtasticMsgSocket.onclose = function(event) {
-        document.getElementById('meshtasticMsgSocketStatus').style="display:none;";
-        document.getElementById('meshtasticMsgSocketStatusRed').style="display:block; padding-left: 5px; padding-top:5px;"; 
-        notifyMessage("Message channel disconnected! Try reloading page..", 5000);
-        meshtasticMsgSocketConnected=false;
-    };
-    
-    //
-    // meshtasticMsgSocket incoming (8991)
-    //
-    meshtasticMsgSocket.onmessage = function(event) {
-        var incomingMessage = event.data;
-        var trimmedString = incomingMessage.substring(0, 200);
-        const msgArray=trimmedString.split("|");
-        const msgFrom =  msgArray[0];
-        const msgType =  msgArray[1];
-        const msgLocation =  msgArray[2];
-        const msgMessage =  msgArray[3];
-        
-        if ( getElementItem('#myCallSign').value === msgFrom) {
-            console.log("My own message detected, discarding.");
-            return;
-        }
-        
         //
-        // GPIO Sensor - work in progress demo
+        // meshtasticMsgSocket (8991)
         // 
-        if ( msgType === "sensor" ) {
-            const sensorMsgArray=trimmedString.split(" ");
-            
-            if ( sensorMsgArray[1] === "detected" ) {
-                loadSensor(msgFrom,0,1);
-                // return;
-            }
-            if ( sensorMsgArray[1] === "state:" ) {
-                var sensorKeepAliveState = sensorMsgArray[2];
-                loadSensor(msgFrom,1,sensorKeepAliveState);
-                // return;
-            }
-        }
-        // 
-        // meshpipe join
-        //
-        if ( msgType === "meshpipe" ) {
-           notifyMessage( "Node start: " + msgMessage, 5000);                   
-        }
+        if ( wsProtocol == "ws://" )
+            meshtasticMsgSocket = new WebSocket(wsProtocol+wsHost+':7991');
+        if ( wsProtocol == "wss://" )
+            meshtasticMsgSocket = new WebSocket(wsProtocol+wsHost+':8991');
         
         //
-        // Join message demo
+        // meshtasticMsgSocket connect (8991)
         //
-        /*
-        if ( msgType === "joinMessage" ) {
+        meshtasticMsgSocket.onopen = function(event) {
+            document.getElementById('meshtasticMsgSocketStatus').style="display:block; padding-left: 5px; padding-top:5px;"; 
+            document.getElementById('meshtasticMsgSocketStatusRed').style="display:none;";
+            meshtasticMsgSocketConnected = true;
+        };
+        //
+        // meshtasticMsgSocket disconnect (8991)
+        //
+        meshtasticMsgSocket.onclose = function(event) {
+            document.getElementById('meshtasticMsgSocketStatus').style="display:none;";
+            document.getElementById('meshtasticMsgSocketStatusRed').style="display:block; padding-left: 5px; padding-top:5px;"; 
+            notifyMessage("Message channel disconnected. Try reloading page..", 5000);
+            meshtasticMsgSocketConnected=false;
+        };
+        
+        //
+        // meshtasticMsgSocket incoming (8991)
+        //
+        meshtasticMsgSocket.onmessage = function(event) {
+            var incomingMessage = event.data;
+            var trimmedString = incomingMessage.substring(0, 200);
+            const msgArray=trimmedString.split("|");
+            const msgFrom =  msgArray[0];
+            const msgType =  msgArray[1];
+            const msgLocation =  msgArray[2];
+            const msgMessage =  msgArray[3];
             
-            if ( !peersOnMap.present(msgFrom) ) {
-                notifyMessage( msgFrom +" " +msgMessage, 5000);    
+            if ( getElementItem('#myCallSign').value === msgFrom) {
+                console.log("My own message detected, discarding.");
+                return;
             }
-            // Add (or update) peer with callsign and timestamp
-            peersOnMap.add( msgFrom, Math.round(+new Date()/1000) );
-            updatePeerListBlock(); 
-        }*/
-
-        if ( msgArray.length == 4 ) 
-        {
+            
             //
-            // Geolocated peer marker
-            //
-            if ( msgType === "trackMarker" ) {
-                const location = msgLocation;
-                const locationNumbers = location.replace(/[\])}[{(]/g, '');
-                const locationArray = locationNumbers.split(",");
-                createTrackMarkerFromMessage(locationArray[0], locationArray[1],msgFrom,msgMessage);
-            }
-            //
-            // Shared 'drag marker'
-            //
-            if ( msgType === "dragMarker" ) {                        
-                const location = msgLocation;
-                const locationNumbers = location.replace(/[\])}[{(]/g, '');
-                const locationArray = locationNumbers.split(",");
-                dragMarker.setLngLat([ locationArray[0], locationArray[1] ]);
-                dragMarkerPopup.setText(msgFrom + " " + msgMessage);
-                
-                if ( msgMessage.includes("dragged") ) {
-                    if ( !dragMarkerPopup.isOpen() ) {
-                        dragMarkerPopup.addTo(map);
-                    }
-                } 
-                 if ( msgMessage.includes("released") )  {
-                    if ( dragMarkerPopup.isOpen() ) {
-                        dragMarkerPopup.remove();
-                    }
-                } 
-            }
-            //
-            // Messaging 'drop in' marker
-            //
-            if ( msgType === "dropMarker" ) {
-                const location = msgLocation;
-                const locationNumbers = location.replace(/[\])}[{(]/g, '');
-                const locationArray = locationNumbers.split(",");
-                const markerText = "<b>" + msgFrom + "</b>:" + msgMessage + "<br>" + locationArray[1]+","+locationArray[0];		
-                createMarkerFromMessage(mapPinMarkerCount, locationArray[0], locationArray[1],markerText );
-                mapPinMarkerCount++;                        
-            }
-            //
-            // Sensor marker: [FROM]|sensorMarker|[LAT,LON]|[markedId],[markerStatus],[symbol code]
-            //
-            if ( msgType == "sensorMarker" ) {
-                const location = msgLocation;
-                const locationNumbers = location.replace(/[\])}[{(]/g, '');
-                const locationArray = locationNumbers.split(",");   
-                const sensorDataArray = msgMessage.split(",");
-                const sensorId = sensorDataArray[0];
-                const sensorStatus = sensorDataArray[1];
-                const sensorSymbol = sensorDataArray[2];
-                createSensorMarker(locationArray[0], locationArray[1],sensorId,sensorStatus,sensorSymbol);
-            }
-            //
-            // Image marker: [FROM]|imageMarker|[LAT,LON]|[FILENAME]
+            // GPIO Sensor - work in progress demo
             // 
-            // Based on: https://stackoverflow.com/questions/47798971/several-modal-images-on-page
-            //
-            if ( msgType == "imageMarker" ) {
-                const location = msgLocation;
-                const locationNumbers = location.replace(/[\])}[{(]/g, '');
-                const locationArray = locationNumbers.split(",");   
-                createImageMarker(msgFrom,locationArray[0], locationArray[1],msgMessage.slice(0,-2));
-                    var modal = document.getElementById('myModal');
-                    var images = document.getElementsByClassName('myImages');
-                    var modalImg = document.getElementById("img01");
-                    var captionText = document.getElementById("caption");
-                    for (var i = 0; i < images.length; i++) {
-                      var img = images[i];
-                      img.onclick = function(evt) {
-                        modal.style.display = "block";
-                        modalImg.src = this.alt; 
-                        captionText.innerHTML = "Full size image";
-                      }
-                    }
-                    var span = document.getElementsByClassName("close")[0];
-                    span.onclick = function() {
-                      modal.style.display = "none";
-                       modalImg.src = "";
-                    } 
-                    notifyMessage("Image received from " + msgFrom , 5000);
+            if ( msgType === "sensor" ) {
+                const sensorMsgArray=trimmedString.split(" ");
+                
+                if ( sensorMsgArray[1] === "detected" ) {
+                    loadSensor(msgFrom,0,1);
+                    // return;
+                }
+                if ( sensorMsgArray[1] === "state:" ) {
+                    var sensorKeepAliveState = sensorMsgArray[2];
+                    loadSensor(msgFrom,1,sensorKeepAliveState);
+                    // return;
+                }
             }
-        }
-        //
-        // Normal message 
-        // TODO: sanitize, validate & parse etc (this is just an demo)
-        //
-        if ( msgArray.length != 4 && msgType != "dragMarker" && msgType != "trackMarker" && msgType != "sensorMarker" && msgType != "imageMarker" && msgType != "joinMessage" && msgType != "sensor" ) {
-            openMessageEntryBox(); 
-            getElementItem('#msgChannelLog').innerHTML += trimmedString;
-            getElementItem('#msgChannelLog').innerHTML += "<br>";
-            var scrollElement = document.getElementById('msgChannelLog');
-            scrollElement.scrollTop = scrollElement.scrollHeight;
-        }
-    };
-    
+            // 
+            // meshpipe join
+            //
+            if ( msgType === "meshpipe" ) {
+               notifyMessage( "Node start: " + msgMessage, 5000);                   
+            }
+            
+            //
+            // Join message demo
+            //
+            /*
+            if ( msgType === "joinMessage" ) {
+                
+                if ( !peersOnMap.present(msgFrom) ) {
+                    notifyMessage( msgFrom +" " +msgMessage, 5000);    
+                }
+                // Add (or update) peer with callsign and timestamp
+                peersOnMap.add( msgFrom, Math.round(+new Date()/1000) );
+                updatePeerListBlock(); 
+            }*/
+
+            if ( msgArray.length == 4 ) 
+            {
+                //
+                // Geolocated peer marker
+                //
+                if ( msgType === "trackMarker" ) {
+                    const location = msgLocation;
+                    const locationNumbers = location.replace(/[\])}[{(]/g, '');
+                    const locationArray = locationNumbers.split(",");
+                    createTrackMarkerFromMessage(locationArray[0], locationArray[1],msgFrom,msgMessage);
+                }
+                //
+                // Shared 'drag marker'
+                //
+                if ( msgType === "dragMarker" ) {                        
+                    const location = msgLocation;
+                    const locationNumbers = location.replace(/[\])}[{(]/g, '');
+                    const locationArray = locationNumbers.split(",");
+                    dragMarker.setLngLat([ locationArray[0], locationArray[1] ]);
+                    dragMarkerPopup.setText(msgFrom + " " + msgMessage);
+                    
+                    if ( msgMessage.includes("dragged") ) {
+                        if ( !dragMarkerPopup.isOpen() ) {
+                            dragMarkerPopup.addTo(map);
+                        }
+                    } 
+                     if ( msgMessage.includes("released") )  {
+                        if ( dragMarkerPopup.isOpen() ) {
+                            dragMarkerPopup.remove();
+                        }
+                    } 
+                }
+                //
+                // Messaging 'drop in' marker
+                //
+                if ( msgType === "dropMarker" ) {
+                    const location = msgLocation;
+                    const locationNumbers = location.replace(/[\])}[{(]/g, '');
+                    const locationArray = locationNumbers.split(",");
+                    const markerText = "<b>" + msgFrom + "</b>:" + msgMessage + "<br>" + locationArray[1]+","+locationArray[0];		
+                    createMarkerFromMessage(mapPinMarkerCount, locationArray[0], locationArray[1],markerText );
+                    mapPinMarkerCount++;                        
+                }
+                //
+                // Sensor marker: [FROM]|sensorMarker|[LAT,LON]|[markedId],[markerStatus],[symbol code]
+                //
+                if ( msgType == "sensorMarker" ) {
+                    const location = msgLocation;
+                    const locationNumbers = location.replace(/[\])}[{(]/g, '');
+                    const locationArray = locationNumbers.split(",");   
+                    const sensorDataArray = msgMessage.split(",");
+                    const sensorId = sensorDataArray[0];
+                    const sensorStatus = sensorDataArray[1];
+                    const sensorSymbol = sensorDataArray[2];
+                    createSensorMarker(locationArray[0], locationArray[1],sensorId,sensorStatus,sensorSymbol);
+                }
+                //
+                // Image marker: [FROM]|imageMarker|[LAT,LON]|[FILENAME]
+                // 
+                // Based on: https://stackoverflow.com/questions/47798971/several-modal-images-on-page
+                //
+                if ( msgType == "imageMarker" ) {
+                    const location = msgLocation;
+                    const locationNumbers = location.replace(/[\])}[{(]/g, '');
+                    const locationArray = locationNumbers.split(",");   
+                    createImageMarker(msgFrom,locationArray[0], locationArray[1],msgMessage.slice(0,-2));
+                        var modal = document.getElementById('myModal');
+                        var images = document.getElementsByClassName('myImages');
+                        var modalImg = document.getElementById("img01");
+                        var captionText = document.getElementById("caption");
+                        for (var i = 0; i < images.length; i++) {
+                          var img = images[i];
+                          img.onclick = function(evt) {
+                            modal.style.display = "block";
+                            modalImg.src = this.alt; 
+                            captionText.innerHTML = "Full size image";
+                          }
+                        }
+                        var span = document.getElementsByClassName("close")[0];
+                        span.onclick = function() {
+                          modal.style.display = "none";
+                           modalImg.src = "";
+                        } 
+                        notifyMessage("Image received from " + msgFrom , 5000);
+                }
+            }
+            //
+            // Normal message 
+            // TODO: sanitize, validate & parse etc (this is just an demo)
+            //
+            if ( msgArray.length != 4 && msgType != "dragMarker" && msgType != "trackMarker" && msgType != "sensorMarker" && msgType != "imageMarker" && msgType != "joinMessage" && msgType != "sensor" ) {
+                openMessageEntryBox(); 
+                getElementItem('#msgChannelLog').innerHTML += trimmedString;
+                getElementItem('#msgChannelLog').innerHTML += "<br>";
+                var scrollElement = document.getElementById('msgChannelLog');
+                scrollElement.scrollTop = scrollElement.scrollHeight;
+            }
+        };
+    }
     
     // ================
     // == MESHTASTIC ==
@@ -1441,7 +1444,9 @@
                         // 
                         // First 'geojson' parse to create symbol images
                         // 
-                        
+                        if ( this.response == "" ) {
+                            return;
+                        }
                         var name;
                         var another = JSON.parse(this.response, function (key, value) {			
                             if ( key == "targetName" ) {
