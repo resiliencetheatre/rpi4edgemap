@@ -1,12 +1,11 @@
 [Unit]
-Description=gwsocket for secureptt (7996)
+Description=gwsocket status (ssl/8997)
 After=multi-user.target
-Conflicts=ws-secureptt.service
 
 [Service]
 WorkingDirectory=/opt/edgemap
 KillMode=process
-ExecStart=gwsocket -p 7996 --pipein=/tmp/secureptt
+ExecStart=gwsocket -p 8997 --pipein=/tmp/statusin --ssl-cert=/etc/apache2/edgemap.crt --ssl-key=/etc/apache2/edgemap.key
 Restart=always
 RestartSec=1
 TimeoutStartSec=5

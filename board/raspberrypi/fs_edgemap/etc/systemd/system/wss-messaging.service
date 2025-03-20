@@ -1,7 +1,6 @@
 [Unit]
-Description=gwsocket for msgchannel (SSL/8990)
+Description=gwsocket for messaging (ssl/8990)
 After=multi-user.target
-Conflicts=ws-msgchannel.service
 
 [Service]
 WorkingDirectory=/opt/edgemap
@@ -11,5 +10,5 @@ Restart=always
 RestartSec=5
 TimeoutStartSec=5
 
-#[Install]
-#WantedBy=multi-user.target
+# [Install]
+# WantedBy=multi-user.target
