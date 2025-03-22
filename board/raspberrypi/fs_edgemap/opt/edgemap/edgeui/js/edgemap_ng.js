@@ -166,20 +166,17 @@ function localSensorMarkerCreate(messageData) {
 
 
 function toggleStyle() {
-    // Get the current URL
-    const url = new URL(window.location.href);
-
-    // Get the current value of the 'style' parameter
-    const currentStyle = url.searchParams.get('style');
-
-    // Determine the new value (toggle between 'bright' and 'dark')
-    const newStyle = currentStyle === 'bright' ? 'dark' : 'bright';
-
-    // Update the 'style' parameter in the URL
-    url.searchParams.set('style', newStyle);
-
-    // Reload the page with the updated URL
-    window.location.href = url.toString();
+    if ( currentStyle == "bright" ) {
+        map.setStyle("styles/style-v4-dark.json");
+        currentStyle="dark";
+        return 0;
+    }
+    if ( currentStyle == "dark" ) {
+        map.setStyle("styles/style-v4.json");
+        currentStyle="bright";
+        return 0;
+    }
+    return 0;
 }
 
 // reticulum peers
@@ -1921,6 +1918,27 @@ function systemControl(action) {
     
 }
 
+// This could be nextgen version of system control. Separating 
+// system functions from UI code with fifo pipe. Consider using
+// this instead of systemControl() above?
+
+function engine(code) {
+    const encodedCode = encodeURIComponent(code);
+    const url = `engine.php?code=${encodedCode}`;
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    })
+    .then(response => response.text())
+    .then(data => {
+        console.log('Response from engine:', data);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
 
 
 

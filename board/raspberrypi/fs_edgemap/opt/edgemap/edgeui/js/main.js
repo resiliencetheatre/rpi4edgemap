@@ -235,38 +235,36 @@ window.onload = function ()
             } 
             
             if ( item.id == "wipe" ) {
-                systemControl("wipe");
+                engine("wipe");
             }
             if ( item.id == "distress" ) {
-                systemControl("distress");
+                engine("distress");
             }
             if ( item.id == "poweroff" ) {
-                systemControl("poweroff");
+                engine("poweroff"); // nextgen
             }
             if ( item.id == "pos_off" ) {
-                systemControl("pos_off");
+                engine("pos_off");
             }
             if ( item.id == "pos_2" ) {
-                systemControl("pos_2");
+                engine("pos_2");
             }
             if ( item.id == "pos_4" ) {
-                systemControl("pos_4");
+                engine("pos_4");
             }
             if ( item.id == "pos_10" ) {
-                systemControl("pos_10");
+                engine("pos_10");
             }
             if ( item.id == "pos_manual" ) {
-                systemControl("pos_manual");
+                engine("pos_manual");
             }
             if ( item.id == "pos_random" ) {
-                systemControl("pos_random");
+                engine("pos_random");
             }
             if ( item.id == "style" ) {
                 toggleStyle();
             }
-            if ( item.id == "distress" ) {
-                systemControl("distress");
-            }
+
             
             
 		}

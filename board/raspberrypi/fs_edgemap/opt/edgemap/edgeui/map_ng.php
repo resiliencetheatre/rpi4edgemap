@@ -408,21 +408,8 @@
     Work in progress.
 
 */
-    // Set map style based on URL parameter
-    const url = new URL(window.location.href);
-    const style_parameter = url.searchParams.get('style');
-    if ( style_parameter == "dark" ) 
-    {
-        var map = new maplibregl.Map({
-          container: 'map',
-          zoom: 1,
-          minZoom: 1,
-          maxPitch: 85,
-          hash: true,
-          style: "styles/style-v4-dark.json"
-        });
-    } else {    
-        var map = new maplibregl.Map({
+
+    var map = new maplibregl.Map({
           container: 'map',
           zoom: 1,
           minZoom: 1,
@@ -430,9 +417,10 @@
           hash: true,
           style: "styles/style-v4.json"
         });
-    }
+    var currentStyle = "bright";
 
-    const edgemapUiVersion = "v0.76";
+
+    const edgemapUiVersion = "v0.8";
     var intialZoomLevel=1;
 	var symbolSize = 30;
     
@@ -921,8 +909,10 @@
     getElementItem('#sendMsg').onclick = function(e) {
         console.log("Send message debug: ", getElementItem('#myCallSign').value);
         var msgPayload = getElementItem('#myCallSign').value + '|' + getElementItem('#msgInput').value + '\n';       
+        
         // This is for reticulum ACK message demonstration
-        if ( messagingFeatureEnabled ) {
+        // Currently disabled on nextgen approach, to be removed.
+        if ( 0 ) {
             document.getElementById("delivery_status").innerHTML = ""
             fadeIn(deliveryStatusDiv,400);
             // fireup timeout for fadeout
@@ -935,7 +925,6 @@
         sendMessageToAllBearers( msgPayload );
         localSensorMarkerCreate( msgPayload );
 
-        
         getElementItem('#msgChannelLog').innerHTML += msgPayload  + '<br>';
         getElementItem('#msgInput').value = '';
         var scrollElement = document.getElementById('msgChannelLog');

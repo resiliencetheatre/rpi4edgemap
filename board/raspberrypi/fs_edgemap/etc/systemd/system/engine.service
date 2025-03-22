@@ -1,0 +1,14 @@
+[Unit]
+Description=engine service
+After=multi-user.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/engineroom
+ExecStart=/opt/engineroom/listener.sh
+Restart=always
+RestartSec=10
+TimeoutStartSec=10
+
+# [Install]
+# WantedBy=multi-user.target
