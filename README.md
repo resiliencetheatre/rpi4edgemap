@@ -78,6 +78,16 @@ sensorMarker|[58.2320306,27.3464727]|path23,Cellular Jamming,3001100000150504000
 sensorMarker|[58.0549952,27.0552062]|path24,Starlink uplink detected 04:19,30015000001101000000
 ```
 
+With milsymbols 3.0 we get some nice cyber security symbols:
+
+```
+sensorMarker|[58.9074826,23.5766601]|path13,KOLD,130460000012000000000000000000
+sensorMarker|[52.5578409,-0.6288282]|path14,TWIST,130460000017060000000000000000
+sensorMarker|[48.0131228,16.3930026]|path15,BINARY,130460000011020000000000000000
+sensorMarker|[45.3958035,9.11607187]|path16,OBSOLETE,130460000011080000000000000000
+sensorMarker|[53.3570698,29.2069794]|path17,INSBRUCK,130560000017030100000000000000
+```
+
 To save bandwidth on Meshtastic communication, some of messaging channel functions have been commented out on UI code. We don't deliver 'drag marker' or 'geolocation' over Meshtastic and we have increased presence indication sending interval to 2 minute.
 
 ### Meshtastic detection sensor
