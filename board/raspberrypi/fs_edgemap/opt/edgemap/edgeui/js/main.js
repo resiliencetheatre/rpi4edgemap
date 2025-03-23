@@ -1,5 +1,14 @@
 'use strict';
 
+/* Add if needed:
+ * 
+    {
+        id   : 'distress',
+        title: 'Distress',
+        icon: '#svg-icon-distress'
+    },
+  
+ */
 var menuItems = [
     {
         id   : 'setlocation',
@@ -22,9 +31,9 @@ var menuItems = [
         icon: '#svg-icon-meshtastic'
     },
     {
-        id   : 'reticulum',
-        title: 'Reticulum',
-        icon: '#svg-icon-reticulum'
+        id   : 'symbols',
+        title: 'Show',
+        icon: '#svg-icon-pin'
     },
     {
         id   : 'more',
@@ -138,15 +147,16 @@ var menuItems = [
                 icon: '#svg-icon-toggle'
             },
             {
-                id   : 'distress',
-                title: 'Distress',
-                icon: '#svg-icon-distress'
+                id   : 'editsymbols',
+                title: 'Edit symbols',
+                icon: '#svg-icon-pin'
             },
             {
                 id   : 'poweroff',
                 title: 'Power off',
                 icon: '#svg-icon-poweroff'
             },
+            
             
             
             
@@ -193,8 +203,8 @@ window.onload = function ()
             if ( item.id == "coordinate" ) {
                  openCoordinateSearchEntryBox();
             }
-            if ( item.id == "reticulum" ) {
-                 toggleReticulumList();
+            if ( item.id == "symbols" ) {
+                 loadLocalSymbols();
             }
             if ( item.id == "message" ) {
                  openMessageEntryBox();
@@ -264,6 +274,11 @@ window.onload = function ()
             if ( item.id == "style" ) {
                 toggleStyle();
             }
+            if ( item.id == "editsymbols" ) {
+                const relativePath = "symbolseditor/"; 
+                window.location.href = relativePath;
+            }
+            
 
             
             

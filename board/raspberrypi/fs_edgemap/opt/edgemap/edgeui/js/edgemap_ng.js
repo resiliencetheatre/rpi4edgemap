@@ -469,15 +469,8 @@ function notifyMessage(message, timeout) {
         }, timeout);
 }
 
-
-
-
-
-// 
-// Replace window.location.reload(); on page reload
-// 
 function reloadPage() {
-    window.location=window.location;
+    location.reload();
 }
 
 // If you enable geolocate, post contains also lat,lon and callsign
@@ -1940,6 +1933,28 @@ function engine(code) {
     });
 }
 
+// Experiment to load symbols from /opt/edgemap-persist/symbols.txt file
+function loadLocalSymbols() {
+    const fileName = "symbols.txt";
+    console.log("load local symbols from " + fileName);
+    fetch(`symbolseditor/file-handler.php?file=${encodeURIComponent(fileName)}`)
+        .then(response => {
+            if (!response.ok) throw new Error('File not found');
+            return response.text();
+        })
+        .then(text => {
+            loadedText = text;
+            const lines = loadedText.split('\n');
+            lines.forEach(line => {
+                    // Exclude commented lines
+                    if( !line.startsWith("#") ) {
+                        markerCreatePayload = "local|" + line;
+                        localSensorMarkerCreate(markerCreatePayload);
+                    }   
+                });
+            })
+            .catch(error => alert("Error: " + error.message));
+}
 
 
 

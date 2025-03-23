@@ -503,7 +503,13 @@
     
     // Development variable for enabling / disabling messaging
     var messagingFeatureEnabled = 1
-
+    
+    // Remember to run gwsocket systemd service along enabling these:
+    
+    // Development variable for enabling / disabling highrate target
+    var highrateFeatureEnabled = 0
+    // Development variable for enabling / disabling securePTT
+    var securepttFeatureEnabled = 0
     
     // We track 'radios' on mesh - not their location on map.
     // We don't want to enforce or use meshtastic internal
@@ -670,41 +676,42 @@
     document.getElementById('highRateSocketStatus').style="display:none;";
     document.getElementById('highRateSocketStatusRed').style="display:block;";
     
-    if ( wsProtocol == "ws://" )
-        highrateSocket = new WebSocket(wsProtocol+wsHost+':7890');
-    if ( wsProtocol == "wss://" )
-        highrateSocket = new WebSocket(wsProtocol+wsHost+':8890');
-        
-    highrateSocket.onopen = function(event) {
-        document.getElementById('highRateSocketStatus').style="display:block;";
-        document.getElementById('highRateSocketStatusRed').style="display:none;";
-        highrateSocketConnected = true;
-    };
-    highrateSocket.onclose = function(event) {
-        document.getElementById('highRateSocketStatus').style="display:none;";
-        document.getElementById('highRateSocketStatusRed').style="display:block;";
-        highrateSocketConnected=false;
-    };
-    highrateSocket.onmessage = function(event) {
-			var incomingMessage = event.data;
-			var trimmedString = incomingMessage.substring(0, 80);
-			const positionArray = trimmedString.split(",");
-			// TODO: Validate data better
-			getElementItem('#lat_highrate').innerHTML =  positionArray[1];
-			getElementItem('#lon_highrate').innerHTML =  positionArray[0];
-			getElementItem('#name_highrate').innerHTML =  positionArray[2];
-			var targetSymbol = positionArray[3];
+    if ( highrateFeatureEnabled ) {
+        if ( wsProtocol == "ws://" )
+            highrateSocket = new WebSocket(wsProtocol+wsHost+':7890');
+        if ( wsProtocol == "wss://" )
+            highrateSocket = new WebSocket(wsProtocol+wsHost+':8890');
             
-			// Create highrate highrateMarker from first incoming message 
-			if ( highRateCreated == false ) {
-                highrateMarker = new maplibregl.Marker({
-                    element: milSymHighrateMarker
-				});
-				requestAnimationFrame(animateHighrateMarker);
-                highRateCreated = true;
-			}
-		};
-    
+        highrateSocket.onopen = function(event) {
+            document.getElementById('highRateSocketStatus').style="display:block;";
+            document.getElementById('highRateSocketStatusRed').style="display:none;";
+            highrateSocketConnected = true;
+        };
+        highrateSocket.onclose = function(event) {
+            document.getElementById('highRateSocketStatus').style="display:none;";
+            document.getElementById('highRateSocketStatusRed').style="display:block;";
+            highrateSocketConnected=false;
+        };
+        highrateSocket.onmessage = function(event) {
+                var incomingMessage = event.data;
+                var trimmedString = incomingMessage.substring(0, 80);
+                const positionArray = trimmedString.split(",");
+                // TODO: Validate data better
+                getElementItem('#lat_highrate').innerHTML =  positionArray[1];
+                getElementItem('#lon_highrate').innerHTML =  positionArray[0];
+                getElementItem('#name_highrate').innerHTML =  positionArray[2];
+                var targetSymbol = positionArray[3];
+                
+                // Create highrate highrateMarker from first incoming message 
+                if ( highRateCreated == false ) {
+                    highrateMarker = new maplibregl.Marker({
+                        element: milSymHighrateMarker
+                    });
+                    requestAnimationFrame(animateHighrateMarker);
+                    highRateCreated = true;
+                }
+            };
+    }
     
     // ============================
     // Websocket for messaging (ng)
@@ -946,56 +953,56 @@
         }
     };
     
-    
     // =================================
     // Secureptt status (/tmp/secureptt)
     // =================================
     
-    if ( wsProtocol == "ws://" )
-        securePttStatusSocket = new WebSocket(wsProtocol+wsHost+':7996');
-    if ( wsProtocol == "wss://" )
-        securePttStatusSocket = new WebSocket(wsProtocol+wsHost+':8996');
-        
-    securePttStatusSocket.onopen = function(event) {
-        document.getElementById('securePttStatus').style="display:block; padding-top:5px;";
-        document.getElementById('securePttStatusRed').style="display:none; padding-top:5px;";
-        
-        var style="font: 8px 'Helvetica Neue', Arial, Helvetica, sans-serif;padding: 1px;border: 1px solid #0E0;color: #0F0;background-color: transparent;";
-        document.getElementById('securePttTx').style = style;
-        document.getElementById('securePttRx').style = style;
-    };
-    securePttStatusSocket.onclose = function(event) {
-        document.getElementById('securePttStatus').style="display:none;";
-        document.getElementById('securePttStatusRed').style="display:block; padding-top:5px;";
-        document.getElementById('securePttTx').style = "display:none;"
-        document.getElementById('securePttRx').style = "display:none;"
-    };
-    
-    securePttStatusSocket.onmessage = function(event) {
-        var incomingMessage = event.data;
-        var trimmedString = incomingMessage.substring(0, 80);
-        if ( trimmedString === "tx-on" )
-        {
-            var style="font: 8px 'Helvetica Neue', Arial, Helvetica, sans-serif;padding: 1px;border: 1px solid #0E0;color: #0F0;background-color: #D00;";
-            document.getElementById('securePttTx').style = style;
-        }
-        if ( trimmedString === "tx-off" )
-        {
+    if ( securepttFeatureEnabled ) {    
+        if ( wsProtocol == "ws://" )
+            securePttStatusSocket = new WebSocket(wsProtocol+wsHost+':7996');
+        if ( wsProtocol == "wss://" )
+            securePttStatusSocket = new WebSocket(wsProtocol+wsHost+':8996');
+            
+        securePttStatusSocket.onopen = function(event) {
+            document.getElementById('securePttStatus').style="display:block; padding-top:5px;";
+            document.getElementById('securePttStatusRed').style="display:none; padding-top:5px;";
+            
             var style="font: 8px 'Helvetica Neue', Arial, Helvetica, sans-serif;padding: 1px;border: 1px solid #0E0;color: #0F0;background-color: transparent;";
             document.getElementById('securePttTx').style = style;
-        }
-        if ( trimmedString === "rx-on" )
-        {
-            var style="font: 8px 'Helvetica Neue', Arial, Helvetica, sans-serif;padding: 1px;border: 1px solid #0E0;color: #0F0;background-color: #D00;";
             document.getElementById('securePttRx').style = style;
-        }
-        if ( trimmedString === "rx-off" )
-        {
-            var style="font: 8px 'Helvetica Neue', Arial, Helvetica, sans-serif;padding: 1px;border: 1px solid #0E0;color: #0F0;background-color: transparent;";
-            document.getElementById('securePttRx').style = style;
-        }
-    };
-    
+        };
+        securePttStatusSocket.onclose = function(event) {
+            document.getElementById('securePttStatus').style="display:none;";
+            document.getElementById('securePttStatusRed').style="display:block; padding-top:5px;";
+            document.getElementById('securePttTx').style = "display:none;"
+            document.getElementById('securePttRx').style = "display:none;"
+        };
+        
+        securePttStatusSocket.onmessage = function(event) {
+            var incomingMessage = event.data;
+            var trimmedString = incomingMessage.substring(0, 80);
+            if ( trimmedString === "tx-on" )
+            {
+                var style="font: 8px 'Helvetica Neue', Arial, Helvetica, sans-serif;padding: 1px;border: 1px solid #0E0;color: #0F0;background-color: #D00;";
+                document.getElementById('securePttTx').style = style;
+            }
+            if ( trimmedString === "tx-off" )
+            {
+                var style="font: 8px 'Helvetica Neue', Arial, Helvetica, sans-serif;padding: 1px;border: 1px solid #0E0;color: #0F0;background-color: transparent;";
+                document.getElementById('securePttTx').style = style;
+            }
+            if ( trimmedString === "rx-on" )
+            {
+                var style="font: 8px 'Helvetica Neue', Arial, Helvetica, sans-serif;padding: 1px;border: 1px solid #0E0;color: #0F0;background-color: #D00;";
+                document.getElementById('securePttRx').style = style;
+            }
+            if ( trimmedString === "rx-off" )
+            {
+                var style="font: 8px 'Helvetica Neue', Arial, Helvetica, sans-serif;padding: 1px;border: 1px solid #0E0;color: #0F0;background-color: transparent;";
+                document.getElementById('securePttRx').style = style;
+            }
+        };
+    }
 
     
     // ===================
@@ -1594,6 +1601,12 @@
     <svg id="svg-icon-manual" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#0096FF" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 12h2m16 0h2M4 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0m12 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0m-8.5-1.5L15 5"/></svg>
     <svg id="svg-icon-random" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512"><path fill="#FFA500" fill-rule="evenodd" d="M465.023 135.32L376.68 465.023L46.977 376.68L135.32 46.977zm-52.256 30.17L165.49 99.233L99.233 346.51l247.277 66.257zM317.08 316.538c17.07 4.574 27.201 22.121 22.627 39.192c-4.574 17.07-22.121 27.201-39.192 22.627c-17.07-4.574-27.201-22.12-22.627-39.192c4.574-17.07 22.12-27.201 39.192-22.627m-52.798-91.448c17.071 4.575 27.202 22.121 22.628 39.192s-22.121 27.202-39.192 22.628s-27.202-22.121-22.628-39.192s22.121-27.202 39.192-22.628m-52.797-91.447c17.07 4.574 27.201 22.12 22.627 39.192c-4.574 17.07-22.12 27.201-39.192 22.627c-17.07-4.574-27.201-22.12-22.627-39.192c4.574-17.07 22.121-27.201 39.192-22.627"/></svg>
     
+
+
+<svg id="svg-icon-pin" class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#00FF00" viewBox="0 0 24 24">
+  <path fill-rule="evenodd" d="M5 9a7 7 0 1 1 8 6.93V21a1 1 0 1 1-2 0v-5.07A7.001 7.001 0 0 1 5 9Zm5.94-1.06A1.5 1.5 0 0 1 12 7.5a1 1 0 1 0 0-2A3.5 3.5 0 0 0 8.5 9a1 1 0 0 0 2 0c0-.398.158-.78.44-1.06Z" clip-rule="evenodd"/>
+</svg>
+
 
     
     <svg id="svg-icon-toggle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
