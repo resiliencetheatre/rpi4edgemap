@@ -310,10 +310,10 @@
         <div class="map-bottom-manualLocation-entries" id="manualLocationNotify" style="display: none;">
         <table width=100% border=0>
             <tr valign="top">
-                <td ><i data-feather="target" id="manualLocation-Icon" class="feather-submitCallSignEntry"></i></td>
+                <td ><i data-feather="info" id="manualLocation-Icon" class="feather-submitCallSignEntry"></i></td>
                 <td width=90%>
                     <div class="manualLocation-message-style" id="manualLocation-Message"></div>
-                    
+                    <br>
                     <div id="manualLocation-create-input-placeholder"></div>
                     <div id="manualLocation-create-input">
                         <table border=0 width=80%>
@@ -1409,7 +1409,7 @@
                 if ( manualLocationCreateInProgress == 1 ) {
                   document.getElementById('manualLocation-Lat').innerHTML = uLat.substring(0,10);
                   document.getElementById('manualLocation-LatLonComma').innerHTML = ",";
-                  document.getElementById('manualLocation-Tooltip').innerHTML = "Pos: ";
+                  document.getElementById('manualLocation-Tooltip').innerHTML = "";
                   document.getElementById('manualLocation-create-input-placeholder').style.display = "none";
                   document.getElementById('manualLocation-create-input').style.display = "block";
                 }

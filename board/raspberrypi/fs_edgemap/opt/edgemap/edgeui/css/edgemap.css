@@ -1431,8 +1431,8 @@ input:focus {
 	position: absolute;
 	border-radius: 5px;
     width: 290px;
-    height: 80px;
-	bottom: 220px;
+    height: 100px;
+	bottom: 180px;
     left: 10px;
 	padding: 10px;
 	opacity: 0.6;

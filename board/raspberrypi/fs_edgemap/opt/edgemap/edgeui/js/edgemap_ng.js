@@ -1817,7 +1817,7 @@ function removeSensorIcon() {
 
 // manual location manualLocationNotify
 function setManualLocationNotifyMessage() {
-    message="Set your location manually";
+    message="If you don't have local GPS<br>receiver, you can pick point on<br>map for your static location.";
     const elementOpacity=0.8;
     fadeInTo09(document.getElementById("manualLocationNotify") ,400,elementOpacity);
     document.getElementById("manualLocation-Message").innerHTML = message;
@@ -1826,7 +1826,7 @@ function setManualLocationNotifyMessage() {
     document.getElementById('manualLocation-Lon').innerHTML = "";
     document.getElementById('manualLocation-LatLonComma').innerHTML = "";
     document.getElementById('manualLocation-create-input-placeholder').style.display = "block";
-    document.getElementById('manualLocation-create-input-placeholder').innerHTML = "Click on map to pick location";
+    document.getElementById('manualLocation-create-input-placeholder').innerHTML = "<b>Click on map to pick location</b>";
     document.getElementById("manualLocation-create-input").style.display = "none"; 
     keyEventListener=0;
     manualLocationCreateInProgress=1;
