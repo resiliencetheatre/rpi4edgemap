@@ -223,8 +223,11 @@
     </div>
 
 
-    <div class="coordinateSearch" id="coordinateSearchEntry" >
-            <input id="coordinateInput" type="text" placeholder="[latitude,longitude]" class="coordinateSearchInput" maxlength="20" onkeypress="handleKeyPress(event)" onfocus="ensureVisible(this)">
+    <div class="coordinateSearch" id="coordinateSearchEntry">
+        
+        <input id="coordinateInput" type="text" placeholder="[latitude,longitude]" class="coordinateSearchInput" maxlength="20" onkeypress="handleKeyPress(event)" onfocus="ensureVisible(this)">
+        <i data-feather="x-circle" class="feather-closeCoordinateSearch" onClick='closeCoordinateSearchEntryBox();' ></i>
+            
     </div>
     
 
@@ -235,8 +238,7 @@
                     <span class="callsignTitle">Callsign:</span><input id="myCallSign" type="text" class="callSignInput" maxlength="5" >
                 </td>
                 <td>
-                
-                <i data-feather="check-circle" class="feather-submitCallSignEntry" onClick='closeCallSignEntryBox();' ></i> 
+                    <i data-feather="check-circle" class="feather-submitCallSignEntry" onClick='closeCallSignEntryBox();' ></i> 
                 </td>
             </tr>
         </table>	
@@ -324,6 +326,7 @@
                     </div>
                     <div class="manualLocation-define-button-style" id="manualLocation-define-button" style="display: block;" onclick="manualLocationErase();"><center>Unset</center></div>
                     <div class="manualLocation-close-button-style" id="manualLocation-close-button" style="display: block;" onclick="manualLocationSet();"><center>Set</center></div>
+                    <div class="manualLocation-abort-button-style" id="manualLocation-close-button" style="display: block;" onclick="manualLocationClose()"><center>Abort</center></div>
                 </td>
             </tr>
         </table>
@@ -510,6 +513,8 @@
     var highrateFeatureEnabled = 0
     // Development variable for enabling / disabling securePTT
     var securepttFeatureEnabled = 0
+    
+    
     
     // We track 'radios' on mesh - not their location on map.
     // We don't want to enforce or use meshtastic internal
@@ -977,7 +982,6 @@
             document.getElementById('securePttTx').style = "display:none;"
             document.getElementById('securePttRx').style = "display:none;"
         };
-        
         securePttStatusSocket.onmessage = function(event) {
             var incomingMessage = event.data;
             var trimmedString = incomingMessage.substring(0, 80);
@@ -1002,6 +1006,9 @@
                 document.getElementById('securePttRx').style = style;
             }
         };
+    } else {
+        document.getElementById('securePttStatus').style="display:none; padding-top:5px;";
+        document.getElementById('securePttStatusRed').style="display:none; padding-top:5px;";
     }
 
     

@@ -1870,6 +1870,7 @@ function manualLocationErase() {
     manualLocationClose();
 }
 
+
 function manualLocationClose() {
     const elementOpacity=0.8;
     fadeOutFrom09(document.getElementById("manualLocationNotify"),400,elementOpacity);

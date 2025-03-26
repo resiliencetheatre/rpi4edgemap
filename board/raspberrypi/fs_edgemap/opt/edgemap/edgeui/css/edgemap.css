@@ -1431,7 +1431,7 @@ input:focus {
 	position: absolute;
 	border-radius: 5px;
     width: 290px;
-    height: 50px;
+    height: 80px;
 	bottom: 220px;
     left: 10px;
 	padding: 10px;
@@ -1449,6 +1449,7 @@ input:focus {
 	right: 4px;
 	padding: 2px;
 	opacity: 1.0;
+    cursor: pointer;
 }
 .manualLocation-define-button-style {
 	font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
@@ -1461,6 +1462,21 @@ input:focus {
 	right: 4px;
 	padding: 2px;
 	opacity: 1.0;
+    cursor: pointer;
+}
+
+.manualLocation-abort-button-style {
+	font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+	position: absolute;
+	width: 40px;
+    color: #0f0;
+    border: 1px solid #00fF00;
+	border-radius: 5px;
+	top: 64px;
+	right: 4px;
+	padding: 2px;
+	opacity: 1.0;
+    cursor: pointer;
 }
 
 .manualLocation-message-style {
@@ -1652,6 +1668,11 @@ body {
     padding-top: 3px; 
     padding-left: 5px;
 }
+
+.coordinateSearchTitle {
+	font-size: 15px;
+}
+
 .coordinateSearch {
 	display: none;
 	font: 12px 'Helvetica Neue', Arial, Helvetica, sans-serif;
@@ -1664,19 +1685,16 @@ body {
 	border-radius: 5px;
 	padding-top: 0px;
 	padding-left: 5px;
-	width: 300px;
+	width: 230px;
 	height: 40px; 
 	opacity: 0.9;
     
 }
 
-.coordinateSearchTitle {
-	font-size: 15px;
-}
-
 .coordinateSearchInput {
 	font-size: 15px;
-	/*width: 60%;
+    width: 70%;
+	/*
 	 margin-top: -10px; */
 	border-top-style: hidden;
 	border-right-style: hidden;
@@ -1686,7 +1704,17 @@ body {
 	background-color: transparent;
 	color: #0F0;
 }
-
+.feather-closeCoordinateSearch {
+  width: 30px;
+  height: 30px;
+  vertical-align: bottom;
+  stroke: #F20;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  padding: 5px 5px;
+}
 
 
 
