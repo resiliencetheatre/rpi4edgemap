@@ -78,17 +78,8 @@ sensorMarker|[58.2320306,27.3464727]|path23,Cellular Jamming,3001100000150504000
 sensorMarker|[58.0549952,27.0552062]|path24,Starlink uplink detected 04:19,30015000001101000000
 ```
 
-With milsymbols 3.0 we get some nice cyber security symbols:
-
-```
-sensorMarker|[58.9074826,23.5766601]|path13,KOLD,130460000012000000000000000000
-sensorMarker|[52.5578409,-0.6288282]|path14,TWIST,130460000017060000000000000000
-sensorMarker|[48.0131228,16.3930026]|path15,BINARY,130460000011020000000000000000
-sensorMarker|[45.3958035,9.11607187]|path16,OBSOLETE,130460000011080000000000000000
-sensorMarker|[53.3570698,29.2069794]|path17,INSBRUCK,130560000017030100000000000000
-```
-
 To save bandwidth on Meshtastic communication, some of messaging channel functions have been commented out on UI code. We don't deliver 'drag marker' or 'geolocation' over Meshtastic and we have increased presence indication sending interval to 2 minute.
+
 
 ### Meshtastic detection sensor
 
@@ -117,6 +108,25 @@ where you can pick location on map and give description. All further alarms are 
 
 Note that this implementation is still work in progress.
 
+### Local symbols
+
+You can edit locally stored symbols with built in "symbols editor" and save them to be displayed on your map.
+
+![symbols-editor](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/symbols-editor.png?raw=true)
+
+Symbols are stored at `/opt/edgemap-persist/symbols.txt` and symbols editor loads and saves this file. Feel free
+to build some more clever logic around this demonstration. You can use [unit symbols generator](https://spatialillusions.com/unitgenerator/) to define your symbols. 
+
+For example, with updated milsymbols 3.0 we get some nice cyber security symbols:
+
+```
+sensorMarker|[58.9074826,23.5766601]|path13,KOLD,130460000012000000000000000000
+sensorMarker|[52.5578409,-0.6288282]|path14,TWIST,130460000017060000000000000000
+sensorMarker|[48.0131228,16.3930026]|path15,BINARY,130460000011020000000000000000
+sensorMarker|[45.3958035,9.11607187]|path16,OBSOLETE,130460000011080000000000000000
+sensorMarker|[53.3570698,29.2069794]|path17,INSBRUCK,130560000017030100000000000000
+```
+
 ### Highrate
 
 ![highrate](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/highrate.png?raw=true)
@@ -125,12 +135,10 @@ You can also update highrate target information to map via websocket connection.
 
 ### Reticulum
 
-Experimental support for reticulum network is included on build. Currently we have to disable meshtastic when reticulum is 
-activated into use, but this might change in future. For reticulum there is "Reticulum MeshChat" included, which is
+Experimental support for reticulum network is included on build. Currently we have to disable meshtastic when reticulum is  activated into use, but this might change in future. For reticulum there is "Reticulum MeshChat" included, which is
 independent browser usable chat and nomad network access tool. 
 
-For reticulum message delivery image contains [LXMF](https://github.com/markqvist/LXMF) based messaging and reticulum links based
-option. Both of these are currently under development and field testing. 
+For reticulum message delivery image contains [LXMF](https://github.com/markqvist/LXMF) based messaging and reticulum links based option. Both of these are currently under development and field testing. 
 
 ![edgemap-phone](https://github.com/resiliencetheatre/rpi4edgemap/blob/main/doc/edgmap-with-phone.png?raw=true)
 
@@ -197,16 +205,14 @@ git clone https://github.com/resiliencetheatre/rpi4edgemap.git
 git clone https://git.buildroot.net/buildroot
 cd buildroot/
 # We checkout verified version on master branch
-git checkout 4bf27608a77143650fa94994363b444d57db7842
+git checkout aa2d7ca53f704af901f6c33c13e4bb1591886700
 ```
 
-You can use latest master or checkout version `4bf27608a77143650fa94994363b444d57db7842` as above,
-which I've tested at Feb 1st, 2025. Please note that buildroot version, kernel and other system
+You can use latest buildroot master or checkout version `aa2d7ca53f704af901f6c33c13e4bb1591886700` as above,
+which I've tested at Mar 27th, 2025. Please note that buildroot version, kernel and other system
 components needs to be in 'sync' and this is an art in embedded design.
 
-Modify buildroot standard `rpi-firmware` package file and change 
-firmware version tag to match kernel version we're using. Note that you need to track
-firmware version from RPi repositories yourself if you face any issues with HW compatibility (or stick with this version). 
+Optionally you can modify buildroot standard `rpi-firmware` package file and change  firmware version tag to match kernel version we're using. Note that you need to track firmware version from RPi repositories yourself if you face any issues with HW compatibility (or stick with this version).
 
 ```
 # package/rpi-firmware/rpi-firmware.mk
@@ -219,25 +225,6 @@ Disable hash check by deleting `rpi-firmware.hash` file:
 cd ~/build-directory/buildroot
 rm package/rpi-firmware/rpi-firmware.hash
 ```
-
-Protobufs 28.3
-
-UPDATE: It seems that buildroot 4bf27608a77143650fa94994363b444d57db7842 builds image
-just fine without this patch. This was tested at Feb 9th 2025.
-
-This version uses protobufs 28.3 (for python-meshtastic) which is not yet
-in buildroot master branch and you need to patch your buildroot manually 
-before building the image. There is now patch avaialable to patch protobufs 
-28.3. and it's based on [this patch](https://patchwork.ozlabs.org/project/buildroot/patch/20241107191634.378670-2-james.hilliard1@gmail.com/). 
-
-```
-cd ~/build-directory/buildroot
-patch --directory=. --strip=1 < ../rpi4edgemap/buildroot-extras/v5-2-4-package-python--protobuf-bump-to-version-28.3.diff
-```
-
-Note that if you're using more recent upstream buildroot, this change might be incorporated 
-into your buildroot already. Check `package/protobuf/protobuf.mk` for version before applying
-patch above. 
 
 ## Start build
 
@@ -285,7 +272,7 @@ This will set your unit hostname and create wifi access point with same name. Wi
 
 ### Copying pmtiles to map partition
 
-You can copy planet.pmtiles to your map partition with computer or try to download it directly from Edgemap:
+You can copy `planet.pmtiles` to your map partition with computer or try to download it directly from Edgemap:
 
 ```
 cd /opt/data
@@ -294,7 +281,7 @@ wget --no-check-certificate https://build.protomaps.com/20240520.pmtiles -O plan
 
 Check latest pmtiles [here](https://maps.protomaps.com/builds/) or [generate it yourself](https://resilience-theatre.com/wiki/doku.php?id=edgemap:planet_with_tilemaker). 
 
-Link downloaded planet.pmtiles under /opt/edgemap/edgeui
+Link downloaded `planet.pmtiles` under `/opt/edgemap/edgeui`
 
 ```
 cd /opt/edgemap/edgeui/
@@ -317,14 +304,6 @@ rm ~/build-directory/buildroot/package/libcodec2/libcodec2.hash
 cd ~/build-directory/rpi4edgemap/buildroot-extras/
 cp libcodec2.mk ~/build-directory/buildroot/package/libcodec2/libcodec2.hash
 ```
-
-# Configuration
-
-On first boot on your RPi 4, you must create `maps` partition and create CA + certificates.
-
-To create `maps` partition, run `create-partition-noenc.sh` script on RPi4. Then you need to
-place pmtiles to your MicroSD second partition and link them under /opt/edgemap/edgeui/ 
-on running instance.
 
 ## Map data
 
