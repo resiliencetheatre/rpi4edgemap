@@ -2203,6 +2203,12 @@ export type UpdateImageOptions = {
 	 */
 	coordinates?: Coordinates;
 };
+export type CanonicalTileRange = {
+	minTileX: number;
+	minTileY: number;
+	maxTileX: number;
+	maxTileY: number;
+};
 /**
  * A data source containing an image.
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-image) for detailed documentation of options.)
@@ -2253,6 +2259,13 @@ export declare class ImageSource extends Evented implements Source {
 	maxzoom: number;
 	tileSize: number;
 	url: string;
+	/**
+	 * This object is used to store the range of terrain tiles that overlap with this tile.
+	 * It is relevant for image tiles, as the image exceeds single tile boundaries.
+	 */
+	terrainTileRanges: {
+		[zoom: string]: CanonicalTileRange;
+	};
 	coordinates: Coordinates;
 	tiles: {
 		[_: string]: Tile;
@@ -2294,6 +2307,13 @@ export declare class ImageSource extends Evented implements Source {
 	loadTile(tile: Tile): Promise<void>;
 	serialize(): ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification;
 	hasTransition(): boolean;
+	/**
+	 * Given a list of coordinates, determine overlapping tile ranges for all zoom levels.
+	 *
+	 * @returns Overlapping tile ranges for all zoom levels.
+	 * @internal
+	 */
+	private _getOverlappingTileRanges;
 }
 /**
  * Options to add a canvas source type to the map.
@@ -3708,7 +3728,28 @@ declare class TerrainSourceCache extends Evented {
 	 * @param tileID - the tile to look for
 	 * @returns the tiles that were found
 	 */
-	getTerrainCoords(tileID: OverscaledTileID): Record<string, OverscaledTileID>;
+	getTerrainCoords(tileID: OverscaledTileID, terrainTileRanges?: {
+		[zoom: string]: CanonicalTileRange;
+	}): Record<string, OverscaledTileID>;
+	/**
+	 * Searches for the corresponding current renderable terrain-tiles.
+	 * Includes terrain tiles that are either:
+	 * - the same as the tileID
+	 * - a parent of the tileID
+	 * - a child of the tileID
+	 * @param tileID - the tile to look for
+	 * @returns the tiles that were found
+	 */
+	_getTerrainCoordsForRegularTile(tileID: OverscaledTileID): Record<string, OverscaledTileID>;
+	/**
+	 * Searches for the corresponding current renderable terrain-tiles.
+	 * Includes terrain tiles that are within terrain tile ranges.
+	 * @param tileID - the tile to look for
+	 * @returns the tiles that were found
+	 */
+	_getTerrainCoordsForTileRanges(tileID: OverscaledTileID, terrainTileRanges: {
+		[zoom: string]: CanonicalTileRange;
+	}): Record<string, OverscaledTileID>;
 	/**
 	 * find the covering raster-dem tile
 	 * @param tileID - the tile to look for
@@ -3722,6 +3763,13 @@ declare class TerrainSourceCache extends Evented {
 	 * @returns true if any tiles came into view at or after the specified time
 	 */
 	anyTilesAfterTime(time?: number): boolean;
+	/**
+	 * Checks whether a tile is within the canonical tile ranges.
+	 * @param tileID - Tile to check
+	 * @param canonicalTileRanges - Canonical tile ranges
+	 * @returns
+	 */
+	private _isWithinTileRanges;
 }
 /**
  * @internal
@@ -4571,6 +4619,7 @@ export type QueryParameters = {
 	queryGeometry: Array<Point>;
 	cameraQueryGeometry: Array<Point>;
 	queryPadding: number;
+	getElevation: undefined | ((x: number, y: number) => number);
 	params: {
 		filter?: FilterSpecification;
 		layers?: Set<string> | null;
@@ -5197,7 +5246,7 @@ declare class Tile {
 		[_: string]: StyleLayer;
 	}, serializedLayers: {
 		[_: string]: any;
-	}, sourceFeatureState: SourceFeatureState, queryGeometry: Array<Point>, cameraQueryGeometry: Array<Point>, scale: number, params: Pick<QueryRenderedFeaturesOptionsStrict, "filter" | "layers" | "availableImages"> | undefined, transform: IReadonlyTransform, maxPitchScaleFactor: number, pixelPosMatrix: mat4): QueryResults;
+	}, sourceFeatureState: SourceFeatureState, queryGeometry: Array<Point>, cameraQueryGeometry: Array<Point>, scale: number, params: Pick<QueryRenderedFeaturesOptionsStrict, "filter" | "layers" | "availableImages"> | undefined, transform: IReadonlyTransform, maxPitchScaleFactor: number, pixelPosMatrix: mat4, getElevation: undefined | ((x: number, y: number) => number)): QueryResults;
 	querySourceFeatures(result: Array<GeoJSONFeature>, params?: {
 		sourceLayer?: string;
 		filter?: FilterSpecification;
@@ -5308,7 +5357,7 @@ declare class CircleStyleLayer extends StyleLayer {
 	constructor(layer: LayerSpecification);
 	createBucket(parameters: BucketParameters<any>): CircleBucket<any>;
 	queryRadius(bucket: Bucket): number;
-	queryIntersectsFeature({ queryGeometry, feature, featureState, geometry, transform, pixelsToTileUnits, pixelPosMatrix }: QueryIntersectsFeatureParams): boolean;
+	queryIntersectsFeature({ queryGeometry, feature, featureState, geometry, transform, pixelsToTileUnits, unwrappedTileID, getElevation }: QueryIntersectsFeatureParams): boolean;
 }
 declare class FillBucket implements Bucket {
 	index: number;
@@ -6962,6 +7011,14 @@ export type QueryIntersectsFeatureParams = {
 	 * The pixel coordinates are relative to the center of the screen.
 	 */
 	pixelPosMatrix: mat4;
+	/**
+	 * The unwrapped tile ID for the tile being queried.
+	 */
+	unwrappedTileID: UnwrappedTileID;
+	/**
+	 * A function to get the elevation of a point in tile coordinates.
+	 */
+	getElevation: undefined | ((x: number, y: number) => number);
 };
 declare abstract class StyleLayer extends Evented {
 	id: string;
@@ -8564,13 +8621,12 @@ declare abstract class Camera extends Evented {
 	_renderFrameCallback: () => void;
 	_normalizeBearing(bearing: number, currentBearing: number): number;
 	/**
-	 * Get the elevation difference between a given point
-	 * and a point that is currently in the middle of the screen.
-	 * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-model-with-terrain/)
+	 * Gets the elevation at a given location, in meters above sea level.
 	 * Returns null if terrain is not enabled.
-	 * This method is subject to change in Maplibre GL JS v5.
+	 * If terrain is enabled with some exaggeration value, the value returned here will be reflective of (multiplied by) that exaggeration value.
+	 * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-model-with-terrain/)
 	 * @param lngLatLike - [x,y] or LngLat coordinates of the location
-	 * @returns elevation offset in meters
+	 * @returns elevation in meters
 	 */
 	queryTerrainElevation(lngLatLike: LngLatLike): number | null;
 }
@@ -9541,7 +9597,7 @@ export declare class AttributionControl implements IControl {
 	_innerContainer: HTMLElement;
 	_compactButton: HTMLElement;
 	_editLink: HTMLAnchorElement;
-	_sanitizedAttributionHTML: string;
+	_attribHTML: string;
 	styleId: string;
 	styleOwner: string;
 	/**
@@ -12039,8 +12095,8 @@ declare class Map$1 extends Camera {
 	 * This method can only be used with sources that have a `feature.id` attribute. The `feature.id` attribute can be defined in three ways:
 	 *
 	 * - For vector or GeoJSON sources, including an `id` attribute in the original data file.
-	 * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-style-spec/sources/#vector-promoteId) option at the time the source is defined.
-	 * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-style-spec/sources/#geojson-generateId) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
+	 * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-style-spec/sources/#promoteid) option at the time the source is defined.
+	 * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-style-spec/sources/#generateid) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
 	 *
 	 * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
 	 *
@@ -13772,6 +13828,13 @@ export declare class GeoJSONSource extends Evented implements Source {
 	 * @returns a promise which resolves to the source's actual GeoJSON data
 	 */
 	getData(): Promise<GeoJSON.GeoJSON>;
+	private getCoordinatesFromGeometry;
+	/**
+	 * Allows getting the source's boundaries.
+	 * If there's a problem with the source's data, it will return an empty {@link LngLatBounds}.
+	 * @returns a promise which resolves to the source's boundaries
+	 */
+	getBounds(): Promise<LngLatBounds>;
 	/**
 	 * To disable/enable clustering on the source options
 	 * @param options - The options to set

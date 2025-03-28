@@ -1,6 +1,6 @@
 /**
  * MapLibre GL JS
- * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.2.0/LICENSE.txt
+ * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.3.0/LICENSE.txt
  */
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -459,7 +459,7 @@ function getDefaultExportFromNamespaceIfNotNamed (n) {
 }
 
 function getAugmentedNamespace(n) {
-  if (n.__esModule) return n;
+  if (Object.prototype.hasOwnProperty.call(n, '__esModule')) return n;
   var f = n.default;
 	if (typeof f == "function") {
 		var a = function a () {
@@ -9482,6 +9482,35 @@ const MAX_TILE_ZOOM = 25;
  */
 const MIN_TILE_ZOOM = 0;
 const MAX_VALID_LATITUDE = 85.051129;
+const touchableEvents = {
+    touchstart: true,
+    touchmove: true,
+    touchmoveWindow: true,
+    touchend: true,
+    touchcancel: true
+};
+const pointableEvents = {
+    dblclick: true,
+    click: true,
+    mouseover: true,
+    mouseout: true,
+    mousedown: true,
+    mousemove: true,
+    mousemoveWindow: true,
+    mouseup: true,
+    mouseupWindow: true,
+    contextmenu: true,
+    wheel: true
+};
+function isTouchableEvent(event, eventType) {
+    return touchableEvents[eventType] && 'touches' in event;
+}
+function isPointableEvent(event, eventType) {
+    return pointableEvents[eventType] && (event instanceof MouseEvent || event instanceof WheelEvent);
+}
+function isTouchableOrPointableType(eventType) {
+    return touchableEvents[eventType] || pointableEvents[eventType];
+}
 
 /**
  * An error message to use when an operation is aborted
@@ -25415,21 +25444,15 @@ function distToSegmentSquared(p, v, w) {
         return p.distSqr(w);
     return p.distSqr(w.sub(v)._mult(t)._add(v));
 }
-// point in polygon ray casting algorithm
 function multiPolygonContainsPoint(rings, p) {
-    let c = false, ring, p1, p2;
     for (let k = 0; k < rings.length; k++) {
-        ring = rings[k];
-        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-            p1 = ring[i];
-            p2 = ring[j];
-            if (((p1.y > p.y) !== (p2.y > p.y)) && (p.x < (p2.x - p1.x) * (p.y - p1.y) / (p2.y - p1.y) + p1.x)) {
-                c = !c;
-            }
+        if (polygonContainsPoint(rings[k], p)) {
+            return true;
         }
     }
-    return c;
+    return false;
 }
+// point in polygon ray casting algorithm
 function polygonContainsPoint(ring, p) {
     let c = false;
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -25584,7 +25607,7 @@ class CircleStyleLayer extends StyleLayer {
             getMaximumPaintValue('circle-stroke-width', this, circleBucket) +
             translateDistance(this.paint.get('circle-translate'));
     }
-    queryIntersectsFeature({ queryGeometry, feature, featureState, geometry, transform, pixelsToTileUnits, pixelPosMatrix }) {
+    queryIntersectsFeature({ queryGeometry, feature, featureState, geometry, transform, pixelsToTileUnits, unwrappedTileID, getElevation }) {
         const translatedPolygon = translate(queryGeometry, this.paint.get('circle-translate'), this.paint.get('circle-translate-anchor'), -transform.bearingInRadians, pixelsToTileUnits);
         const radius = this.paint.get('circle-radius').evaluate(feature, featureState);
         const stroke = this.paint.get('circle-stroke-width').evaluate(feature, featureState);
@@ -25594,18 +25617,18 @@ class CircleStyleLayer extends StyleLayer {
         // A circle with fixed scaling relative to the viewport gets larger in tile space as it moves into the distance
         // A circle with fixed scaling relative to the map gets smaller in viewport space as it moves into the distance
         const alignWithMap = this.paint.get('circle-pitch-alignment') === 'map';
-        const transformedPolygon = alignWithMap ? translatedPolygon : projectQueryGeometry$1(translatedPolygon, pixelPosMatrix);
+        const transformedPolygon = alignWithMap ? translatedPolygon : projectQueryGeometry$1(translatedPolygon, transform, unwrappedTileID, getElevation);
         const transformedSize = alignWithMap ? size * pixelsToTileUnits : size;
         for (const ring of geometry) {
             for (const point of ring) {
-                const transformedPoint = alignWithMap ? point : projectPoint(point, pixelPosMatrix);
+                const transformedPoint = alignWithMap ? point : projectPoint(point, transform, unwrappedTileID, getElevation);
                 let adjustedSize = transformedSize;
-                const projectedCenter = transformMat4$1([], [point.x, point.y, 0, 1], pixelPosMatrix);
+                const w = transform.projectTileCoordinates(point.x, point.y, unwrappedTileID, getElevation).signedDistanceFromCamera;
                 if (this.paint.get('circle-pitch-scale') === 'viewport' && this.paint.get('circle-pitch-alignment') === 'map') {
-                    adjustedSize *= projectedCenter[3] / transform.cameraToCenterDistance;
+                    adjustedSize *= w / transform.cameraToCenterDistance;
                 }
                 else if (this.paint.get('circle-pitch-scale') === 'map' && this.paint.get('circle-pitch-alignment') === 'viewport') {
-                    adjustedSize *= transform.cameraToCenterDistance / projectedCenter[3];
+                    adjustedSize *= transform.cameraToCenterDistance / w;
                 }
                 if (polygonIntersectsBufferedPoint(transformedPolygon, transformedPoint, adjustedSize))
                     return true;
@@ -25614,13 +25637,16 @@ class CircleStyleLayer extends StyleLayer {
         return false;
     }
 }
-function projectPoint(p, pixelPosMatrix) {
-    const point = transformMat4$1([], [p.x, p.y, 0, 1], pixelPosMatrix);
-    return new Point(point[0] / point[3], point[1] / point[3]);
+function projectPoint(tilePoint, transform, unwrappedTileID, getElevation) {
+    // Convert `tilePoint` from tile coordinates to clip coordinates.
+    const clipPoint = transform.projectTileCoordinates(tilePoint.x, tilePoint.y, unwrappedTileID, getElevation).point;
+    // Convert `clipPoint` from clip coordinates into pixel/screen coordinates.
+    const pixelPoint = new Point((clipPoint.x * 0.5 + 0.5) * transform.width, (-clipPoint.y * 0.5 + 0.5) * transform.height);
+    return pixelPoint;
 }
-function projectQueryGeometry$1(queryGeometry, pixelPosMatrix) {
+function projectQueryGeometry$1(queryGeometry, transform, unwrappedTileID, getElevation) {
     return queryGeometry.map((p) => {
-        return projectPoint(p, pixelPosMatrix);
+        return projectPoint(p, transform, unwrappedTileID, getElevation);
     });
 }
 
@@ -33202,7 +33228,9 @@ class FeatureIndex {
                     zoom: this.z,
                     transform: args.transform,
                     pixelsToTileUnits,
-                    pixelPosMatrix: args.pixelPosMatrix
+                    pixelPosMatrix: args.pixelPosMatrix,
+                    unwrappedTileID: this.tileID.toUnwrapped(),
+                    getElevation: args.getElevation
                 });
             });
         }
@@ -35084,6 +35112,7 @@ exports.KDBush = KDBush;
 exports.LineBucket = LineBucket;
 exports.LineStripIndexArray = LineStripIndexArray;
 exports.LngLat = LngLat;
+exports.MAX_TILE_ZOOM = MAX_TILE_ZOOM;
 exports.MAX_VALID_LATITUDE = MAX_VALID_LATITUDE;
 exports.MercatorCoordinate = MercatorCoordinate;
 exports.NORTH_POLE_Y = NORTH_POLE_Y;
@@ -35201,9 +35230,12 @@ exports.isImageBitmap = isImageBitmap;
 exports.isInBoundsForZoomLngLat = isInBoundsForZoomLngLat;
 exports.isLineStyleLayer = isLineStyleLayer;
 exports.isOffscreenCanvasDistorted = isOffscreenCanvasDistorted;
+exports.isPointableEvent = isPointableEvent;
 exports.isRasterStyleLayer = isRasterStyleLayer;
 exports.isSafari = isSafari;
 exports.isSymbolStyleLayer = isSymbolStyleLayer;
+exports.isTouchableEvent = isTouchableEvent;
+exports.isTouchableOrPointableType = isTouchableOrPointableType;
 exports.isWorker = isWorker;
 exports.keysDifference = keysDifference;
 exports.length = length;
@@ -37909,7 +37941,7 @@ define('index', ['exports', './shared'], (function (exports, performance$1) { 'u
 
 var name = "maplibre-gl";
 var description = "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library";
-var version$2 = "5.2.0";
+var version$2 = "5.3.0";
 var main = "dist/maplibre-gl.js";
 var style = "dist/maplibre-gl.css";
 var license = "BSD-3-Clause";
@@ -37955,17 +37987,17 @@ var dependencies = {
 var devDependencies = {
 	"@mapbox/mapbox-gl-rtl-text": "^0.3.0",
 	"@mapbox/mvt-fixtures": "^3.10.0",
-	"@rollup/plugin-commonjs": "^28.0.2",
+	"@rollup/plugin-commonjs": "^28.0.3",
 	"@rollup/plugin-json": "^6.1.0",
-	"@rollup/plugin-node-resolve": "^16.0.0",
+	"@rollup/plugin-node-resolve": "^16.0.1",
 	"@rollup/plugin-replace": "^6.0.2",
 	"@rollup/plugin-strip": "^3.0.4",
 	"@rollup/plugin-terser": "^0.4.4",
 	"@rollup/plugin-typescript": "^12.1.2",
-	"@stylistic/eslint-plugin-ts": "^4.1.0",
+	"@stylistic/eslint-plugin-ts": "^4.2.0",
 	"@types/benchmark": "^2.1.5",
 	"@types/d3": "^7.4.3",
-	"@types/diff": "^7.0.1",
+	"@types/diff": "^7.0.2",
 	"@types/earcut": "^3.0.0",
 	"@types/eslint": "^9.6.1",
 	"@types/gl": "^6.0.5",
@@ -37974,31 +38006,31 @@ var devDependencies = {
 	"@types/minimist": "^1.2.5",
 	"@types/murmurhash-js": "^1.0.6",
 	"@types/nise": "^1.4.5",
-	"@types/node": "^22.13.8",
+	"@types/node": "^22.13.13",
 	"@types/offscreencanvas": "^2019.7.3",
 	"@types/pixelmatch": "^5.2.6",
 	"@types/pngjs": "^6.0.5",
-	"@types/react": "^19.0.10",
+	"@types/react": "^19.0.12",
 	"@types/react-dom": "^19.0.4",
 	"@types/request": "^2.48.12",
 	"@types/shuffle-seed": "^1.1.3",
 	"@types/window-or-global": "^1.0.6",
-	"@typescript-eslint/eslint-plugin": "^8.25.0",
-	"@typescript-eslint/parser": "^8.25.0",
-	"@vitest/coverage-v8": "3.0.7",
-	"@vitest/ui": "3.0.7",
+	"@typescript-eslint/eslint-plugin": "^8.28.0",
+	"@typescript-eslint/parser": "^8.28.0",
+	"@vitest/coverage-v8": "3.0.9",
+	"@vitest/ui": "3.0.9",
 	address: "^2.0.3",
-	autoprefixer: "^10.4.20",
+	autoprefixer: "^10.4.21",
 	benchmark: "^2.1.4",
 	canvas: "^3.1.0",
 	cspell: "^8.17.5",
 	cssnano: "^7.0.6",
 	d3: "^7.9.0",
 	"d3-queue": "^3.0.7",
-	"devtools-protocol": "^0.0.1425554",
+	"devtools-protocol": "^0.0.1436416",
 	diff: "^7.0.0",
 	"dts-bundle-generator": "^9.5.1",
-	eslint: "^9.21.0",
+	eslint: "^9.23.0",
 	"eslint-plugin-html": "^8.1.2",
 	"eslint-plugin-import": "^2.31.0",
 	"eslint-plugin-react": "^7.37.4",
@@ -38012,7 +38044,7 @@ var devDependencies = {
 	"junit-report-builder": "^5.1.1",
 	minimist: "^1.2.8",
 	"mock-geolocation": "^1.0.11",
-	"monocart-coverage-reports": "^2.12.2",
+	"monocart-coverage-reports": "^2.12.3",
 	nise: "^6.1.1",
 	"npm-font-open-sans": "^1.1.0",
 	"npm-run-all": "^4.1.5",
@@ -38020,13 +38052,13 @@ var devDependencies = {
 	pixelmatch: "^7.1.0",
 	pngjs: "^7.0.0",
 	postcss: "^8.5.3",
-	"postcss-cli": "^11.0.0",
+	"postcss-cli": "^11.0.1",
 	"postcss-inline-svg": "^6.0.0",
 	"pretty-bytes": "^6.1.1",
 	puppeteer: "^24.1.1",
 	react: "^19.0.0",
 	"react-dom": "^19.0.0",
-	rollup: "^4.34.9",
+	rollup: "^4.37.0",
 	"rollup-plugin-sourcemaps2": "^0.5.0",
 	rw: "^1.3.3",
 	semver: "^7.7.1",
@@ -38034,15 +38066,15 @@ var devDependencies = {
 	"shuffle-seed": "^1.1.6",
 	"source-map-explorer": "^2.5.3",
 	st: "^3.0.1",
-	stylelint: "^16.15.0",
+	stylelint: "^16.16.0",
 	"stylelint-config-standard": "^37.0.0",
 	"ts-node": "^10.9.2",
 	tslib: "^2.8.1",
-	typedoc: "^0.27.9",
-	"typedoc-plugin-markdown": "^4.4.2",
-	"typedoc-plugin-missing-exports": "^3.1.0",
-	typescript: "^5.7.3",
-	vitest: "3.0.7",
+	typedoc: "^0.28.1",
+	"typedoc-plugin-markdown": "^4.6.0",
+	"typedoc-plugin-missing-exports": "^4.0.0",
+	typescript: "^5.8.2",
+	vitest: "3.0.9",
 	"vitest-webgl-canvas-mock": "^1.1.0"
 };
 var scripts = {
@@ -39868,7 +39900,7 @@ function queryIncludes3DLayer(layers, styleLayers, sourceID) {
     }
     return false;
 }
-function queryRenderedFeatures(sourceCache, styleLayers, serializedLayers, queryGeometry, params, transform) {
+function queryRenderedFeatures(sourceCache, styleLayers, serializedLayers, queryGeometry, params, transform, getElevation) {
     var _a;
     const has3DLayer = queryIncludes3DLayer((_a = params === null || params === void 0 ? void 0 : params.layers) !== null && _a !== void 0 ? _a : null, styleLayers, sourceCache.id);
     const maxPitchScaleFactor = transform.maxPitchScaleFactor();
@@ -39878,7 +39910,7 @@ function queryRenderedFeatures(sourceCache, styleLayers, serializedLayers, query
     for (const tileIn of tilesIn) {
         renderedFeatureLayers.push({
             wrappedTileID: tileIn.tileID.wrapped().key,
-            queryResults: tileIn.tile.queryRenderedFeatures(styleLayers, serializedLayers, sourceCache._state, tileIn.queryGeometry, tileIn.cameraQueryGeometry, tileIn.scale, params, transform, maxPitchScaleFactor, getPixelPosMatrix(sourceCache.transform, tileIn.tileID))
+            queryResults: tileIn.tile.queryRenderedFeatures(styleLayers, serializedLayers, sourceCache._state, tileIn.queryGeometry, tileIn.cameraQueryGeometry, tileIn.scale, params, transform, maxPitchScaleFactor, getPixelPosMatrix(sourceCache.transform, tileIn.tileID), getElevation ? (x, y) => getElevation(tileIn.tileID, x, y) : undefined)
         });
     }
     const result = mergeRenderedFeatureLayers(renderedFeatureLayers);
@@ -41067,6 +41099,42 @@ class GeoJSONSource extends performance$1.Evented {
             return this.actor.sendAsync({ type: "GD" /* MessageType.getData */, data: options });
         });
     }
+    getCoordinatesFromGeometry(geometry) {
+        if (geometry.type === 'GeometryCollection') {
+            return geometry.geometries.map((g) => g.coordinates).flat(Infinity);
+        }
+        return geometry.coordinates.flat(Infinity);
+    }
+    /**
+     * Allows getting the source's boundaries.
+     * If there's a problem with the source's data, it will return an empty {@link LngLatBounds}.
+     * @returns a promise which resolves to the source's boundaries
+     */
+    getBounds() {
+        return performance$1.__awaiter(this, void 0, void 0, function* () {
+            const bounds = new LngLatBounds();
+            const data = yield this.getData();
+            let coordinates;
+            switch (data.type) {
+                case 'FeatureCollection':
+                    coordinates = data.features.map(f => this.getCoordinatesFromGeometry(f.geometry)).flat(Infinity);
+                    break;
+                case 'Feature':
+                    coordinates = this.getCoordinatesFromGeometry(data.geometry);
+                    break;
+                default:
+                    coordinates = this.getCoordinatesFromGeometry(data);
+                    break;
+            }
+            if (coordinates.length == 0) {
+                return bounds;
+            }
+            for (let i = 0; i < coordinates.length - 1; i += 2) {
+                bounds.extend([coordinates[i], coordinates[i + 1]]);
+            }
+            return bounds;
+        });
+    }
     /**
      * To disable/enable clustering on the source options
      * @param options - The options to set
@@ -41389,6 +41457,9 @@ class ImageSource extends performance$1.Evented {
         // Compute the coordinates of the tile we'll use to hold this image's
         // render data
         this.tileID = getCoordinatesCenterTileID(cornerCoords);
+        // Compute tiles overlapping with the image. We need to know for which
+        // terrain tiles we have to render the image.
+        this.terrainTileRanges = this._getOverlappingTileRanges(cornerCoords);
         // Constrain min/max zoom to our tile's zoom level in order to force
         // SourceCache to request this tile (no matter what the map's zoom
         // level)
@@ -41449,6 +41520,39 @@ class ImageSource extends performance$1.Evented {
     }
     hasTransition() {
         return false;
+    }
+    /**
+     * Given a list of coordinates, determine overlapping tile ranges for all zoom levels.
+     *
+     * @returns Overlapping tile ranges for all zoom levels.
+     * @internal
+     */
+    _getOverlappingTileRanges(coords) {
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+        for (const coord of coords) {
+            minX = Math.min(minX, coord.x);
+            minY = Math.min(minY, coord.y);
+            maxX = Math.max(maxX, coord.x);
+            maxY = Math.max(maxY, coord.y);
+        }
+        const ranges = {};
+        for (let z = 0; z <= performance$1.MAX_TILE_ZOOM; z++) {
+            const tilesAtZoom = Math.pow(2, z);
+            const minTileX = Math.floor(minX * tilesAtZoom);
+            const minTileY = Math.floor(minY * tilesAtZoom);
+            const maxTileX = Math.floor(maxX * tilesAtZoom);
+            const maxTileY = Math.floor(maxY * tilesAtZoom);
+            ranges[z] = {
+                minTileX,
+                minTileY,
+                maxTileX,
+                maxTileY
+            };
+        }
+        return ranges;
     }
 }
 /**
@@ -42137,7 +42241,7 @@ class Tile {
     }
     // Queries non-symbol features rendered for this tile.
     // Symbol features are queried globally
-    queryRenderedFeatures(layers, serializedLayers, sourceFeatureState, queryGeometry, cameraQueryGeometry, scale, params, transform, maxPitchScaleFactor, pixelPosMatrix) {
+    queryRenderedFeatures(layers, serializedLayers, sourceFeatureState, queryGeometry, cameraQueryGeometry, scale, params, transform, maxPitchScaleFactor, pixelPosMatrix, getElevation) {
         if (!this.latestFeatureIndex || !this.latestFeatureIndex.rawTileData)
             return {};
         return this.latestFeatureIndex.query({
@@ -42148,7 +42252,8 @@ class Tile {
             pixelPosMatrix,
             transform,
             params,
-            queryPadding: this.queryPadding * maxPitchScaleFactor
+            queryPadding: this.queryPadding * maxPitchScaleFactor,
+            getElevation
         }, layers, serializedLayers, sourceFeatureState);
     }
     querySourceFeatures(result, params) {
@@ -52266,7 +52371,9 @@ class Style extends performance$1.Evented {
         for (const id in this.sourceCaches) {
             if (params.layers && !includedSources[id])
                 continue;
-            sourceResults.push(queryRenderedFeatures(this.sourceCaches[id], this._layers, serializedLayers, queryGeometry, paramsStrict, transform));
+            sourceResults.push(queryRenderedFeatures(this.sourceCaches[id], this._layers, serializedLayers, queryGeometry, paramsStrict, transform, this.map.terrain ?
+                (id, x, y) => this.map.terrain.getElevation(id, x, y) :
+                undefined));
         }
         if (this.placement) {
             // If a placement has run, query against its CollisionIndex
@@ -56984,6 +57091,7 @@ class MapMouseEvent extends performance$1.Event {
         return this._defaultPrevented;
     }
     constructor(type, map, originalEvent, data = {}) {
+        originalEvent = originalEvent instanceof MouseEvent ? originalEvent : new MouseEvent(type, originalEvent);
         const point = DOM.mousePos(map.getCanvas(), originalEvent);
         const lngLat = map.unproject(point);
         super(type, performance$1.extend({ point, lngLat, originalEvent }, data));
@@ -59139,11 +59247,6 @@ class HandlerManager {
             const mergedHandlerResult = { needsRenderFrame: false };
             const eventsInProgress = {};
             const activeHandlers = {};
-            const eventTouches = e.touches;
-            const mapTouches = eventTouches ? this._getMapTouches(eventTouches) : undefined;
-            const points = mapTouches ?
-                DOM.touchPos(this._map.getCanvas(), mapTouches) :
-                DOM.mousePos(this._map.getCanvas(), e);
             for (const { handlerName, handler, allowed } of this._handlers) {
                 if (!handler.isEnabled())
                     continue;
@@ -59153,7 +59256,19 @@ class HandlerManager {
                 }
                 else {
                     if (handler[eventName || e.type]) {
-                        data = handler[eventName || e.type](e, points, mapTouches);
+                        if (performance$1.isPointableEvent(e, eventName || e.type)) {
+                            const point = DOM.mousePos(this._map.getCanvas(), e);
+                            data = handler[eventName || e.type](e, point);
+                        }
+                        else if (performance$1.isTouchableEvent(e, eventName || e.type)) {
+                            const eventTouches = e.touches;
+                            const mapTouches = this._getMapTouches(eventTouches);
+                            const points = DOM.touchPos(this._map.getCanvas(), mapTouches);
+                            data = handler[eventName || e.type](e, points, mapTouches);
+                        }
+                        else if (!performance$1.isTouchableOrPointableType(eventName || e.type)) {
+                            data = handler[eventName || e.type](e);
+                        }
                         this.mergeHandlerResult(mergedHandlerResult, eventsInProgress, data, handlerName, inputEvent);
                         if (data && data.needsRenderFrame) {
                             this._triggerRenderFrame();
@@ -60718,13 +60833,12 @@ class Camera extends performance$1.Evented {
         return bearing;
     }
     /**
-     * Get the elevation difference between a given point
-     * and a point that is currently in the middle of the screen.
-     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-model-with-terrain/)
+     * Gets the elevation at a given location, in meters above sea level.
      * Returns null if terrain is not enabled.
-     * This method is subject to change in Maplibre GL JS v5.
+     * If terrain is enabled with some exaggeration value, the value returned here will be reflective of (multiplied by) that exaggeration value.
+     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-model-with-terrain/)
      * @param lngLatLike - [x,y] or LngLat coordinates of the location
-     * @returns elevation offset in meters
+     * @returns elevation in meters
      */
     queryTerrainElevation(lngLatLike) {
         if (!this.terrain) {
@@ -60828,7 +60942,7 @@ class AttributionControl {
         this._map.off('drag', this._updateCompactMinimize);
         this._map = undefined;
         this._compact = undefined;
-        this._sanitizedAttributionHTML = undefined;
+        this._attribHTML = undefined;
     }
     _setElementTitle(element, title) {
         const str = this._map._getUIString(`AttributionControl.${title}`);
@@ -60881,11 +60995,11 @@ class AttributionControl {
         });
         // check if attribution string is different to minimize DOM changes
         const attribHTML = attributions.join(' | ');
-        if (attribHTML === this._sanitizedAttributionHTML)
+        if (attribHTML === this._attribHTML)
             return;
-        this._sanitizedAttributionHTML = DOM.sanitize(attribHTML);
+        this._attribHTML = attribHTML;
         if (attributions.length) {
-            this._innerContainer.innerHTML = this._sanitizedAttributionHTML;
+            this._innerContainer.innerHTML = DOM.sanitize(attribHTML);
             this._container.classList.remove('maplibregl-attrib-empty');
         }
         else {
@@ -61106,25 +61220,42 @@ class TerrainSourceCache extends performance$1.Evented {
      * @param tileID - the tile to look for
      * @returns the tiles that were found
      */
-    getTerrainCoords(tileID) {
+    getTerrainCoords(tileID, terrainTileRanges) {
+        if (terrainTileRanges) {
+            return this._getTerrainCoordsForTileRanges(tileID, terrainTileRanges);
+        }
+        else {
+            return this._getTerrainCoordsForRegularTile(tileID);
+        }
+    }
+    /**
+     * Searches for the corresponding current renderable terrain-tiles.
+     * Includes terrain tiles that are either:
+     * - the same as the tileID
+     * - a parent of the tileID
+     * - a child of the tileID
+     * @param tileID - the tile to look for
+     * @returns the tiles that were found
+     */
+    _getTerrainCoordsForRegularTile(tileID) {
         const coords = {};
         for (const key of this._renderableTilesKeys) {
-            const _tileID = this._tiles[key].tileID;
+            const terrainTileID = this._tiles[key].tileID;
             const coord = tileID.clone();
             const mat = performance$1.createMat4f64();
-            if (_tileID.canonical.equals(tileID.canonical)) {
+            if (terrainTileID.canonical.equals(tileID.canonical)) {
                 performance$1.ortho(mat, 0, performance$1.EXTENT, performance$1.EXTENT, 0, 0, 1);
             }
-            else if (_tileID.canonical.isChildOf(tileID.canonical)) {
-                const dz = _tileID.canonical.z - tileID.canonical.z;
-                const dx = _tileID.canonical.x - (_tileID.canonical.x >> dz << dz);
-                const dy = _tileID.canonical.y - (_tileID.canonical.y >> dz << dz);
+            else if (terrainTileID.canonical.isChildOf(tileID.canonical)) {
+                const dz = terrainTileID.canonical.z - tileID.canonical.z;
+                const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz);
+                const dy = terrainTileID.canonical.y - (terrainTileID.canonical.y >> dz << dz);
                 const size = performance$1.EXTENT >> dz;
                 performance$1.ortho(mat, 0, size, size, 0, 0, 1); // Note: we are using `size` instead of `EXTENT` here
                 performance$1.translate(mat, mat, [-dx * size, -dy * size, 0]);
             }
-            else if (tileID.canonical.isChildOf(_tileID.canonical)) {
-                const dz = tileID.canonical.z - _tileID.canonical.z;
+            else if (tileID.canonical.isChildOf(terrainTileID.canonical)) {
+                const dz = tileID.canonical.z - terrainTileID.canonical.z;
                 const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
                 const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
                 const size = performance$1.EXTENT >> dz;
@@ -61134,6 +61265,56 @@ class TerrainSourceCache extends performance$1.Evented {
             }
             else {
                 continue;
+            }
+            coord.terrainRttPosMatrix32f = new Float32Array(mat);
+            coords[key] = coord;
+        }
+        return coords;
+    }
+    /**
+     * Searches for the corresponding current renderable terrain-tiles.
+     * Includes terrain tiles that are within terrain tile ranges.
+     * @param tileID - the tile to look for
+     * @returns the tiles that were found
+     */
+    _getTerrainCoordsForTileRanges(tileID, terrainTileRanges) {
+        const coords = {};
+        for (const key of this._renderableTilesKeys) {
+            const terrainTileID = this._tiles[key].tileID;
+            if (!this._isWithinTileRanges(terrainTileID, terrainTileRanges)) {
+                continue;
+            }
+            const coord = tileID.clone();
+            const mat = performance$1.createMat4f64();
+            if (terrainTileID.canonical.z === tileID.canonical.z) {
+                const dx = tileID.canonical.x - terrainTileID.canonical.x;
+                const dy = tileID.canonical.y - terrainTileID.canonical.y;
+                performance$1.ortho(mat, 0, performance$1.EXTENT, performance$1.EXTENT, 0, 0, 1);
+                performance$1.translate(mat, mat, [dx * performance$1.EXTENT, dy * performance$1.EXTENT, 0]);
+            }
+            else if (terrainTileID.canonical.z > tileID.canonical.z) {
+                const dz = terrainTileID.canonical.z - tileID.canonical.z;
+                // this translation is needed to project tileID to terrainTileID zoom level
+                const dx = terrainTileID.canonical.x - (terrainTileID.canonical.x >> dz << dz);
+                const dy = terrainTileID.canonical.y - (terrainTileID.canonical.y >> dz << dz);
+                // this translation is needed if terrainTileID is not a parent of tileID
+                const dx2 = tileID.canonical.x - (terrainTileID.canonical.x >> dz);
+                const dy2 = tileID.canonical.y - (terrainTileID.canonical.y >> dz);
+                const size = performance$1.EXTENT >> dz;
+                performance$1.ortho(mat, 0, size, size, 0, 0, 1);
+                performance$1.translate(mat, mat, [-dx * size + dx2 * performance$1.EXTENT, -dy * size + dy2 * performance$1.EXTENT, 0]);
+            }
+            else { // terrainTileID.canonical.z < tileID.canonical.z
+                const dz = tileID.canonical.z - terrainTileID.canonical.z;
+                // this translation is needed to project tileID to terrainTileID zoom level
+                const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
+                const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
+                // this translation is needed if terrainTileID is not a parent of tileID
+                const dx2 = (tileID.canonical.x >> dz) - terrainTileID.canonical.x;
+                const dy2 = (tileID.canonical.y >> dz) - terrainTileID.canonical.y;
+                const size = performance$1.EXTENT << dz;
+                performance$1.ortho(mat, 0, size, size, 0, 0, 1);
+                performance$1.translate(mat, mat, [dx * performance$1.EXTENT + dx2 * size, dy * performance$1.EXTENT + dy2 * size, 0]);
             }
             coord.terrainRttPosMatrix32f = new Float32Array(mat);
             coords[key] = coord;
@@ -61170,6 +61351,19 @@ class TerrainSourceCache extends performance$1.Evented {
      */
     anyTilesAfterTime(time = Date.now()) {
         return this._lastTilesetChange >= time;
+    }
+    /**
+     * Checks whether a tile is within the canonical tile ranges.
+     * @param tileID - Tile to check
+     * @param canonicalTileRanges - Canonical tile ranges
+     * @returns
+     */
+    _isWithinTileRanges(tileID, canonicalTileRanges) {
+        return canonicalTileRanges[tileID.canonical.z] &&
+            tileID.canonical.x >= canonicalTileRanges[tileID.canonical.z].minTileX &&
+            tileID.canonical.x <= canonicalTileRanges[tileID.canonical.z].maxTileX &&
+            tileID.canonical.y >= canonicalTileRanges[tileID.canonical.z].minTileY &&
+            tileID.canonical.y <= canonicalTileRanges[tileID.canonical.z].maxTileY;
     }
 }
 
@@ -61655,8 +61849,10 @@ class RenderToTexture {
         for (const id in style.sourceCaches) {
             this._coordsAscending[id] = {};
             const tileIDs = style.sourceCaches[id].getVisibleCoordinates();
+            const source = style.sourceCaches[id].getSource();
+            const terrainTileRanges = source instanceof ImageSource ? source.terrainTileRanges : null;
             for (const tileID of tileIDs) {
-                const keys = this.terrain.sourceCache.getTerrainCoords(tileID);
+                const keys = this.terrain.sourceCache.getTerrainCoords(tileID, terrainTileRanges);
                 for (const key in keys) {
                     if (!this._coordsAscending[id][key])
                         this._coordsAscending[id][key] = [];
@@ -63078,6 +63274,7 @@ let Map$1 = class Map extends Camera {
             this.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             this._terrainDataCallback = e => {
+                var _a;
                 if (e.dataType === 'style') {
                     this.terrain.sourceCache.freeRtt();
                 }
@@ -63088,7 +63285,12 @@ let Map$1 = class Map extends Camera {
                             this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
                         }
                     }
-                    this.terrain.sourceCache.freeRtt(e.tile.tileID);
+                    if (((_a = e.source) === null || _a === void 0 ? void 0 : _a.type) === 'image') {
+                        this.terrain.sourceCache.freeRtt();
+                    }
+                    else {
+                        this.terrain.sourceCache.freeRtt(e.tile.tileID);
+                    }
                 }
             };
             this.style.on('data', this._terrainDataCallback);
@@ -63786,8 +63988,8 @@ let Map$1 = class Map extends Camera {
      * This method can only be used with sources that have a `feature.id` attribute. The `feature.id` attribute can be defined in three ways:
      *
      * - For vector or GeoJSON sources, including an `id` attribute in the original data file.
-     * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-style-spec/sources/#vector-promoteId) option at the time the source is defined.
-     * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-style-spec/sources/#geojson-generateId) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
+     * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-style-spec/sources/#promoteid) option at the time the source is defined.
+     * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-style-spec/sources/#generateid) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
      *
      * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
      *

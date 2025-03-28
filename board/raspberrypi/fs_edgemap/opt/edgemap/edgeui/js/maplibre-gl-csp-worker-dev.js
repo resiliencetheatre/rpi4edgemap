@@ -1,6 +1,6 @@
 /**
  * MapLibre GL JS
- * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.2.0/LICENSE.txt
+ * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.3.0/LICENSE.txt
  */
 var maplibregl = (function () {
 'use strict';
@@ -423,7 +423,7 @@ function getDefaultExportFromNamespaceIfNotNamed (n) {
 }
 
 function getAugmentedNamespace(n) {
-  if (n.__esModule) return n;
+  if (Object.prototype.hasOwnProperty.call(n, '__esModule')) return n;
   var f = n.default;
 	if (typeof f == "function") {
 		var a = function a () {
@@ -9446,6 +9446,35 @@ const MAX_TILE_ZOOM = 25;
  */
 const MIN_TILE_ZOOM = 0;
 const MAX_VALID_LATITUDE = 85.051129;
+const touchableEvents = {
+    touchstart: true,
+    touchmove: true,
+    touchmoveWindow: true,
+    touchend: true,
+    touchcancel: true
+};
+const pointableEvents = {
+    dblclick: true,
+    click: true,
+    mouseover: true,
+    mouseout: true,
+    mousedown: true,
+    mousemove: true,
+    mousemoveWindow: true,
+    mouseup: true,
+    mouseupWindow: true,
+    contextmenu: true,
+    wheel: true
+};
+function isTouchableEvent(event, eventType) {
+    return touchableEvents[eventType] && 'touches' in event;
+}
+function isPointableEvent(event, eventType) {
+    return pointableEvents[eventType] && (event instanceof MouseEvent || event instanceof WheelEvent);
+}
+function isTouchableOrPointableType(eventType) {
+    return touchableEvents[eventType] || pointableEvents[eventType];
+}
 
 /*
 This file was copied from https://github.com/mapbox/grid-index and was
@@ -25595,21 +25624,15 @@ function distToSegmentSquared(p, v, w) {
         return p.distSqr(w);
     return p.distSqr(w.sub(v)._mult(t)._add(v));
 }
-// point in polygon ray casting algorithm
 function multiPolygonContainsPoint(rings, p) {
-    let c = false, ring, p1, p2;
     for (let k = 0; k < rings.length; k++) {
-        ring = rings[k];
-        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-            p1 = ring[i];
-            p2 = ring[j];
-            if (((p1.y > p.y) !== (p2.y > p.y)) && (p.x < (p2.x - p1.x) * (p.y - p1.y) / (p2.y - p1.y) + p1.x)) {
-                c = !c;
-            }
+        if (polygonContainsPoint(rings[k], p)) {
+            return true;
         }
     }
-    return c;
+    return false;
 }
+// point in polygon ray casting algorithm
 function polygonContainsPoint(ring, p) {
     let c = false;
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -25764,7 +25787,7 @@ class CircleStyleLayer extends StyleLayer {
             getMaximumPaintValue('circle-stroke-width', this, circleBucket) +
             translateDistance(this.paint.get('circle-translate'));
     }
-    queryIntersectsFeature({ queryGeometry, feature, featureState, geometry, transform, pixelsToTileUnits, pixelPosMatrix }) {
+    queryIntersectsFeature({ queryGeometry, feature, featureState, geometry, transform, pixelsToTileUnits, unwrappedTileID, getElevation }) {
         const translatedPolygon = translate(queryGeometry, this.paint.get('circle-translate'), this.paint.get('circle-translate-anchor'), -transform.bearingInRadians, pixelsToTileUnits);
         const radius = this.paint.get('circle-radius').evaluate(feature, featureState);
         const stroke = this.paint.get('circle-stroke-width').evaluate(feature, featureState);
@@ -25774,18 +25797,18 @@ class CircleStyleLayer extends StyleLayer {
         // A circle with fixed scaling relative to the viewport gets larger in tile space as it moves into the distance
         // A circle with fixed scaling relative to the map gets smaller in viewport space as it moves into the distance
         const alignWithMap = this.paint.get('circle-pitch-alignment') === 'map';
-        const transformedPolygon = alignWithMap ? translatedPolygon : projectQueryGeometry$1(translatedPolygon, pixelPosMatrix);
+        const transformedPolygon = alignWithMap ? translatedPolygon : projectQueryGeometry$1(translatedPolygon, transform, unwrappedTileID, getElevation);
         const transformedSize = alignWithMap ? size * pixelsToTileUnits : size;
         for (const ring of geometry) {
             for (const point of ring) {
-                const transformedPoint = alignWithMap ? point : projectPoint(point, pixelPosMatrix);
+                const transformedPoint = alignWithMap ? point : projectPoint(point, transform, unwrappedTileID, getElevation);
                 let adjustedSize = transformedSize;
-                const projectedCenter = transformMat4$1([], [point.x, point.y, 0, 1], pixelPosMatrix);
+                const w = transform.projectTileCoordinates(point.x, point.y, unwrappedTileID, getElevation).signedDistanceFromCamera;
                 if (this.paint.get('circle-pitch-scale') === 'viewport' && this.paint.get('circle-pitch-alignment') === 'map') {
-                    adjustedSize *= projectedCenter[3] / transform.cameraToCenterDistance;
+                    adjustedSize *= w / transform.cameraToCenterDistance;
                 }
                 else if (this.paint.get('circle-pitch-scale') === 'map' && this.paint.get('circle-pitch-alignment') === 'viewport') {
-                    adjustedSize *= transform.cameraToCenterDistance / projectedCenter[3];
+                    adjustedSize *= transform.cameraToCenterDistance / w;
                 }
                 if (polygonIntersectsBufferedPoint(transformedPolygon, transformedPoint, adjustedSize))
                     return true;
@@ -25794,13 +25817,16 @@ class CircleStyleLayer extends StyleLayer {
         return false;
     }
 }
-function projectPoint(p, pixelPosMatrix) {
-    const point = transformMat4$1([], [p.x, p.y, 0, 1], pixelPosMatrix);
-    return new Point(point[0] / point[3], point[1] / point[3]);
+function projectPoint(tilePoint, transform, unwrappedTileID, getElevation) {
+    // Convert `tilePoint` from tile coordinates to clip coordinates.
+    const clipPoint = transform.projectTileCoordinates(tilePoint.x, tilePoint.y, unwrappedTileID, getElevation).point;
+    // Convert `clipPoint` from clip coordinates into pixel/screen coordinates.
+    const pixelPoint = new Point((clipPoint.x * 0.5 + 0.5) * transform.width, (-clipPoint.y * 0.5 + 0.5) * transform.height);
+    return pixelPoint;
 }
-function projectQueryGeometry$1(queryGeometry, pixelPosMatrix) {
+function projectQueryGeometry$1(queryGeometry, transform, unwrappedTileID, getElevation) {
     return queryGeometry.map((p) => {
-        return projectPoint(p, pixelPosMatrix);
+        return projectPoint(p, transform, unwrappedTileID, getElevation);
     });
 }
 
@@ -32510,7 +32536,9 @@ class FeatureIndex {
                     zoom: this.z,
                     transform: args.transform,
                     pixelsToTileUnits,
-                    pixelPosMatrix: args.pixelPosMatrix
+                    pixelPosMatrix: args.pixelPosMatrix,
+                    unwrappedTileID: this.tileID.toUnwrapped(),
+                    getElevation: args.getElevation
                 });
             });
         }
