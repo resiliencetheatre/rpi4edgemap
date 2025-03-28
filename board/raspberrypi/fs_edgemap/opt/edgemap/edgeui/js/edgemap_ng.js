@@ -1957,5 +1957,24 @@ function loadLocalSymbols() {
             .catch(error => alert("Error: " + error.message));
 }
 
+function distanceControlOpenButton() {
+    geojson.features = [];
+    linestring.geometry.coordinates = [];
+    map.getSource('geojson').setData(geojson);
+    distanceContainer.innerHTML = '<div>Click to measure</div>';
+    document.getElementById("distance-control").style.display = "block";
+}
 
+function distanceControlCloseButton() {
+    geojson.features = [];
+    linestring.geometry.coordinates = [];
+    map.getSource('geojson').setData(geojson);
+    document.getElementById("distance-control").style.display = "none";
+}
 
+function distanceControlResetButton() {
+    geojson.features = [];
+    linestring.geometry.coordinates = [];
+    map.getSource('geojson').setData(geojson);
+    distanceContainer.innerHTML = '<div>Distance reseted!</div>';
+}

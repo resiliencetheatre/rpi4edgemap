@@ -137,9 +137,9 @@ var menuItems = [
                 icon: '#svg-icon-coordinate-search'
             },
             {
-                id   : 'about',
-                title: 'About',
-                icon: '#svg-icon-about'
+                id   : 'measure',
+                title: 'Distance',
+                icon: '#svg-icon-measure'
             },
             {
                 id   : 'style',
@@ -278,6 +278,10 @@ window.onload = function ()
                 const relativePath = "symbolseditor/"; 
                 window.location.href = relativePath;
             }
+            if ( item.id == "measure" ) {
+                distanceControlOpenButton();
+            }
+            
             
 
             
