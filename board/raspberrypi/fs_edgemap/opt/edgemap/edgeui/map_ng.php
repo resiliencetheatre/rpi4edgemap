@@ -62,19 +62,14 @@
 
     <div id="map"></div>
 
-    <div id="distance-control" class="distance-control-container">
-        <table>
-            <tr>
-                <td><div id="distance" class="distance-container"></div></td>
-                <td><div class="distance-control-button-style" id="distane-control-reset-button" style="display: block;" onclick="distanceControlResetButton()"><center>Reset</center></div></td>
-                <td><div class="distance-control-button-style" id="distane-control-abort-button" style="display: block;" onclick="distanceControlCloseButton()"><center>Close</center></div></td>
-            </tr>
-        
-        </table>
-        
-        
+    <div id="distance-bar" class="distance-bar-style">
+        <div id="distance-value" class="distance-value-style"></div>
+        <div id="distane-control-reset-button" onclick="uploadGeoJSON()"><center><i data-feather="upload"  class="feather-mesurementIcon"></i></center></div> 
+        <div id="distane-control-reset-button" onclick="downloadGeoJSON()"><center><i data-feather="download"  class="feather-mesurementIcon"></i></center></div>
+        <div id="distane-control-reset-button" onclick="distanceControlResetButton()"><center><i data-feather="trash"  class="feather-mesurementIcon"></i></center></div>
+        <div id="distane-control-reset-button" onclick="distanceControlCloseButton()"><center><i data-feather="x-circle"  class="feather-mesurementIconRed"></i></center></div>
     </div>
-    
+
     <pre id="features"></pre>
     <pre id="coordinates" class="coordinates"></pre>
     
@@ -436,10 +431,13 @@
         });
     var currentStyle = "bright";
 
-
     const edgemapUiVersion = "v0.8";
     var intialZoomLevel=1;
 	var symbolSize = 30;
+    
+    // geojson for distance measurement
+    var distanceGeoJson;
+    var distanceLineString;
     
     // geojson url
     var geojsonUrl = 'meshtastic_geojson.php?linkline=1';
@@ -1329,6 +1327,39 @@
             // Enable tails for targets
             // showTails();
         }
+        
+        // Distance distanceGeoJson source
+        map.addSource('distanceGeoJsonSource', {
+            'type': 'geojson',
+            'data': distanceGeoJson
+        });
+        // Add distance measurement layers to the map
+        map.addLayer({
+            id: 'measure-points',
+            type: 'circle',
+            source: 'distanceGeoJsonSource',
+            paint: {
+                'circle-radius': 10,
+                'circle-color': '#000'
+            },
+            filter: ['in', '$type', 'Point']
+        });
+        map.addLayer({
+            id: 'measure-lines',
+            type: 'line',
+            source: 'distanceGeoJsonSource',
+            layout: {
+                'line-cap': 'round',
+                'line-join': 'round'
+            },
+            paint: {
+                'line-color': '#000',
+                'line-width': 2.5
+            },
+            filter: ['in', '$type', 'LineString']
+        });
+        
+        
         console.log("Map loaded.");
         map.setTerrain(null);
         loadCallSign();
@@ -1341,37 +1372,8 @@
         }, 15000 );
         showTails();
         
-        // Distance
-        map.addSource('geojson', {
-            'type': 'geojson',
-            'data': geojson
-        });
-
-        // Add styles to the map
-        map.addLayer({
-            id: 'measure-points',
-            type: 'circle',
-            source: 'geojson',
-            paint: {
-                'circle-radius': 5,
-                'circle-color': '#000'
-            },
-            filter: ['in', '$type', 'Point']
-        });
-        map.addLayer({
-            id: 'measure-lines',
-            type: 'line',
-            source: 'geojson',
-            layout: {
-                'line-cap': 'round',
-                'line-join': 'round'
-            },
-            paint: {
-                'line-color': '#000',
-                'line-width': 2.5
-            },
-            filter: ['in', '$type', 'LineString']
-        });
+        
+        
         
     });
     
@@ -1597,17 +1599,19 @@
     //
     // Distance
     // ========
-    const distanceControlContainer = document.getElementById('distance-control');
-    const distanceContainer = document.getElementById('distance');
+    const distanceValueContainer = document.getElementById('distance-value');
+    distanceMeasurementActive = false;
 
     // GeoJSON object to hold our measurement features
-    const geojson = {
+    // const
+    distanceGeoJson = {
         'type': 'FeatureCollection',
         'features': []
     };
 
     // Used to draw a line between points
-    const linestring = {
+    // const
+     distanceLineString = {
         'type': 'Feature',
         'geometry': {
             'type': 'LineString',
@@ -1618,23 +1622,23 @@
     // Distance click if map is loaded
     map.on('click', (e) => {
         
-        if ( mapLoaded ) {
+        if ( mapLoaded && distanceMeasurementActive ) {
         
             const features = map.queryRenderedFeatures(e.point, {
                 layers: ['measure-points']
             });
 
-            // Remove the linestring from the group
+            // Remove the distanceLineString from the group
             // So we can redraw it based on the points collection
-            if (geojson.features.length > 1) geojson.features.pop();
+            if (distanceGeoJson.features.length > 1) distanceGeoJson.features.pop();
 
             // Clear the Distance container to populate it with a new value
-            distanceContainer.innerHTML = '';
+            distanceValueContainer.innerHTML = '';
 
             // If a feature was clicked, remove it from the map
             if (features.length) {
                 const id = features[0].properties.id;
-                geojson.features = geojson.features.filter((point) => {
+                distanceGeoJson.features = distanceGeoJson.features.filter((point) => {
                     return point.properties.id !== id;
                 });
             } else {
@@ -1648,23 +1652,24 @@
                         'id': String(new Date().getTime())
                     }
                 };
-                geojson.features.push(point);
+                distanceGeoJson.features.push(point);
             }
 
-            if (geojson.features.length > 1) {
-                linestring.geometry.coordinates = geojson.features.map(
+            if (distanceGeoJson.features.length > 1) {
+                distanceLineString.geometry.coordinates = distanceGeoJson.features.map(
                     (point) => {
                         return point.geometry.coordinates;
                     }
                 );
-                geojson.features.push(linestring);
-                // Populate the distanceContainer with total distance
+                distanceGeoJson.features.push(distanceLineString);
+                // Populate the distanceValueContainer with total distance
                 const value = document.createElement('div');
-                value.textContent = `Total distance: ${ turf.length(linestring).toLocaleString() } km`;
-                distanceContainer.appendChild(value);
+                value.textContent = `${ turf.length(distanceLineString).toLocaleString() } km`;
+                distanceValueContainer.appendChild(value);
             }
 
-            map.getSource('geojson').setData(geojson);
+            map.getSource('distanceGeoJsonSource').setData(distanceGeoJson);
+            // console.log( map.getSource('distanceGeoJsonSource').serialize() ); 
         }
         
         });
@@ -1672,7 +1677,7 @@
 
     map.on('mousemove', (e) => {
         
-        if ( mapLoaded ) {
+        if ( mapLoaded && distanceMeasurementActive ) {
             const features = map.queryRenderedFeatures(e.point, {
                 layers: ['measure-points']
             });
@@ -1758,13 +1763,18 @@
     <svg id="svg-icon-pin" class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#00FF00" viewBox="0 0 24 24">
   <path fill-rule="evenodd" d="M5 9a7 7 0 1 1 8 6.93V21a1 1 0 1 1-2 0v-5.07A7.001 7.001 0 0 1 5 9Zm5.94-1.06A1.5 1.5 0 0 1 12 7.5a1 1 0 1 0 0-2A3.5 3.5 0 0 0 8.5 9a1 1 0 0 0 2 0c0-.398.158-.78.44-1.06Z" clip-rule="evenodd"/>
 </svg>
-
     <svg id="svg-icon-measure" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16"><path fill="#0F0" fill-rule="evenodd" d="M10.121 2.343a1 1 0 0 1 1.415 0l2.12 2.121a1 1 0 0 1 0 1.415L5.88 13.657a1 1 0 0 1-1.414 0l-2.122-2.121a1 1 0 0 1 0-1.415zm-5.785 7.2L3.05 10.828l2.122 2.122l7.778-7.778l-2.121-2.122l-1.286 1.286L10.707 5.5L10 6.207L8.836 5.043l-.793.793L9.207 7l-.707.707l-1.164-1.164l-.793.793L7.707 8.5L7 9.207L5.836 8.043l-.793.793L6.207 10l-.707.707z" clip-rule="evenodd"/></svg>
-
-    
     <svg id="svg-icon-toggle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
 	<path fill="#0F0" d="M7.5 2c-1.79 1.15-3 3.18-3 5.5s1.21 4.35 3.03 5.5C4.46 13 2 10.54 2 7.5A5.5 5.5 0 0 1 7.5 2m11.57 1.5l1.43 1.43L4.93 20.5L3.5 19.07zm-6.18 2.43L11.41 5L9.97 6l.42-1.7L9 3.24l1.75-.12l.58-1.65L12 3.1l1.73.03l-1.35 1.13zm-3.3 3.61l-1.16-.73l-1.12.78l.34-1.32l-1.09-.83l1.36-.09l.45-1.29l.51 1.27l1.36.03l-1.05.87zM19 13.5a5.5 5.5 0 0 1-5.5 5.5c-1.22 0-2.35-.4-3.26-1.07l7.69-7.69c.67.91 1.07 2.04 1.07 3.26m-4.4 6.58l2.77-1.15l-.24 3.35zm4.33-2.7l1.15-2.77l2.2 2.54zm1.15-4.96l-1.14-2.78l3.34.24zM9.63 18.93l2.77 1.15l-2.53 2.19z" />
     </svg>
+    
+    
+    <svg id="svg-icon-download" width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 22.0002H16C18.8284 22.0002 20.2426 22.0002 21.1213 21.1215C22 20.2429 22 18.8286 22 16.0002V15.0002C22 12.1718 22 10.7576 21.1213 9.8789C20.3529 9.11051 19.175 9.01406 17 9.00195M7 9.00195C4.82497 9.01406 3.64706 9.11051 2.87868 9.87889C2 10.7576 2 12.1718 2 15.0002L2 16.0002C2 18.8286 2 20.2429 2.87868 21.1215C3.17848 21.4213 3.54062 21.6188 4 21.749" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M12 2L12 15M12 15L9 11.5M12 15L15 11.5" stroke="#00FF00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    
+    
     
 </div>
 

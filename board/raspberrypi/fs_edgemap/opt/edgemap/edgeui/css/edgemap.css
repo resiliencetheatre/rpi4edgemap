@@ -1717,59 +1717,81 @@ body {
 }
 
 
+/*
+.distance-control-button-style {
+    font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+    width: 40px;
+    color: #0f0;
+    border: 1px solid #00FF00;
+    border-radius: 5px;
+    padding: 2px;
+    opacity: 1.0;
+    cursor: pointer;
+    height: 90%
+    padding: 5px 10px;
+    cursor: pointer;
+    text-align: center;
+    min-width: 40px;
+}*/
 
-.distance-control-container {
+
+.distance-bar-style {    
+    font: 14px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+    background-color: #333;
+    color: #0f0;
     position: absolute;
+    border-radius: 5px;
     top: 95px;
-    right: 55%;
+    right: 15%;
     left: 15%;
+    padding: 2px;
+    opacity: 0.9;
     height: 30px;
     z-index: 1;
     display: none;
+    
+    
+    align-items: center; /* Aligns items vertically */
+    justify-content: space-between; /* Even spacing */
+    gap: 5px; /* Adds spacing between elements */
+    
 }
-
-.distance-container {
+.distance-value-style {
     font: 14px 'Helvetica Neue', Arial, Helvetica, sans-serif;
-    background-color: rgba(0, 0, 0, 0.8);
+    /* background-color: rgba(0, 0, 0, 0.8); */
     color: #0f0;
     line-height: 18px;
     display: block;
     margin: 0;
     padding: 5px 10px;
     border-radius: 5px;
+    
+    flex-grow: 1; /* Allows the distance value to take available space */
 }
 
-/*
- position: absolute; 
- top: 64px;
-	right: 4px;
- */
-.distance-control-button-style {
-	font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
-	background-color: rgba(0, 0, 0, 0.8);
-	width: 40px;
-    color: #0f0;
-    border: 3px solid #00FF00;
-	border-radius: 5px;
-	padding: 2px;
-	opacity: 1.0;
-    cursor: pointer;
+.feather-mesurementIcon {
+  width: 20px;
+  height: 20px;
+  vertical-align: bottom;
+  stroke: #0F0;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  padding: 5px 5px;
 }
 
-
-/*
-.distance-container > * {
-    font: 14px 'Helvetica Neue', Arial, Helvetica, sans-serif;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: #0f0;
-    line-height: 18px;
-    display: block;
-    margin: 0;
-    padding: 5px 10px;
-    border-radius: 3px;
+.feather-mesurementIconRed {
+  width: 20px;
+  height: 20px;
+  vertical-align: bottom;
+  stroke: #F00;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  padding: 5px 5px;
 }
-*/
-
 
 
 

@@ -1958,23 +1958,90 @@ function loadLocalSymbols() {
 }
 
 function distanceControlOpenButton() {
-    geojson.features = [];
-    linestring.geometry.coordinates = [];
-    map.getSource('geojson').setData(geojson);
-    distanceContainer.innerHTML = '<div>Click to measure</div>';
-    document.getElementById("distance-control").style.display = "block";
+    distanceGeoJson.features = [];
+    distanceLineString.geometry.coordinates = [];
+    map.getSource('distanceGeoJsonSource').setData(distanceGeoJson);
+    document.getElementById('distance-value').innerHTML = '<div>Click to measure</div>';
+    document.getElementById("distance-bar").style.display = "flex";
+    distanceMeasurementActive = true;
 }
 
 function distanceControlCloseButton() {
-    geojson.features = [];
-    linestring.geometry.coordinates = [];
-    map.getSource('geojson').setData(geojson);
-    document.getElementById("distance-control").style.display = "none";
+    distanceGeoJson.features = [];
+    distanceLineString.geometry.coordinates = [];
+    map.getSource('distanceGeoJsonSource').setData(distanceGeoJson);
+    document.getElementById("distance-bar").style.display = "none";
+    distanceMeasurementActive = false;
 }
 
 function distanceControlResetButton() {
-    geojson.features = [];
-    linestring.geometry.coordinates = [];
-    map.getSource('geojson').setData(geojson);
-    distanceContainer.innerHTML = '<div>Distance reseted!</div>';
+    distanceGeoJson.features = [];
+    distanceLineString.geometry.coordinates = [];
+    map.getSource('distanceGeoJsonSource').setData(distanceGeoJson);
+    document.getElementById('distance-value').innerHTML = '<div></div>';
+}
+
+function downloadGeoJSON(layerId = 'distanceGeoJsonSource') {
+    const source = map.getSource(layerId);
+    
+    if (!source) {
+        console.error(`Layer with ID '${layerId}' not found.`);
+        return;
+    }
+    
+    if (source.type !== 'geojson') {
+        console.error(`Source for layer '${layerId}' is not a GeoJSON source.`);
+        return;
+    }
+    
+    const data = source._data || source.serialize().data;
+    if (!data) {
+        console.error('No data found in the GeoJSON source.');
+        return;
+    }
+    
+    const now = new Date();
+    const timestamp = `${now.getDate().toString().padStart(2, '0')}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now.getFullYear()}-${now.getHours().toString().padStart(2, '0')}.${now.getMinutes().toString().padStart(2, '0')}.${now.getSeconds().toString().padStart(2, '0')}`;
+    const filename = `measured-route-${timestamp}.geojson`;
+    
+    const geojsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([geojsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    URL.revokeObjectURL(url);
+}
+
+function uploadGeoJSON(sourceId = 'distanceGeoJsonSource') {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.geojson,.json';
+    input.onchange = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const geojson = JSON.parse(e.target.result);
+                const source = map.getSource(sourceId);
+                if (source) {
+                    source.setData(geojson);
+                } else {
+                    console.error(`Source with ID '${sourceId}' not found.`);
+                }
+            } catch (error) {
+                console.error('Error parsing GeoJSON:', error);
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+    document.getElementById('distance-value').innerHTML = '<div>Data uploaded</div>';
 }
