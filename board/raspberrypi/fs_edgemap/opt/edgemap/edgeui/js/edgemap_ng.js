@@ -1853,6 +1853,28 @@ function manualLocationSet() {
     manualLocationClose();
 }
 
+function manualLocationSetFromRightMenu(latitude,longitude) {
+    var manualLocationValue = latitude + "," + longitude;
+    fetch('save_manual_location.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ data: [manualLocationValue] })
+    })
+    .then(response => response.text())
+    .then(data => {
+        console.log('Position saved!');
+    })
+    .catch(error => {
+        console.error('Position save error:', error);
+    });
+    keyEventListener=1;
+    unknownSensorCreateInProgress=0;
+    manualLocationClose();
+}
+
+
 function manualLocationErase() {
     
     fetch('erase_manual_location.php', {
@@ -2045,3 +2067,26 @@ function uploadGeoJSON(sourceId = 'distanceGeoJsonSource') {
     input.click();
     document.getElementById('distance-value').innerHTML = '<div>Data uploaded</div>';
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

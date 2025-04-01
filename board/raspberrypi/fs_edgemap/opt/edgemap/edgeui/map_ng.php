@@ -372,9 +372,10 @@
     <div id="lon_localgps" style="display: none;"></div>
     <div id="speed_localgps" style="display: none;"></div>
     <div id="mode_localgps" style="display: none;"></div>
-    
+    <div id="rightMenuLat" style="display: none;"></div>
+    <div id="rightMenuLon" style="display: none;"></div>
 
-    
+        
 <script>    
 /*
      _____    _                                  
@@ -1440,6 +1441,7 @@
     
     feather.replace();
     
+    
     // Capture click coordinates to UI 
     map.on('mousedown', function (e) {	
         JSON.parse(JSON.stringify(e.lngLat.wrap()) , (key, value) => {
@@ -1484,23 +1486,6 @@
             let zoom = map.getZoom();
     });
    
-    // Testing new menu, let's hide old - do this proper when done
-    
-    /*fadeOut(zoomDiv,120);
-    fadeOut(sensorDiv,120);
-    // fadeOut(bottomBarDiv,120);
-    fadeOut(cameracontrol,120);
-    fadeOut(userlistbuttonDiv ,120);
-    fadeOut(radiolistbuttonDiv ,120);
-    fadeOut(radiolistblockDiv ,120);
-    fadeOut(videoconferenceButton ,120);
-    fadeOut(reticulumListblockDiv ,120);
-    fadeOut(reticulumListButtonDiv ,120);
-    fadeOut(manualGpsbuttonDiv ,120);
-    */
-    
-    // Radial menu test
-    // REMOVED FOR NG
 
     //
     // Keypress functions
@@ -1688,9 +1673,24 @@
         }
     });
     
-    
-    
-    
+    /*
+    console.log("creating contextmenu map.on() function");
+    map.on('contextmenu', function (e) {
+        console.log("contextmenu entry");
+        JSON.parse(JSON.stringify(e.lngLat.wrap()) , (key, value) => {
+          if ( key == 'lat' ) {
+              let uLat = value.toString();
+              console.log("contextmenu ", uLat);
+              // document.getElementById('rightMenuLat').innerHTML = uLat.substring(0,10);
+          }
+          if ( key == 'lng' ) {
+            let uLon = value.toString();
+            console.log("contextmenu ", uLon);
+            // document.getElementById('rightMenuLon').innerHTML = uLat.substring(0,10);
+          }
+        });	
+    });
+    */
     
     
     

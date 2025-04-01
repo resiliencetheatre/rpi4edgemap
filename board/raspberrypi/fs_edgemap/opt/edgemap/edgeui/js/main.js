@@ -173,6 +173,21 @@ var menuItems = [
     }
 ];
 
+
+// RIGHT CLICK MENU
+var rightClickmenuItems = [
+    {
+        id   : 'setlocation',
+        title: 'Location',
+        icon: '#svg-icon-my-location'
+    },
+    {
+        id   : 'sendimage',
+        title: 'Image',
+        icon: '#svg-icon-camera'
+    }
+];
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 window.onload = function ()
 {
@@ -296,8 +311,10 @@ window.onload = function ()
 	{
 		radialMenu.close();
 	});*/
-	const radialContextMenu = new RadialMenu(// 2nd RadialMenu with different {menuItems}
-		menuItems,
+    
+    // right click menu functions
+	const rightClickMenu = new RadialMenu(// 2nd RadialMenu with different {menuItems}
+		rightClickmenuItems,
 		200,
 		{
 			multiInnerRadius: 0.2,
@@ -313,15 +330,99 @@ window.onload = function ()
 				nested: {
 					title: false
 				}
-			}
+			},
+            closeOnClick: true,
+            closeOnClickOutside: true,
+            onClick: function(item)
+            {
+                if ( item.id == "setlocation" ) {
+                     lat = document.getElementById('rightMenuLat').innerHTML;
+                     lon = document.getElementById('rightMenuLon').innerHTML;
+                     manualLocationSetFromRightMenu(lat,lon);
+                     document.getElementById('rightMenuLat').innerHTML = "";
+                     document.getElementById('rightMenuLon').innerHTML = "";
+                }
+            }
 	});
+    
+    /*
+     * The contextmenu event fires when the user attempts to open a context menu. 
+     * This event is typically triggered by clicking the right mouse button, 
+     * or by pressing the context menu key.
+     */
+    
+    //
+    // Right click event on desktop browsers
+    //
 	document.addEventListener('contextmenu', function(event)
-	{ // right-mouse(as context-menu) opened at position[x,y] of mouse-click
-		event.preventDefault();
-		if (radialContextMenu.isOpen())
+	{ 
+        // Get the map container
+        const mapContainer = document.getElementById('map');
+        if (!mapContainer) {
+            console.error("Map container not found");
+            return;
+        }
+        // Get the bounding rect of the map container
+        const rect = mapContainer.getBoundingClientRect();
+        // Convert screen coordinates to map-relative coordinates
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        // Convert to latitude and longitude
+        const lngLat = map.unproject([x, y]);
+        console.log("Touch lat,lon: ", lngLat.lat, lngLat.lng );
+        document.getElementById('rightMenuLat').innerHTML = lngLat.lat;
+        document.getElementById('rightMenuLon').innerHTML = lngLat.lng;
+        // event.preventDefault();
+		if (rightClickMenu.isOpen())
 		{
 			return;
 		}
-		radialContextMenu.open(event.x, event.y);
+		rightClickMenu.open(event.x, event.y);
 	});
+    
+    //
+    // Long touch as right click on mobile browsers
+    //
+    const targetElement = document.getElementById("map");
+    let timer;
+    function clearTimer() {
+        clearTimeout(timer);
+    }
+    targetElement.addEventListener("touchstart", function (event) {
+        timer = setTimeout(() => {
+            rightClickMenu.open(event.touches[0].clientX, event.touches[0].clientY);
+            // event.touches[0].clientX, event.touches[0].clientY => latitude, longitude
+            // Get the map container
+            const mapContainer = document.getElementById('map');
+            if (!mapContainer) {
+                console.error("Map container not found");
+                return;
+            }
+            // Get the bounding rect of the map container
+            const rect = mapContainer.getBoundingClientRect();
+            // Convert screen coordinates to map-relative coordinates
+            const x = event.touches[0].clientX - rect.left;
+            const y = event.touches[0].clientY - rect.top;
+            // Convert to latitude and longitude
+            const lngLat = map.unproject([x, y]);
+            console.log("Touch lat,lon: ", lngLat.lat, lngLat.lng );
+            // Equip html elements
+            document.getElementById('rightMenuLat').innerHTML = lngLat.lat;
+            document.getElementById('rightMenuLon').innerHTML = lngLat.lng;
+        }, 800); 
+    });
+    // Clear timer events
+    targetElement.addEventListener("touchend", clearTimer );
+    targetElement.addEventListener("touchmove", clearTimer );
+    targetElement.addEventListener("gesturestart", clearTimer);
+    targetElement.addEventListener("gesturechange", clearTimer);
+    targetElement.addEventListener("gestureend", clearTimer);
+    targetElement.addEventListener("touchstart", function (event) {
+        if (event.touches.length > 1) {
+            clearTimer();
+        }
+    });
+    
+    
+    
 };
