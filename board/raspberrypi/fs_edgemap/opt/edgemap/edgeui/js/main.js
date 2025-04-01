@@ -382,15 +382,25 @@ window.onload = function ()
     //
     // Long touch as right click on mobile browsers
     //
-    const targetElement = document.getElementById("map");
+    // We have timerArray because desktop firefox intializes multiple
+    // timers on touchstart event. So what ever we start, we clear
+    // all of them with clearTimer().
+    //
     let timer;
+    let timerArray = [];
     function clearTimer() {
-        clearTimeout(timer);
+        timerArray.forEach(clearTimerEntry);
     }
+    function clearTimerEntry(timerToClear) {
+        clearTimeout(timerToClear);
+    }
+    
+    const targetElement = document.getElementById("map");
+    
     targetElement.addEventListener("touchstart", function (event) {
         timer = setTimeout(() => {
+            // console.log("rightClickMenu.open() ", timer );
             rightClickMenu.open(event.touches[0].clientX, event.touches[0].clientY);
-            // event.touches[0].clientX, event.touches[0].clientY => latitude, longitude
             // Get the map container
             const mapContainer = document.getElementById('map');
             if (!mapContainer) {
@@ -404,15 +414,17 @@ window.onload = function ()
             const y = event.touches[0].clientY - rect.top;
             // Convert to latitude and longitude
             const lngLat = map.unproject([x, y]);
-            console.log("Touch lat,lon: ", lngLat.lat, lngLat.lng );
             // Equip html elements
             document.getElementById('rightMenuLat').innerHTML = lngLat.lat;
             document.getElementById('rightMenuLon').innerHTML = lngLat.lng;
         }, 800); 
+        // console.log(" timer = setTimeout(()) ", timer);
+        timerArray.push(timer);
     });
+    
     // Clear timer events
     targetElement.addEventListener("touchend", clearTimer );
-    targetElement.addEventListener("touchmove", clearTimer );
+    targetElement.addEventListener("touchmove", clearTimer, { passive: false });
     targetElement.addEventListener("gesturestart", clearTimer);
     targetElement.addEventListener("gesturechange", clearTimer);
     targetElement.addEventListener("gestureend", clearTimer);
@@ -421,6 +433,12 @@ window.onload = function ()
             clearTimer();
         }
     });
+    targetElement.addEventListener("touchmove", function (event) {
+        if (event.touches.length > 1) {
+            clearTimer();
+        }
+    });
+    targetElement.addEventListener("pointercancel", clearTimer);
     
     
     
