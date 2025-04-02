@@ -476,23 +476,61 @@ function reloadPage() {
 // If you enable geolocate, post contains also lat,lon and callsign
 // They are updated from geolocate callback at map.php 
 function submitImage() {
-    // Submit to upload.php
+    
+    // Submit upload form to upload.php
     uploadform.submit();
+    
     // Capture what upload.php outputs to 'dummyframe' (filename) and use location
     // (if available) and callsign. So we have everything at hand to form "new image" 
     // message to other peers.
     iframeContentChange(document.getElementById("dummyframe"), function (payload) {
        if ( payload != "" ) {
             var notifyMessagePayload="Image sent";
+            
+            // This is placeholder demo to display image uploaded on map locally
+            // In real life, we need either use centralized edgemap entity where everyone
+            // connects and show pictures from there or transport pictures to other nodes.
+            // Since we are using meshtastastic to deliver message payloads, image transport
+            // is out of question. And falling back to "centralized model" is also stupid. 
+            // So this we need to sort out at strategic level first.
+            
+            // In this demo, take lat, lon from submit form fields, not from message received
+            const formInfo = document.forms['uploadform'];
+            submit_form_latitude = formInfo.lat.value;
+            submit_form_longitude = formInfo.lon.value;
+            
+            // Create image marker
+            createImageMarker("myself",submit_form_latitude, submit_form_longitude, payload );
+            
+            var modal = document.getElementById('myModal');
+            var images = document.getElementsByClassName('myImages');
+            var modalImg = document.getElementById("img01");
+            var captionText = document.getElementById("caption");
+            for (var i = 0; i < images.length; i++) {
+              var img = images[i];
+              img.onclick = function(evt) {
+                modal.style.display = "block";
+                modalImg.src = this.alt; 
+                captionText.innerHTML = "Full size image";
+              }
+            }
+            var span = document.getElementsByClassName("close")[0];
+            span.onclick = function() {
+              modal.style.display = "none";
+               modalImg.src = "";
+            }
+            
+            // This lastKnownCoordinates needs to be re-designed to use local GPS ?
+            // Approach here was very early implementation where everyone had 
+            // random user name and used browser location to send images all around
+            // the world to centralized cloud hosted demo. Now all that is gone!
             if ( lastKnownCoordinates ) {
-            notifyMessagePayload = notifyMessagePayload + " with location";
-            // Send imageMarker if we have location available
-            var imgMsg = callSign + `|imageMarker|[`+lastKnownCoordinates.latitude+`,`+lastKnownCoordinates.longitude+`]|`+ payload + '\n';
-            
-            // TODO: Handle meshtasticMsgSocket.send( );
-            // messagingSocket.send( imgMsg );
-            sendMessageToAllBearers(imgMsg);
-            
+                notifyMessagePayload = notifyMessagePayload + " with location";
+                // Send imageMarker if we have location available
+                // var imgMsg = callSign + `|imageMarker|[`+lastKnownCoordinates.latitude+`,`+lastKnownCoordinates.longitude+`]|`+ payload + '\n';
+                // TODO: Handle meshtasticMsgSocket.send( );
+                // messagingSocket.send( imgMsg );
+                // sendMessageToAllBearers(imgMsg);
             }
             notifyMessage(notifyMessagePayload, 5000);
        }
@@ -1906,7 +1944,10 @@ function manualLocationClose() {
 function clickSendImageForm() {
     console.log("clickSendImageForm()");
     console.log("We need to re-design image upload, because usage model has changed a lot.");
-    // document.getElementById("fileToUpload").click();
+    // This used to be image take and tag with geolocation of browser. But not we have
+    // meshtastic and local GPS. I'd like not to use browser geolocation, but rather local
+    // or picked location for image.
+    document.getElementById("fileToUpload").click();
 }
 
 function submitCoordinateSearch() {

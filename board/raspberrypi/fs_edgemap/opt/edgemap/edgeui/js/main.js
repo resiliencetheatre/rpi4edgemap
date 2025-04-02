@@ -342,6 +342,21 @@ window.onload = function ()
                      document.getElementById('rightMenuLat').innerHTML = "";
                      document.getElementById('rightMenuLon').innerHTML = "";
                 }
+                if ( item.id == "sendimage" ) {
+                    // Take location clicked
+                    lat = document.getElementById('rightMenuLat').innerHTML;
+                    lon = document.getElementById('rightMenuLon').innerHTML;
+                    // Populate upload form with latitude, longitude
+                    const formInfo = document.forms['uploadform'];
+                    console.log("main.js: sendImage ", lat, lon);
+                    formInfo.lat.value = lat;
+                    formInfo.lon.value = lon;
+                    // Upload image
+                    clickSendImageForm();
+                    // Clear used location
+                    document.getElementById('rightMenuLat').innerHTML = "";
+                    document.getElementById('rightMenuLon').innerHTML = "";
+                }
             }
 	});
     
