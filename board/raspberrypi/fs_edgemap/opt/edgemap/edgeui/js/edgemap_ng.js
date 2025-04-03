@@ -1111,58 +1111,19 @@ function changeLanguage(language) {
      * https://docs.protomaps.com/basemaps/localization
      * https://docs.protomaps.com/basemaps/localization#list-of-supported-languages
      */
-    
     map.setLayoutProperty('places_country', 'text-field', ['get',`name:${language}` ]);
     map.setLayoutProperty('places_subplace', 'text-field', ['get',`name:${language}` ]);
     map.setLayoutProperty('places_locality', 'text-field', ['get',`name:${language}` ]);
     map.setLayoutProperty('places_region', 'text-field', ['get',`name:${language}` ]);    
     map.setLayoutProperty('roads_labels_minor', 'text-field', ['get',`name:${language}` ]);
     map.setLayoutProperty('roads_labels_major', 'text-field', ['get',`name:${language}` ]);
-    // Roads (Apr, 2025)
-    map.setLayoutProperty('roads_runway', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_taxiway', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_tunnels_other_casing', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_tunnels_minor_casing', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_tunnels_link_casing', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_tunnels_major_casing', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_tunnels_highway_casing', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_tunnels_other', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_tunnels_minor', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_tunnels_link', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_tunnels_major', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_tunnels_highway', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_pier', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_minor_service_casing', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_minor_casing', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_link_casing', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_major_casing_late', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_highway_casing_late', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_other', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_link', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_minor_service', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_minor', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_major_casing_early', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_major', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_highway_casing_early', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_highway', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_rail', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_bridges_other_casing', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_bridges_link_casing', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_bridges_minor_casing', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_bridges_major_casing', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_bridges_other', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_bridges_minor', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_bridges_link', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_bridges_major', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_bridges_highway_casing', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('roads_bridges_highway', 'text-field', ['get',`name:${language}` ]);
-    // Water
-    map.setLayoutProperty('water_stream', 'text-field', ['get',`name:${language}` ]);
-    map.setLayoutProperty('water_river', 'text-field', ['get',`name:${language}` ]);
+    
     map.setLayoutProperty('water_waterway_label', 'text-field', ['get',`name:${language}` ]);
+    map.setLayoutProperty('roads_labels_minor', 'text-field', ['get',`name:${language}` ]);
     map.setLayoutProperty('water_label_ocean', 'text-field', ['get',`name:${language}` ]);
     map.setLayoutProperty('water_label_lakes', 'text-field', ['get',`name:${language}` ]);
 
+    
     closeLanguageSelectBox();
 }
 
