@@ -522,18 +522,14 @@
     const trackMessageMarkers = []; 
     var lastKnownCoordinates;
     
+    // Remember to run gwsocket systemd service along enabling these:
     
     // Development variable for enabling / disabling messaging
     var messagingFeatureEnabled = 1
-    
-    // Remember to run gwsocket systemd service along enabling these:
-    
     // Development variable for enabling / disabling highrate target
     var highrateFeatureEnabled = 0
     // Development variable for enabling / disabling securePTT
     var securepttFeatureEnabled = 0
-    
-    
     
     // We track 'radios' on mesh - not their location on map.
     // We don't want to enforce or use meshtastic internal
@@ -600,7 +596,8 @@
     messaging (ng)          7990    8990        /tmp/msgchannel /tmp/msgincoming 
     status  (ng)            7997    8997        /tmp/statusin
     
-    old & to be removed:
+    Old & to be removed:
+    ==========================================================
     meshtastic messaging    7991    8991
     meshtastic status       7995    8995
     SecurePTT status        7996    8996
@@ -884,8 +881,6 @@
                 //
                 // Image marker: [FROM]|imageMarker|[LAT,LON]|[FILENAME]
                 // 
-                // Based on: https://stackoverflow.com/questions/47798971/several-modal-images-on-page
-                //
                 if ( msgType == "imageMarker" ) {
                     const location = msgLocation;
                     const locationNumbers = location.replace(/[\])}[{(]/g, '');
@@ -1054,17 +1049,16 @@
         statusSocket.onmessage = function(event) {
             var incomingMessage = event.data;
             var trimmedString = incomingMessage.substring(0, 80);
-            // console.log("DEBUG: ", trimmedString)
             const nodeArray = trimmedString.split(",");
             
-            // meshtastic
+            // Meshtastic
             if ( nodeArray[0] === "peernode" )
             {
                 meshtasticRadiosOnSystem.add( nodeArray[1], Math.round(+new Date()/1000),nodeArray[2],nodeArray[3],nodeArray[4],nodeArray[5],nodeArray[6] );
                 updateMeshtasticRadioListBlock(); 
             }
             
-            // reticulumnode,[callsign],[timestamp],[hash]
+            // Reticulumnode,[callsign],[timestamp],[hash]
             if ( nodeArray[0] === "reticulumnode" )
             {
                 // console.log("reticulumNodesOnSystem.add() : ", nodeArray[1],nodeArray[2],nodeArray[3],nodeArray[4],nodeArray[5],nodeArray[6],nodeArray[7] );
@@ -1075,18 +1069,18 @@
             if ( ! isHidden(reticulumListblockDiv) ) {
                 fadeOut(reticulumNotifyDotDiv,10000);
             }
-            // announcereceived,[callsign],[hash]
+            // reticulum: announcereceived,[callsign],[hash]
             if ( nodeArray[0] === "announcereceived" ) {
                 // notifyMessage("Announce from " + nodeArray[1], 5000);
-                // 
                 document.getElementById("reticulumAnnounceNotify").innerHTML = nodeArray[1];
             }
-            // message-ack,[callsign]
+            // reticulum: message-ack,[callsign]
             if ( nodeArray[0] === "message-ack" ) {
                 delivery_ack_node = nodeArray[1];
                 document.getElementById("delivery_status_header").innerHTML = "Delivery acknowledge from:";
                 document.getElementById("delivery_status").innerHTML += "<span style='color:#0F0;'> "+delivery_ack_node+"</span>";  
             }
+            // reticulum
             if ( nodeArray[0] === "client_count" ) { 
                 clients_connected = nodeArray[1];
                 notifyMessage("Clients connected: " + clients_connected, 5000);
@@ -1174,7 +1168,6 @@
     
     //
     // Reference draggable marker with MilSymbols
-    //
     // Use as template or test terrain model with it
     // 
     var graphMarker;
@@ -1233,8 +1226,10 @@
         if ( geoJsonLayerActive && mapLoaded ) {
 
             //
-            // Get geojson
-            // NOTE: You need cotsim -> curlcot -> taky for this to work
+            // Get geojson for link status
+            // This was initially made to show COT targets on map:
+            // cotsim -> curlcot -> taky 
+            // 
             // getElementItem('#myCallSign').value
             var geojsonUrlwithCallSign = 'meshtastic_geojson.php?linkline=1&myCallSign=' + getElementItem('#myCallSign').value;
             // request.open('GET', geojsonUrl, true);
@@ -1281,7 +1276,6 @@
                         // document.getElementById('status').innerHTML = today.toISOString();
                         // indicator.style.backgroundColor = 'transparent';
                     }
-                    
                 };
             request.send();
         } else {
@@ -1366,7 +1360,6 @@
             filter: ['in', '$type', 'LineString']
         });
         
-        
         console.log("Map loaded.");
         map.setTerrain(null);
         loadCallSign();
@@ -1378,9 +1371,6 @@
         fadeOut(document.getElementById("platform_logo") ,1000);
         }, 15000 );
         showTails();
-        
-        
-        
         
     });
     

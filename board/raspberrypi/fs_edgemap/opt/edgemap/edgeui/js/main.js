@@ -235,7 +235,7 @@ window.onload = function ()
                  changeLanguage('en');
             }
             if ( item.id == "language-zh" ) {
-                 changeLanguage('zh');
+                 changeLanguage('zh-Hans');
             }
             if ( item.id == "language-ukr" ) {
                  changeLanguage('uk');
@@ -348,7 +348,6 @@ window.onload = function ()
                     lon = document.getElementById('rightMenuLon').innerHTML;
                     // Populate upload form with latitude, longitude
                     const formInfo = document.forms['uploadform'];
-                    console.log("main.js: sendImage ", lat, lon);
                     formInfo.lat.value = lat;
                     formInfo.lon.value = lon;
                     // Upload image
