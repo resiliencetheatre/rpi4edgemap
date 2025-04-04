@@ -194,17 +194,17 @@ var rightClickmenuItems = [
         icon: '#svg-icon-camera'
     },
     {
-        id: 'symbolTest0',
+        id: 'symbol0',
         title: menuSymbolText[0],
         icon: '#milSymbol_0'
     },
     {
-        id: 'symbolTest1',
+        id: 'symbol1',
         title: menuSymbolText[1],
         icon: '#milSymbol_1'
     },
     {
-        id: 'symbolTest2',
+        id: 'symbol2',
         title: menuSymbolText[2],
         icon: '#milSymbol_2'
     }
@@ -376,6 +376,13 @@ window.onload = function ()
                     // Clear used location
                     document.getElementById('rightMenuLat').innerHTML = "";
                     document.getElementById('rightMenuLon').innerHTML = "";
+                }
+                if ( item.id == "symbol0" ) {
+                    // Take location clicked 
+                    lat = document.getElementById('rightMenuLat').innerHTML;
+                    lon = document.getElementById('rightMenuLon').innerHTML;
+                    console.log("Inserting symbol0 to: ",lat,lon);
+                    // map.getSource('rightMenuSymbolGeoJsonSource').setData(distanceGeoJson);
                 }
             }
 	});

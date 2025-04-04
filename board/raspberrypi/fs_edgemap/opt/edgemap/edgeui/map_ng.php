@@ -443,6 +443,9 @@
     var intialZoomLevel=1;
 	var symbolSize = 30;
     
+    // geojson for right menu inserted symbols
+    var rightMenuSymbolsGeoJson;
+    
     // geojson for distance measurement
     var distanceGeoJson;
     var distanceLineString;
@@ -1206,12 +1209,8 @@
     //document.getElementById('debugImage').style="display:none;";
 
 
-
-//
-// Generate Milsymbols to right click menu
-//
-// 
-generateRightMenuSymbolArray();
+    // Generate Milsymbols to right click menu
+    generateRightMenuSymbolArray();
 
   
     // Update meshtastic and reticulum nodes every 30 s to UI
@@ -1338,6 +1337,8 @@ generateRightMenuSymbolArray();
             // showTails();
         }
         
+        
+        
         // Distance distanceGeoJson source
         map.addSource('distanceGeoJsonSource', {
             'type': 'geojson',
@@ -1368,6 +1369,70 @@ generateRightMenuSymbolArray();
             },
             filter: ['in', '$type', 'LineString']
         });
+        
+        // 
+        // Right menu inserted symbols geoJson
+        // 
+        /*
+        map.addSource('rightMenuSymbolGeoJsonSource', {
+            'type': 'geojson',
+            'data': rightMenuSymbolsGeoJson
+        });
+        */
+        
+        // Add right menu clicked symbols layer to the map
+        // TODO: Modify to faciliate milsymbols, see drone layer above
+        /*map.addLayer({
+            
+            'id': 'rightClickSymbols',
+            'type': 'symbol',
+            'source': 'rightMenuSymbolGeoJsonSource',
+            'layout': {
+                'icon-image': ['get', 'targetName'], 
+                'icon-anchor': 'center',
+                'icon-offset': [0,0],   
+                'icon-allow-overlap': true,
+                'icon-ignore-placement': true, 
+                'text-allow-overlap': true,
+                'text-field': ['get', 'targetName'],
+                'text-font': [
+                'Noto Sans Regular'
+                ],
+                'text-offset': [0, 1.2],
+                'text-anchor': 'top'
+                },
+                'paint': {
+                  "text-color": "#00f",
+                  "text-halo-color": "#eee",
+                  "text-halo-width": 2,
+                  "text-halo-blur": 2
+                },
+                'filter': ['==', '$type', 'Point']
+                
+        });
+        */
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         console.log("Map loaded.");
         map.setTerrain(null);
