@@ -381,8 +381,25 @@ window.onload = function ()
                     // Take location clicked 
                     lat = document.getElementById('rightMenuLat').innerHTML;
                     lon = document.getElementById('rightMenuLon').innerHTML;
+                    
                     console.log("Inserting symbol0 to: ",lat,lon);
-                    // map.getSource('rightMenuSymbolGeoJsonSource').setData(distanceGeoJson);
+                    addRightClickSymbol(lat,lon,0);
+                    
+                    
+                }
+                if ( item.id == "symbol1" ) {
+                    // Take location clicked 
+                    lat = document.getElementById('rightMenuLat').innerHTML;
+                    lon = document.getElementById('rightMenuLon').innerHTML;
+                    console.log("Inserting symbol0 to: ",lat,lon);
+                    addRightClickSymbol(lat,lon,1);
+                }
+                if ( item.id == "symbol2" ) {
+                    // Take location clicked 
+                    lat = document.getElementById('rightMenuLat').innerHTML;
+                    lon = document.getElementById('rightMenuLon').innerHTML;
+                    console.log("Inserting symbol0 to: ",lat,lon);
+                    addRightClickSymbol(lat,lon,2);
                 }
             }
 	});

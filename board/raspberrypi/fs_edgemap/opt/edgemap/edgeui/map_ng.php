@@ -1208,11 +1208,6 @@
     //document.getElementById('debugImage').src = milSymbolTest;
     //document.getElementById('debugImage').style="display:none;";
 
-
-    // Generate Milsymbols to right click menu
-    generateRightMenuSymbolArray();
-
-  
     // Update meshtastic and reticulum nodes every 30 s to UI
     // Note: updateReticulumBlock() has also age checking 
     window.setInterval(function () {
@@ -1253,6 +1248,7 @@
                         var name;
                         var another = JSON.parse(this.response, function (key, value) {			
                             if ( key == "targetName" ) {
+                                
                                 name = value;
                                 if ( !map.hasImage( value ) ) {
                                     createImage( value );
@@ -1370,69 +1366,47 @@
             filter: ['in', '$type', 'LineString']
         });
         
+        
         // 
         // Right menu inserted symbols geoJson
         // 
-        /*
+        
+        // GeoJSON object to hold right click symbols
+        rightMenuSymbolsGeoJson = {
+            'type': 'FeatureCollection',
+            'features': []
+        };
         map.addSource('rightMenuSymbolGeoJsonSource', {
             'type': 'geojson',
             'data': rightMenuSymbolsGeoJson
         });
-        */
         
-        // Add right menu clicked symbols layer to the map
-        // TODO: Modify to faciliate milsymbols, see drone layer above
-        /*map.addLayer({
-            
+        map.addLayer({
             'id': 'rightClickSymbols',
             'type': 'symbol',
             'source': 'rightMenuSymbolGeoJsonSource',
             'layout': {
-                'icon-image': ['get', 'targetName'], 
+                'icon-image': ['get', 'milSymbol'], 
                 'icon-anchor': 'center',
                 'icon-offset': [0,0],   
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true, 
                 'text-allow-overlap': true,
-                'text-field': ['get', 'targetName'],
+                'text-field': ['get', 'text'],
                 'text-font': [
                 'Noto Sans Regular'
                 ],
-                'text-offset': [0, 1.2],
+                'text-offset': [0, 1.3],
                 'text-anchor': 'top'
                 },
                 'paint': {
-                  "text-color": "#00f",
-                  "text-halo-color": "#eee",
-                  "text-halo-width": 2,
-                  "text-halo-blur": 2
+                  "text-color": "#ff00ff",
+                  "text-halo-color": "#888888",
+                  "text-halo-width": 0,
+                  "text-halo-blur": 0
                 },
                 'filter': ['==', '$type', 'Point']
-                
         });
-        */
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
         
         console.log("Map loaded.");
         map.setTerrain(null);
@@ -1445,6 +1419,9 @@
         fadeOut(document.getElementById("platform_logo") ,1000);
         }, 15000 );
         showTails();
+        
+        // Generate Milsymbols for right click menu
+        generateRightMenuSymbolArray(map);
         
     });
     

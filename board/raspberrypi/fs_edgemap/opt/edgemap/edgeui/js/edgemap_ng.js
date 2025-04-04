@@ -2120,9 +2120,30 @@ function uploadGeoJSON(sourceId = 'distanceGeoJsonSource') {
     document.getElementById('distance-value').innerHTML = '<div>Data uploaded</div>';
 }
 
+
+function svgToImageBitmap(svgString, width, height) {
+    return new Promise((resolve, reject) => {
+        const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(svgBlob);
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(url);
+            createImageBitmap(canvas).then(resolve).catch(reject);
+        };
+        img.onerror = reject;
+        img.src = url;
+    });
+}
+
+
 // Note: There is global menuSymbolText[] array bellow, which needs to match
 // given symbols codes.
-function generateRightMenuSymbolArray() {
+async function generateRightMenuSymbolArray(map) {
     
     var menuSymbolCode=[];
     menuSymbolCode[0] = "130411000011100000000000000000";
@@ -2133,14 +2154,15 @@ function generateRightMenuSymbolArray() {
     
     for (let i = 0; i < menuSymbolCode.length; i++) {
         // console.log("generateRightMenuSymbolArray(): ", menuSymbolCode[i]);
+        // size 40
         menuSymbols = new ms.Symbol(menuSymbolCode[i], {
-            size: 45,
+            size: 30,
             dtg: "",
             staffComments: "",
             additionalInformation: "",
             combatEffectiveness: "",
             type: "",
-            padding: 0
+            padding: 5
         }).asSVG();
         
         // Create a symbol element dynamically
@@ -2151,7 +2173,8 @@ function generateRightMenuSymbolArray() {
         var id_attribute = "milSymbol_" + i;
         // console.log("generateRightMenuSymbolArray() id_attribute: ", id_attribute);
         symbolElement.setAttribute("id", id_attribute);
-        symbolElement.setAttribute("viewBox", "0 0 50 55");
+        // symbolElement.setAttribute("viewBox", "0 0 50 55");
+        symbolElement.setAttribute("viewBox", "0 0 35 40");
         symbolElement.appendChild(svgDoc);
         
         var defsArray=[];
@@ -2165,8 +2188,16 @@ function generateRightMenuSymbolArray() {
             defsArray[i].style.display = "none";
             document.body.appendChild(defsArray[i]);
         }
-        // Append the new symbol
+        // Append the new symbol (for radialmenu use)
         defsArray[i].appendChild(symbolElement);
+        
+        // Add images for geojson layer
+        // const bitmap = await svgToImageBitmap(menuSymbols, 55, 55);
+        const bitmap = await svgToImageBitmap(menuSymbols, 45, 45);
+        const imageId = "milSymbol_" + i;
+        if (!map.hasImage(imageId)) {
+            map.addImage(imageId, bitmap);
+        }
     }
 }
 
@@ -2178,7 +2209,22 @@ menuSymbolText[0] = "Medical";
 menuSymbolText[1] = "EOD";
 menuSymbolText[2] = "Mine";
 
-
+function addRightClickSymbol(lat,lon,symbolIndex) {
+    const point = {
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                'coordinates': [lon,lat]
+            },
+            'properties': {
+                'id': String(new Date().getTime()),
+                'text': menuSymbolText[symbolIndex],
+                'milSymbol': 'milSymbol_' + symbolIndex
+            }
+        };
+        rightMenuSymbolsGeoJson.features.push(point);
+        map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
+}
 
 
 
