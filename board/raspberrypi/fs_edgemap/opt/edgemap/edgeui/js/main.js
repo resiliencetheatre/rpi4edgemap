@@ -174,17 +174,39 @@ var menuItems = [
 ];
 
 
-// RIGHT CLICK MENU
+
+
+
+//
+// Right click menu
+//
+// Call generateRightMenuSymbols(); so that SVG's are available
+// 
 var rightClickmenuItems = [
     {
         id   : 'setlocation',
-        title: 'Location',
+        title: 'Set location',
         icon: '#svg-icon-my-location'
     },
     {
         id   : 'sendimage',
-        title: 'Image',
+        title: 'Send image',
         icon: '#svg-icon-camera'
+    },
+    {
+        id: 'symbolTest0',
+        title: menuSymbolText[0],
+        icon: '#milSymbol_0'
+    },
+    {
+        id: 'symbolTest1',
+        title: menuSymbolText[1],
+        icon: '#milSymbol_1'
+    },
+    {
+        id: 'symbolTest2',
+        title: menuSymbolText[2],
+        icon: '#milSymbol_2'
     }
 ];
 
@@ -296,28 +318,27 @@ window.onload = function ()
             if ( item.id == "measure" ) {
                 distanceControlOpenButton();
             }
-            
-            
-
-            
-            
 		}
 	});
+    
 	document.getElementById('topRightMenuButton').addEventListener('click', function(event)
 	{
 		radialMenu.open();
 	});
+    
 	/*document.getElementById('closeMenu').addEventListener('click', function(event)
 	{
 		radialMenu.close();
 	});*/
     
-    // right click menu functions
-	const rightClickMenu = new RadialMenu(// 2nd RadialMenu with different {menuItems}
+    //
+    // Right click menu functions
+    // multiInnerRadius: 0.2,
+    // 
+	const rightClickMenu = new RadialMenu(
 		rightClickmenuItems,
-		200,
+        250,
 		{
-			multiInnerRadius: 0.2,
 			ui: {
 				classes: {
 					menuContainer: "menuHolder2",
@@ -343,7 +364,7 @@ window.onload = function ()
                      document.getElementById('rightMenuLon').innerHTML = "";
                 }
                 if ( item.id == "sendimage" ) {
-                    // Take location clicked
+                    // Take location clicked 
                     lat = document.getElementById('rightMenuLat').innerHTML;
                     lon = document.getElementById('rightMenuLon').innerHTML;
                     // Populate upload form with latitude, longitude
@@ -360,9 +381,9 @@ window.onload = function ()
 	});
     
     /*
-     * The contextmenu event fires when the user attempts to open a context menu. 
+     * "The contextmenu event fires when the user attempts to open a context menu. 
      * This event is typically triggered by clicking the right mouse button, 
-     * or by pressing the context menu key.
+     * or by pressing the context menu key."
      */
     
     //

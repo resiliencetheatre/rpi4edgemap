@@ -2120,12 +2120,63 @@ function uploadGeoJSON(sourceId = 'distanceGeoJsonSource') {
     document.getElementById('distance-value').innerHTML = '<div>Data uploaded</div>';
 }
 
+// Note: There is global menuSymbolText[] array bellow, which needs to match
+// given symbols codes.
+function generateRightMenuSymbolArray() {
+    
+    var menuSymbolCode=[];
+    menuSymbolCode[0] = "130411000011100000000000000000";
+    menuSymbolCode[1] = "130411000000000024001000000000";
+    menuSymbolCode[2] = "130425000028020000000000000000";
+    
+    var menuSymbols=[];
+    
+    for (let i = 0; i < menuSymbolCode.length; i++) {
+        // console.log("generateRightMenuSymbolArray(): ", menuSymbolCode[i]);
+        menuSymbols = new ms.Symbol(menuSymbolCode[i], {
+            size: 45,
+            dtg: "",
+            staffComments: "",
+            additionalInformation: "",
+            combatEffectiveness: "",
+            type: "",
+            padding: 0
+        }).asSVG();
+        
+        // Create a symbol element dynamically
+        var parser = new DOMParser();
+        var svgDoc = parser.parseFromString(menuSymbols, "image/svg+xml").documentElement;
+        // Wrap the SVG inside a <symbol> tag
+        var symbolElement = document.createElementNS("http://www.w3.org/2000/svg", "symbol");
+        var id_attribute = "milSymbol_" + i;
+        // console.log("generateRightMenuSymbolArray() id_attribute: ", id_attribute);
+        symbolElement.setAttribute("id", id_attribute);
+        symbolElement.setAttribute("viewBox", "0 0 50 55");
+        symbolElement.appendChild(svgDoc);
+        
+        var defsArray=[];
+        // Find or create the SVG container in the document
+        defsArray[i] = document.querySelector("svg#symbolDefs");
+        var id_symbolsAttribute = "symbolDefs_" + i;
+        if (!defsArray[i]) {
+            defsArray[i] = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            defsArray[i].setAttribute("id", id_symbolsAttribute);
+            defsArray[i].setAttribute("xmlns", "http://www.w3.org/2000/svg");
+            defsArray[i].style.display = "none";
+            document.body.appendChild(defsArray[i]);
+        }
+        // Append the new symbol
+        defsArray[i].appendChild(symbolElement);
+    }
+}
 
-
-
-
-
-
+// Global titles for right click menu
+// Feel free to implement this from generateRightMenuSymbolArray()
+// I did not know how to do it?
+var menuSymbolText=[];
+menuSymbolText[0] = "Medical";
+menuSymbolText[1] = "EOD";
+menuSymbolText[2] = "Mine";
 
 
 
