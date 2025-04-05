@@ -75,6 +75,15 @@
         <div id="distane-control-reset-button" onclick="distanceControlResetButton()"><center><i data-feather="trash"  class="feather-mesurementIcon"></i></center></div>
         <div id="distane-control-reset-button" onclick="distanceControlCloseButton()"><center><i data-feather="x-circle"  class="feather-mesurementIconRed"></i></center></div>
     </div>
+    
+    <div id="symbols-bar" class="symbols-bar-style">
+        <div id="symbols-value" class="symbols-value-style"></div>
+        <div id="symbols-control-reset-button" onclick="uploadGeoJSON('rightMenuSymbolGeoJsonSource')"><center><i data-feather="upload"  class="feather-mesurementIcon"></i></center></div> 
+        <div id="symbols-control-reset-button" onclick="downloadGeoJSON('rightMenuSymbolGeoJsonSource')"><center><i data-feather="download"  class="feather-mesurementIcon"></i></center></div>
+        <div id="symbols-control-reset-button" onclick="symbolsControlResetButton()"><center><i data-feather="trash"  class="feather-mesurementIcon"></i></center></div>
+        <div id="symbols-control-reset-button" onclick="symbolsControlCloseButton()"><center><i data-feather="x-circle"  class="feather-mesurementIconRed"></i></center></div>
+    </div>
+    
 
     <pre id="features"></pre>
     <pre id="coordinates" class="coordinates"></pre>

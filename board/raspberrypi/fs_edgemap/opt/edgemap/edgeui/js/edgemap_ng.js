@@ -2076,7 +2076,16 @@ function downloadGeoJSON(layerId = 'distanceGeoJsonSource') {
     
     const now = new Date();
     const timestamp = `${now.getDate().toString().padStart(2, '0')}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now.getFullYear()}-${now.getHours().toString().padStart(2, '0')}.${now.getMinutes().toString().padStart(2, '0')}.${now.getSeconds().toString().padStart(2, '0')}`;
-    const filename = `measured-route-${timestamp}.geojson`;
+    
+    file_prefix="";
+    if ( layerId == "distanceGeoJsonSource" ) {
+        file_prefix="measured-route";
+    }
+    if ( layerId == "rightMenuSymbolGeoJsonSource" ) {
+        file_prefix="symbols";
+    }
+    
+    const filename = `${file_prefix}-${timestamp}.geojson`;
     
     const geojsonStr = JSON.stringify(data, null, 2);
     const blob = new Blob([geojsonStr], { type: 'application/json' });
@@ -2232,8 +2241,28 @@ function addRightClickSymbol(lat,lon,symbolIndex) {
 }
 
 
+// symbolsBar
+function symbolsControlOpenButton() {
+    // distanceGeoJson.features = [];
+    // distanceLineString.geometry.coordinates = [];
+    // map.getSource('distanceGeoJsonSource').setData(distanceGeoJson);
+    document.getElementById('symbols-value').innerHTML = '<div>Symbol inserted</div>';
+    document.getElementById("symbols-bar").style.display = "flex";
+}
 
+function symbolsControlCloseButton() {
+    // distanceGeoJson.features = [];
+    // distanceLineString.geometry.coordinates = [];
+    // map.getSource('distanceGeoJsonSource').setData(distanceGeoJson);
+    document.getElementById("symbols-bar").style.display = "none";
+    distanceMeasurementActive = false;
+}
 
+function symbolsControlResetButton() {
+    rightMenuSymbolsGeoJson.features = [];
+    map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
+    document.getElementById('symbols-value').innerHTML = '<div></div>';
+}
 
 
 

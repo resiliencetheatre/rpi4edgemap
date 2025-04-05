@@ -376,21 +376,25 @@ window.onload = function ()
                     lat = document.getElementById('rightMenuLat').innerHTML;
                     lon = document.getElementById('rightMenuLon').innerHTML;
                     addRightClickSymbol(lat,lon,0);
+                    symbolsControlOpenButton();
                 }
                 if ( item.id == "symbol1" ) {
                     lat = document.getElementById('rightMenuLat').innerHTML;
                     lon = document.getElementById('rightMenuLon').innerHTML;
                     addRightClickSymbol(lat,lon,1);
+                    symbolsControlOpenButton();
                 }
                 if ( item.id == "symbol2" ) {
                     lat = document.getElementById('rightMenuLat').innerHTML;
                     lon = document.getElementById('rightMenuLon').innerHTML;
                     addRightClickSymbol(lat,lon,2);
+                    symbolsControlOpenButton();
                 }
                 if ( item.id == "symbol3" ) {
                     lat = document.getElementById('rightMenuLat').innerHTML;
                     lon = document.getElementById('rightMenuLon').innerHTML;
                     addRightClickSymbol(lat,lon,3);
+                    symbolsControlOpenButton();
                 }
             }
 	});
@@ -427,6 +431,9 @@ window.onload = function ()
 			return;
 		}
 		rightClickMenu.open(event.x, event.y);
+        // Open bar experiment
+        document.getElementById('symbols-value').innerHTML = '<div></div>';
+        symbolsControlOpenButton();
 	});
     
     //
@@ -451,6 +458,9 @@ window.onload = function ()
         timer = setTimeout(() => {
             // console.log("rightClickMenu.open() ", timer );
             rightClickMenu.open(event.touches[0].clientX, event.touches[0].clientY);
+            // Open bar experiment
+            document.getElementById('symbols-value').innerHTML = '<div></div>';
+            symbolsControlOpenButton();
             // Get the map container
             const mapContainer = document.getElementById('map');
             if (!mapContainer) {
