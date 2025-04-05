@@ -1415,6 +1415,59 @@
                 'filter': ['==', '$type', 'Point']
         });
         
+        
+        // Click to delete symbol
+        
+        map.on('click', 'rightClickSymbols', function (e) {
+            if (!e.features.length) return;
+
+            const feature = e.features[0];
+            const coordinates = feature.geometry.coordinates.slice();
+            const id = feature.properties.id;
+
+            // Create popup container
+            const popupNode = document.createElement('div');
+            popupNode.style.background = '#333';
+            popupNode.style.padding = '5px';
+            popupNode.style.borderRadius = '6px';
+            popupNode.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+            popupNode.style.display = 'flex';
+            popupNode.style.justifyContent = 'center';
+
+            // Create delete button
+            const deleteButton = document.createElement('button');
+            deleteButton.id = 'deleteSymbol';
+            deleteButton.innerText = 'Delete';
+            deleteButton.style.background = 'transparent';
+            deleteButton.style.border = '2px solid #0F0';
+            deleteButton.style.color = '#0F0';
+            deleteButton.style.borderRadius = '6px';
+            deleteButton.style.padding = '6px 12px';
+            deleteButton.style.cursor = 'pointer';
+
+            popupNode.appendChild(deleteButton);
+
+            const popup = new maplibregl.Popup({ offset: [0, -30] }) // 30px above point
+                .setLngLat(coordinates)
+                .setDOMContent(popupNode)
+                .addTo(map);
+
+            deleteButton.addEventListener('click', function () {
+                deleteFeatureFromGeoJsonSource(id);
+                popup.remove();
+            });
+        });
+
+        map.on('mouseenter', 'rightClickSymbols', () => {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+        map.on('mouseleave', 'rightClickSymbols', () => {
+            map.getCanvas().style.cursor = '';
+        });
+        
+        
+        
+        
         console.log("Map loaded.");
         map.setTerrain(null);
         loadCallSign();
@@ -1632,6 +1685,21 @@
                         map.setTerrain({ source: 'terrainSource' });
                     }
                 }
+            }
+            
+            // Info display
+            if ( key == "i" ) {
+                const targetDiv = document.getElementById("info-box");
+                targetDiv.style.display = "block";
+                const btn = document.getElementById("infobox-close");
+                const infoIcon = document.getElementById("info-icon");
+                btn.onclick = function () {
+                  if (targetDiv.style.display !== "none") {
+                    targetDiv.style.display = "none";
+                  } else {
+                    targetDiv.style.display = "block";
+                  }
+                };
             }
         }
     });

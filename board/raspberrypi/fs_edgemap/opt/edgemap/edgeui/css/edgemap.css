@@ -238,8 +238,9 @@ body { margin: 0; padding: 0;  }
 	transform: translate(-50%, -50%);
 	border-radius: 5px;
 	padding-top: 30px;
-	width: 80%;
-	height: 250px; 
+	width: 20%;
+    /* 250px */
+	height: 20%; 
 	font-size: 15px;	
 	opacity: 0.9;
 }
@@ -250,10 +251,10 @@ body { margin: 0; padding: 0;  }
 	background-color: #333;
 	color: #0f0;
 	position: absolute;
-	left: 10%;
-    right: 10%;
-	top: 10%;
-    bottom: 10px;
+	left: 20%;
+    right: 20%;
+	top: 15%;
+    bottom: 20px;
 	border-radius: 5px;
 	padding-top: 10px;
 	font-size: 15px;	

@@ -2213,33 +2213,23 @@ async function generateRightMenuSymbolArray(map) {
     }
 }
 
-// Global titles for right click menu
-// Feel free to implement this from generateRightMenuSymbolArray()
-// I did not know how to do it?
-// var menuSymbolText=[];
-/*
-menuSymbolText[0] = "Medical";
-menuSymbolText[1] = "EOD";
-menuSymbolText[2] = "Mine";
-*/
-
-function addRightClickSymbol(lat,lon,symbolIndex) {
+function addRightClickSymbol(lat, lon, symbolIndex) {
+    const featureId = String(Date.now());
     const point = {
-            'type': 'Feature',
-            'geometry': {
-                'type': 'Point',
-                'coordinates': [lon,lat]
-            },
-            'properties': {
-                'id': String(new Date().getTime()),
-                'text': menuSymbolText[symbolIndex],
-                'milSymbol': 'milSymbol_' + symbolIndex
-            }
-        };
-        rightMenuSymbolsGeoJson.features.push(point);
-        map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
+        'type': 'Feature',
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [lon, lat]
+        },
+        'properties': {
+            'id': featureId, // <- store id in properties
+            'text': menuSymbolText[symbolIndex],
+            'milSymbol': 'milSymbol_' + symbolIndex
+        }
+    };
+    rightMenuSymbolsGeoJson.features.push(point);
+    map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
 }
-
 
 // symbolsBar
 function symbolsControlOpenButton() {
@@ -2262,6 +2252,17 @@ function symbolsControlResetButton() {
     rightMenuSymbolsGeoJson.features = [];
     map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
     document.getElementById('symbols-value').innerHTML = '<div></div>';
+}
+
+
+function deleteFeatureFromGeoJsonSource(featureId) {
+    rightMenuSymbolsGeoJson.features = rightMenuSymbolsGeoJson.features.filter(
+    f => f.properties.id !== featureId
+    );
+    const source = map.getSource('rightMenuSymbolGeoJsonSource');
+    if (source) {
+        source.setData(rightMenuSymbolsGeoJson);
+    }
 }
 
 
