@@ -2246,7 +2246,7 @@ function symbolsControlOpenButton() {
     // distanceGeoJson.features = [];
     // distanceLineString.geometry.coordinates = [];
     // map.getSource('distanceGeoJsonSource').setData(distanceGeoJson);
-    document.getElementById('symbols-value').innerHTML = '<div>Symbol inserted</div>';
+    document.getElementById('symbols-value').innerHTML = '<div></div>';
     document.getElementById("symbols-bar").style.display = "flex";
 }
 

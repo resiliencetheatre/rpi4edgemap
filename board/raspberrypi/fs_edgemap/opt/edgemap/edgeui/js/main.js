@@ -377,24 +377,28 @@ window.onload = function ()
                     lon = document.getElementById('rightMenuLon').innerHTML;
                     addRightClickSymbol(lat,lon,0);
                     symbolsControlOpenButton();
+                    document.getElementById('symbols-value').innerHTML = '<div>'+menuSymbolText[0]+'</div>';
                 }
                 if ( item.id == "symbol1" ) {
                     lat = document.getElementById('rightMenuLat').innerHTML;
                     lon = document.getElementById('rightMenuLon').innerHTML;
                     addRightClickSymbol(lat,lon,1);
                     symbolsControlOpenButton();
+                    document.getElementById('symbols-value').innerHTML = '<div>'+menuSymbolText[1]+'</div>';
                 }
                 if ( item.id == "symbol2" ) {
                     lat = document.getElementById('rightMenuLat').innerHTML;
                     lon = document.getElementById('rightMenuLon').innerHTML;
                     addRightClickSymbol(lat,lon,2);
                     symbolsControlOpenButton();
+                    document.getElementById('symbols-value').innerHTML = '<div>'+menuSymbolText[2]+'</div>';
                 }
                 if ( item.id == "symbol3" ) {
                     lat = document.getElementById('rightMenuLat').innerHTML;
                     lon = document.getElementById('rightMenuLon').innerHTML;
                     addRightClickSymbol(lat,lon,3);
                     symbolsControlOpenButton();
+                    document.getElementById('symbols-value').innerHTML = '<div>'+menuSymbolText[3]+'</div>';
                 }
             }
 	});
