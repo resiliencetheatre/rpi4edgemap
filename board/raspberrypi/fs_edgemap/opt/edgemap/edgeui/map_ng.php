@@ -450,7 +450,7 @@
     var distanceGeoJson;
     var distanceLineString;
     
-    // geojson url
+    // geojson url for node links
     var geojsonUrl = 'meshtastic_geojson.php?linkline=1';
     var geoJsonLayerActive = true;
 	
@@ -474,7 +474,7 @@
 	var lastDraggedMarkerId;
 
 	//
-	// Generate random callsign for a demo
+	// Generate random callsign for a demo (not in use)
     // 
 	var callSign = genCallSign();
 	document.getElementById('myCallSign').value = callSign;
@@ -1220,7 +1220,7 @@
     }, 30000 );
 
     //
-    // Interval loading function for geojson
+    // Interval loading function for node links geojson
     //
     var mapLoaded = false;
     var request = new XMLHttpRequest();
@@ -1333,8 +1333,6 @@
             // showTails();
         }
         
-        
-        
         // Distance distanceGeoJson source
         map.addSource('distanceGeoJsonSource', {
             'type': 'geojson',
@@ -1420,7 +1418,8 @@
         }, 15000 );
         showTails();
         
-        // Generate Milsymbols for right click menu
+        // Generate milsymbols for right click menu, remember to 
+        // re-run this if you change symbols on fly later.
         generateRightMenuSymbolArray(map);
         
     });

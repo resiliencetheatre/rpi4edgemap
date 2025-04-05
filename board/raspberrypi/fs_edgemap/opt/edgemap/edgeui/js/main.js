@@ -1,6 +1,8 @@
 'use strict';
-
-/* Add if needed:
+/* 
+ * radialmenus - note that edgemap_ng.js needs to be loaded first
+ * 
+ * Add if needed:
  * 
     {
         id   : 'distress',
@@ -8,7 +10,7 @@
         icon: '#svg-icon-distress'
     },
   
- */
+*/
 var menuItems = [
     {
         id   : 'setlocation',
@@ -155,16 +157,9 @@ var menuItems = [
                 id   : 'poweroff',
                 title: 'Power off',
                 icon: '#svg-icon-poweroff'
-            },
-            
-            
-            
-            
+            },      
         ]
     },
-    
-    
-    
     {
         id: 'message',
         title: 'Message',
@@ -172,10 +167,6 @@ var menuItems = [
         
     }
 ];
-
-
-
-
 
 //
 // Right click menu
@@ -207,6 +198,11 @@ var rightClickmenuItems = [
         id: 'symbol2',
         title: menuSymbolText[2],
         icon: '#milSymbol_2'
+    },
+    {
+        id: 'symbol3',
+        title: menuSymbolText[3],
+        icon: '#milSymbol_3'
     }
 ];
 
@@ -333,7 +329,6 @@ window.onload = function ()
     
     //
     // Right click menu functions
-    // multiInnerRadius: 0.2,
     // 
 	const rightClickMenu = new RadialMenu(
 		rightClickmenuItems,
@@ -378,28 +373,24 @@ window.onload = function ()
                     document.getElementById('rightMenuLon').innerHTML = "";
                 }
                 if ( item.id == "symbol0" ) {
-                    // Take location clicked 
                     lat = document.getElementById('rightMenuLat').innerHTML;
                     lon = document.getElementById('rightMenuLon').innerHTML;
-                    
-                    console.log("Inserting symbol0 to: ",lat,lon);
                     addRightClickSymbol(lat,lon,0);
-                    
-                    
                 }
                 if ( item.id == "symbol1" ) {
-                    // Take location clicked 
                     lat = document.getElementById('rightMenuLat').innerHTML;
                     lon = document.getElementById('rightMenuLon').innerHTML;
-                    console.log("Inserting symbol0 to: ",lat,lon);
                     addRightClickSymbol(lat,lon,1);
                 }
                 if ( item.id == "symbol2" ) {
-                    // Take location clicked 
                     lat = document.getElementById('rightMenuLat').innerHTML;
                     lon = document.getElementById('rightMenuLon').innerHTML;
-                    console.log("Inserting symbol0 to: ",lat,lon);
                     addRightClickSymbol(lat,lon,2);
+                }
+                if ( item.id == "symbol3" ) {
+                    lat = document.getElementById('rightMenuLat').innerHTML;
+                    lon = document.getElementById('rightMenuLon').innerHTML;
+                    addRightClickSymbol(lat,lon,3);
                 }
             }
 	});

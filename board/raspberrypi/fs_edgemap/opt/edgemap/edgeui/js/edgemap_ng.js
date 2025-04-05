@@ -2141,20 +2141,25 @@ function svgToImageBitmap(svgString, width, height) {
 }
 
 
-// Note: There is global menuSymbolText[] array bellow, which needs to match
-// given symbols codes.
+// We have to define here, because edgemap_ng.js is loaded before main.js
+var menuSymbolText=[];
+menuSymbolText[0] = "Medical";
+menuSymbolText[1] = "EOD";
+menuSymbolText[2] = "Mine";
+menuSymbolText[3] = "Water";
+
+// Generate milsymbols for radialmenu (svg) and geojson (png)
 async function generateRightMenuSymbolArray(map) {
     
+    var menuSymbols=[];
     var menuSymbolCode=[];
     menuSymbolCode[0] = "130411000011100000000000000000";
     menuSymbolCode[1] = "130411000000000024001000000000";
     menuSymbolCode[2] = "130425000028020000000000000000";
-    
-    var menuSymbols=[];
+    menuSymbolCode[3] = "130311000000000036001000000000";
     
     for (let i = 0; i < menuSymbolCode.length; i++) {
-        // console.log("generateRightMenuSymbolArray(): ", menuSymbolCode[i]);
-        // size 40
+        // Size here determines size on menu
         menuSymbols = new ms.Symbol(menuSymbolCode[i], {
             size: 30,
             dtg: "",
@@ -2173,8 +2178,8 @@ async function generateRightMenuSymbolArray(map) {
         var id_attribute = "milSymbol_" + i;
         // console.log("generateRightMenuSymbolArray() id_attribute: ", id_attribute);
         symbolElement.setAttribute("id", id_attribute);
-        // symbolElement.setAttribute("viewBox", "0 0 50 55");
-        symbolElement.setAttribute("viewBox", "0 0 35 40");
+        // viewBox has to match SVG size
+        symbolElement.setAttribute("viewBox", "0 0 50 50");
         symbolElement.appendChild(svgDoc);
         
         var defsArray=[];
@@ -2190,10 +2195,8 @@ async function generateRightMenuSymbolArray(map) {
         }
         // Append the new symbol (for radialmenu use)
         defsArray[i].appendChild(symbolElement);
-        
-        // Add images for geojson layer
-        // const bitmap = await svgToImageBitmap(menuSymbols, 55, 55);
-        const bitmap = await svgToImageBitmap(menuSymbols, 45, 45);
+        // Add bitmap images for map so geojson layer can show them
+        const bitmap = await svgToImageBitmap(menuSymbols, 50, 50);
         const imageId = "milSymbol_" + i;
         if (!map.hasImage(imageId)) {
             map.addImage(imageId, bitmap);
@@ -2204,10 +2207,12 @@ async function generateRightMenuSymbolArray(map) {
 // Global titles for right click menu
 // Feel free to implement this from generateRightMenuSymbolArray()
 // I did not know how to do it?
-var menuSymbolText=[];
+// var menuSymbolText=[];
+/*
 menuSymbolText[0] = "Medical";
 menuSymbolText[1] = "EOD";
 menuSymbolText[2] = "Mine";
+*/
 
 function addRightClickSymbol(lat,lon,symbolIndex) {
     const point = {
