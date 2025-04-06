@@ -203,6 +203,11 @@ var rightClickmenuItems = [
         id: 'symbol3',
         title: menuSymbolText[3],
         icon: '#milSymbol_3'
+    },
+    {
+        id: 'symbol4',
+        title: menuSymbolText[4],
+        icon: '#milSymbol_4'
     }
 ];
 
@@ -399,6 +404,13 @@ window.onload = function ()
                     addRightClickSymbol(lat,lon,3);
                     symbolsControlOpenButton();
                     document.getElementById('symbols-value').innerHTML = '<div>'+menuSymbolText[3]+'</div>';
+                }
+                if ( item.id == "symbol4" ) {
+                    lat = document.getElementById('rightMenuLat').innerHTML;
+                    lon = document.getElementById('rightMenuLon').innerHTML;
+                    addRightClickSymbol(lat,lon,4);
+                    symbolsControlOpenButton();
+                    document.getElementById('symbols-value').innerHTML = '<div>'+menuSymbolText[4]+'</div>';
                 }
             }
 	});
