@@ -487,7 +487,7 @@ function submitImage() {
        if ( payload != "" ) {
             var notifyMessagePayload="Image sent";
             
-            // This is placeholder demo to display image uploaded on map locally
+            // This is placeholder demo to display image uploaded on map locally.
             // In real life, we need either use centralized edgemap entity where everyone
             // connects and show pictures from there or transport pictures to other nodes.
             // Since we are using meshtastastic to deliver message payloads, image transport
@@ -2157,7 +2157,7 @@ menuSymbolText[1] = "EOD";
 menuSymbolText[2] = "Mine";
 menuSymbolText[3] = "Water";
 
-// Generate milsymbols for radialmenu (svg) and geojson (png)
+// Generate milsymbols for radialmenu (svg) and geojson (bitmap)
 async function generateRightMenuSymbolArray(map) {
     
     var menuSymbols=[];
@@ -2204,6 +2204,7 @@ async function generateRightMenuSymbolArray(map) {
         }
         // Append the new symbol (for radialmenu use)
         defsArray[i].appendChild(symbolElement);
+        
         // Add bitmap images for map so geojson layer can show them
         const bitmap = await svgToImageBitmap(menuSymbols, 50, 50);
         const imageId = "milSymbol_" + i;
@@ -2231,19 +2232,13 @@ function addRightClickSymbol(lat, lon, symbolIndex) {
     map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
 }
 
-// symbolsBar
+// symbolsBar functions
 function symbolsControlOpenButton() {
-    // distanceGeoJson.features = [];
-    // distanceLineString.geometry.coordinates = [];
-    // map.getSource('distanceGeoJsonSource').setData(distanceGeoJson);
     document.getElementById('symbols-value').innerHTML = '<div></div>';
     document.getElementById("symbols-bar").style.display = "flex";
 }
 
 function symbolsControlCloseButton() {
-    // distanceGeoJson.features = [];
-    // distanceLineString.geometry.coordinates = [];
-    // map.getSource('distanceGeoJsonSource').setData(distanceGeoJson);
     document.getElementById("symbols-bar").style.display = "none";
     distanceMeasurementActive = false;
 }
@@ -2254,7 +2249,7 @@ function symbolsControlResetButton() {
     document.getElementById('symbols-value').innerHTML = '<div></div>';
 }
 
-
+// Click to delete for right click symbols
 function deleteFeatureFromGeoJsonSource(featureId) {
     rightMenuSymbolsGeoJson.features = rightMenuSymbolsGeoJson.features.filter(
     f => f.properties.id !== featureId

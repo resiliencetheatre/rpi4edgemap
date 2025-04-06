@@ -401,7 +401,7 @@
              |___/                     |_|   
 
     Simple Edgemap user interface for off the grid browser use
-    Copyright (C) 2023 Resilience Theatre
+    Copyright (C) 2023 - 2025 Resilience Theatre
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -423,10 +423,21 @@
     * Full world terrain.
     * Milsymbols as DOM element [1]
     * CoT targets from Taky via geojson
-    * Sniper control demo (not enabled)
     * Protomaps OSM planet and raster satellite sources [3]
     * Requires gwsocket and tacmsgrouter for full messaging demo
-
+    * Language change on fly
+    * Distance measurement
+    * Click to coordinates display
+    * Coordinates copy to clipboard with clicking coordinate display field
+    * Messaging and drop in marker shared over msg channel
+    * GeoJson symbols stored in text file with inbuilt text editor
+    * GeoJson symbols as right click menu drop in, with delete
+    * GeoJson layers download/upload for saving and restoring
+    * Own location via locally connected GPS (gpsd) 
+    * Own location with manual setting with right click menu
+    * Image upload to map location via right click menu
+    * Image upload to own location (browser location) (disabled)
+    
     [1] https://www.spatialillusions.com/milsymbol/documentation.html
     [2] https://maplibre.org/maplibre-gl-js/docs/API/
     [3] https://protomaps.com/
@@ -823,7 +834,9 @@
                notifyMessage( "Node start: " + msgMessage, 5000);                   
             }
             //
-            // Join message demo
+            // Join message demo. This was used when multiple users use
+            // same Web UI as centralized server. Not currently on scope
+            // on embedded web ui.
             //
             /*
             if ( msgType === "joinMessage" ) {
@@ -1110,36 +1123,6 @@
     document.getElementById('messagingSocketStatusRed').style="display:none;";
     document.getElementById('statusSocketStatusRed').style="display:none;";
 
-    //
-    // 'info window' open and close logic
-    //
-    /*
-    const targetDiv = document.getElementById("info-box");
-    const btn = document.getElementById("infobox-close");
-    const infoIcon = document.getElementById("info-icon");
-    btn.onclick = function () {
-      if (targetDiv.style.display !== "none") {
-        targetDiv.style.display = "none";
-      } else {
-        targetDiv.style.display = "block";
-      }
-    };
-    infoIcon.onclick = function () {
-      if ( targetDiv.style.display == "" )
-      {
-          targetDiv.style.display = "block";
-      } else {
-          if (targetDiv.style.display !== "none" ) {
-            targetDiv.style.display = "none";
-          } else {
-            targetDiv.style.display = "block";
-          }
-        }
-    };*/
-	
-    //
-    // 'log-window' open and close logic variables
-    //
     const logIcon = document.getElementById("log-icon");
     const logDiv = document.getElementById("log-window");
     const bottomBarDiv = document.getElementById("bottomBar");
@@ -1255,6 +1238,8 @@
                             return;
                         }
                         var name;
+                        
+                        /* Remove this commented out block if code bellow works and handles errors in JSON
                         var another = JSON.parse(this.response, function (key, value) {			
                             if ( key == "targetName" ) {
                                 
@@ -1277,6 +1262,52 @@
                                 updateImage(name, value, roundedAgeString );
                             }
                         });
+                        */
+                        
+                        // Trying to catch errors on JSON
+                        try {
+                            var another = JSON.parse(this.response, function (key, value) {
+                                try {
+                                    if (key === "targetName") {
+                                        if (typeof value !== "string") return undefined; // Skip if not valid string
+                                        name = value;
+                                        if (!map.hasImage(value)) {
+                                            createImage(value);
+                                        }
+                                    }
+
+                                    if (key === "time-stamp") {
+                                        if (isNaN(Date.parse(value))) return undefined; // Skip if timestamp is invalid
+                                        let currentTime = new Date();
+                                        let expireTime = new Date(value);
+                                        let ageSeconds = (currentTime - expireTime) / 1000;
+                                        let roundedAge = Math.round(ageSeconds);
+                                        let roundedAgeString = roundedAge.toString();
+                                        updateImage(name, value, roundedAgeString);
+                                    }
+                                } catch (e) {
+                                    console.warn(`Error handling key "${key}":`, e);
+                                    return undefined; // Skip processing this key-value pair
+                                }
+
+                                return value; // Always return value unless skipping
+                            });
+                        } catch (e) {
+                            console.error("Failed to parse JSON:", e);
+                            // Optionally: show fallback UI or silently ignore
+                        }
+
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
                         //
                         // Second: set 'json' to 'drone' source.
                         //
@@ -1306,7 +1337,6 @@
         fadeIn(document.getElementById("platform_help") ,1000);
         fadeIn(document.getElementById("platform_logo") ,1000);
         if ( geoJsonLayerActive  ) {
-            console.log("Activating geojson layer")
             // 
             // 'drone' is target layer for geojson data
             // TODO: Calculating icon-offset for symbology text changes 
@@ -1373,12 +1403,7 @@
             filter: ['in', '$type', 'LineString']
         });
         
-        
-        // 
-        // Right menu inserted symbols geoJson
-        // 
-        
-        // GeoJSON object to hold right click symbols
+        // Right menu symbols geoJson
         rightMenuSymbolsGeoJson = {
             'type': 'FeatureCollection',
             'features': []
@@ -1387,7 +1412,6 @@
             'type': 'geojson',
             'data': rightMenuSymbolsGeoJson
         });
-        
         map.addLayer({
             'id': 'rightClickSymbols',
             'type': 'symbol',
@@ -1415,9 +1439,7 @@
                 'filter': ['==', '$type', 'Point']
         });
         
-        
         // Click to delete symbol
-        
         map.on('click', 'rightClickSymbols', function (e) {
             if (!e.features.length) return;
 
@@ -1428,7 +1450,7 @@
             // Create popup container
             const popupNode = document.createElement('div');
             popupNode.style.background = '#333';
-            popupNode.style.padding = '5px';
+            popupNode.style.padding = '2px';
             popupNode.style.borderRadius = '6px';
             popupNode.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
             popupNode.style.display = 'flex';
@@ -1465,9 +1487,6 @@
             map.getCanvas().style.cursor = '';
         });
         
-        
-        
-        
         console.log("Map loaded.");
         map.setTerrain(null);
         loadCallSign();
@@ -1486,9 +1505,7 @@
         
     });
     
-    // 
     // map feature debug if off by default (use D to enable)
-    //
     document.getElementById('features').style.display = 'none';     
     
     // ====================================
@@ -1577,9 +1594,8 @@
                 document.getElementById("copyNotifyText").innerHTML = "";
                 document.getElementById("coordinateComma").innerHTML = ",";
                 if ( document.getElementById("mapClickLatlonSection").style.visibility != "visible") {
-                    fadeIn( document.getElementById("mapClickLatlonSection"), 400 );
+                    fadeInTo09( document.getElementById("mapClickLatlonSection"), 400, 0.9);
                 }
-              
                 if ( unknownSensorCreateInProgress == 1 ) {
                     document.getElementById('sensorLon').innerHTML = uLon.substring(0,10);
                 }
@@ -1641,8 +1657,7 @@
                    openReticulumList();
                }
             }
-            
-            
+
             // Enable map features debugging if needed
             if (key === "D") {
                 if ( isHidden(logDiv) ) { 
@@ -1666,7 +1681,6 @@
             if (key === "Escape") {
                 document.getElementById('coordinateInput').value="";   
                 if ( !isHidden(coordinateEntryBoxDiv) ) closeCoordinateSearchEntryBox();
-                // if ( !isHidden(languageSelectDialogDiv) ) closeLanguageSelectBox(); // REMOVE
                 if ( !isHidden(logDiv) ) closeMessageEntryBox();
                 if ( !isHidden(radiolistblockDiv) ) closeRadioList();
                 if ( !isHidden(reticulumListblockDiv) ) closeReticulumList();
@@ -1705,20 +1719,18 @@
     });
     
     //
-    // Distance
-    // ========
+    // Distance measurement
+    // 
     const distanceValueContainer = document.getElementById('distance-value');
     distanceMeasurementActive = false;
 
     // GeoJSON object to hold our measurement features
-    // const
     distanceGeoJson = {
         'type': 'FeatureCollection',
         'features': []
     };
 
     // Used to draw a line between points
-    // const
      distanceLineString = {
         'type': 'Feature',
         'geometry': {
@@ -1731,15 +1743,12 @@
     map.on('click', (e) => {
         
         if ( mapLoaded && distanceMeasurementActive ) {
-        
             const features = map.queryRenderedFeatures(e.point, {
                 layers: ['measure-points']
             });
-
             // Remove the distanceLineString from the group
             // So we can redraw it based on the points collection
             if (distanceGeoJson.features.length > 1) distanceGeoJson.features.pop();
-
             // Clear the Distance container to populate it with a new value
             distanceValueContainer.innerHTML = '';
 
@@ -1775,16 +1784,12 @@
                 value.textContent = `${ turf.length(distanceLineString).toLocaleString() } km`;
                 distanceValueContainer.appendChild(value);
             }
-
             map.getSource('distanceGeoJsonSource').setData(distanceGeoJson);
-            // console.log( map.getSource('distanceGeoJsonSource').serialize() ); 
         }
         
-        });
+    });
     
-
     map.on('mousemove', (e) => {
-        
         if ( mapLoaded && distanceMeasurementActive ) {
             const features = map.queryRenderedFeatures(e.point, {
                 layers: ['measure-points']

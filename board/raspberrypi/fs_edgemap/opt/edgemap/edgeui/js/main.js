@@ -1,6 +1,6 @@
 'use strict';
 /* 
- * radialmenus - note that edgemap_ng.js needs to be loaded first
+ * radialmenus - NOTE: edgemap_ng.js needs to be loaded first
  * 
  * Add if needed:
  * 
@@ -435,7 +435,7 @@ window.onload = function ()
 			return;
 		}
 		rightClickMenu.open(event.x, event.y);
-        // Open bar experiment
+        // Open symbolsBar
         document.getElementById('symbols-value').innerHTML = '<div></div>';
         symbolsControlOpenButton();
 	});
@@ -462,7 +462,7 @@ window.onload = function ()
         timer = setTimeout(() => {
             // console.log("rightClickMenu.open() ", timer );
             rightClickMenu.open(event.touches[0].clientX, event.touches[0].clientY);
-            // Open bar experiment
+            // Open symbolsBar
             document.getElementById('symbols-value').innerHTML = '<div></div>';
             symbolsControlOpenButton();
             // Get the map container
