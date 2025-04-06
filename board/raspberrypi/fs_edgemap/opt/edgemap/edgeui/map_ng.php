@@ -1079,20 +1079,15 @@
             var trimmedString = incomingMessage.substring(0, 80);
             const nodeArray = trimmedString.split(",");
             
-            // Meshtastic NG - addming meshtatic location reading into soup
-            // meshpipe_ng.py sends this:
-            // meshtasticmessage = "peernode," + fromIdent + "," + str(DeviceBat) + "," + str(DeviceAirUtilTx) + "," + str(DeviceRxSnr) + "," + str(DeviceHopLimit) + "," + str(DeviceRxRssi) + "," + str( DeviceMeshtasticLatitude ) + "," + str( DeviceMeshtasticLongitude ) + "," + str( DeviceMeshtasticPdop ) + "," + str( DeviceMeshtasticGroundSpeed ) + "," + str( DeviceMeshtasticSatsInView ) + "," + str( DeviceMeshtasticPrecisionBits )
-            
+            // Meshtastic NG - adding meshtatic location reading into soup
             if ( nodeArray[0] === "peernode" )
             {
-                
-                // NG:
-                // Next we need to do geoJson layer of meshtatic located nodes. Don't mix them with edgemap GPS positioned ones.
-                console.log("NG meshtasticRadiosOnSystem.add(): ",  nodeArray[1], Math.round(+new Date()/1000),nodeArray[2],nodeArray[3],nodeArray[4],nodeArray[5],nodeArray[6],nodeArray[7],nodeArray[8],nodeArray[9],nodeArray[10],nodeArray[11],nodeArray[12] );
                 meshtasticRadiosOnSystem.add( nodeArray[1], Math.round(+new Date()/1000),nodeArray[2],nodeArray[3],nodeArray[4],nodeArray[5],nodeArray[6],nodeArray[7],nodeArray[8],nodeArray[9],nodeArray[10],nodeArray[11],nodeArray[12] );
-               
-                // Old:
-                // meshtasticRadiosOnSystem.add( nodeArray[1], Math.round(+new Date()/1000),nodeArray[2],nodeArray[3],nodeArray[4],nodeArray[5],nodeArray[6] );
+                // If we have SN, latitude and longitude, we could update geoJson
+                if ( nodeArray[1] != "-" && nodeArray[7] != "-" && nodeArray[8] != "-" ) {
+                    console.log("updateMeshtasticNodesToMap(): ", nodeArray[1], nodeArray[7], nodeArray[8]);
+                    updateMeshtasticNodesToMap( nodeArray[1], nodeArray[7], nodeArray[8] );
+                }
                 updateMeshtasticRadioListBlock(); 
             }
             
@@ -1251,31 +1246,6 @@
                         }
                         var name;
                         
-                        /* Remove this commented out block if code bellow works and handles errors in JSON
-                        var another = JSON.parse(this.response, function (key, value) {			
-                            if ( key == "targetName" ) {
-                                
-                                name = value;
-                                if ( !map.hasImage( value ) ) {
-                                    createImage( value );
-                                }
-                            }
-                            // Update image with timestamp
-                            // NOTE: this is not active in demo
-                            if ( key == "time-stamp" ) {
-                                // Test to calculate 'age' of fix. Not in use.
-                                // Note: cotsim, curlcot does not provide time
-                                // on test tracks! Just location.
-                                let currentTime = new Date();
-                                let expireTime = new Date(value);
-                                let ageSeconds = (currentTime - expireTime ) / (1000 );
-                                roundedAge = Math.round(ageSeconds);
-                                roundedAgeString = roundedAge.toString();
-                                updateImage(name, value, roundedAgeString );
-                            }
-                        });
-                        */
-                        
                         // Trying to catch errors on JSON
                         try {
                             var another = JSON.parse(this.response, function (key, value) {
@@ -1309,18 +1279,6 @@
                             // Optionally: show fallback UI or silently ignore
                         }
 
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        //
                         // Second: set 'json' to 'drone' source.
                         // TODO: Do error handling here as well
                         var json = JSON.parse(this.response);
@@ -1498,6 +1456,47 @@
         map.on('mouseleave', 'rightClickSymbols', () => {
             map.getCanvas().style.cursor = '';
         });
+        
+        
+        // Meshtastic units geoJson
+        // This are positions from meshtastic internal GPS (or fixed position)
+        meshtasticGeoJson = {
+            'type': 'FeatureCollection',
+            'features': []
+        };
+        map.addSource('meshtasticGeoJsonSource', {
+            'type': 'geojson',
+            'data': meshtasticGeoJson
+        });
+        map.addLayer({
+            'id': 'meshtasticNodes',
+            'type': 'symbol',
+            'source': 'meshtasticGeoJsonSource',
+            'layout': {
+                'icon-image': ['get', 'milSymbol'], 
+                'icon-anchor': 'center',
+                'icon-offset': [0,0],   
+                'icon-allow-overlap': true,
+                'icon-ignore-placement': true, 
+                'text-allow-overlap': true,
+                'text-field': ['get', 'text'],
+                'text-font': [
+                'Noto Sans Regular'
+                ],
+                'text-offset': [0, 1.3],
+                'text-anchor': 'top',
+                'text-size': 18
+                },
+                'paint': {
+                  "text-color": "#00274D",
+                  "text-halo-color": "#FFFFFF",
+                  "text-halo-width": 2,
+                  "text-halo-blur": 1
+                },
+                'filter': ['==', '$type', 'Point']
+        });
+        // Generate bitmap for meshtastic geojson units
+        generateMeshtasticIcon(map);
         
         console.log("Map loaded.");
         map.setTerrain(null);

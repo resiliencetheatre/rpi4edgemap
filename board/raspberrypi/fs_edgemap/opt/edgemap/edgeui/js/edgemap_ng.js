@@ -2297,8 +2297,59 @@ function deleteFeatureFromGeoJsonSource(featureId) {
 
 
 
+// Add or update meshtastic node to meshtasticGeoJson
+function updateMeshtasticNodesToMap(unitSerial, unitLatitude, unitLongitude) {
+    const featureId = unitSerial;
 
+    // Check if the feature already exists
+    let existingFeature = meshtasticGeoJson.features.find(
+        (f) => f.properties.id === featureId
+    );
 
+    if (existingFeature) {
+        // Update coordinates if feature exists
+        existingFeature.geometry.coordinates = [unitLongitude, unitLatitude];
+    } else {
+        // Create and push a new feature if it doesn't exist
+        const newFeature = {
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: [unitLongitude, unitLatitude]
+            },
+            properties: {
+                id: featureId, // ID stored in properties
+                text: unitSerial.toUpperCase(),
+                milSymbol: 'meshtasticSymbol'
+            }
+        };
+        meshtasticGeoJson.features.push(newFeature);
+    }
+
+    // Update the source data
+    map.getSource('meshtasticGeoJsonSource').setData(meshtasticGeoJson);
+}
+
+// Generate milsymbol for meshtastic
+async function generateMeshtasticIcon(map) {
+    var meshtasticMilSymbol;
+    var meshtasticMilSymbolCode = "130410000000000000000000000000";
+    meshtasticMilSymbol = new ms.Symbol(meshtasticMilSymbolCode, {
+        size: 30,
+        dtg: "",
+        staffComments: "",
+        additionalInformation: "",
+        combatEffectiveness: "",
+        type: "",
+        padding: 5
+    }).asSVG();
+    // Add bitmap images for map so geojson layer can show it
+    const bitmap = await svgToImageBitmap(meshtasticMilSymbol, 50, 50);
+    const imageId = "meshtasticSymbol";
+    if (!map.hasImage(imageId)) {
+        map.addImage(imageId, bitmap);
+    }
+}
 
 
 
