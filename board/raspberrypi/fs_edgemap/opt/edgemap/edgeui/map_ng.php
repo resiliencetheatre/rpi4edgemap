@@ -65,6 +65,8 @@
         <img class="modal-content" id="img01">
         <div id="caption"></div>
     </div>
+    
+    <div id="mapStatus" class="bottom-center-text">SIMULATION DATA DISPLAYED</div>
 
     <div id="map"></div>
 
@@ -1310,7 +1312,7 @@
                         
                         //
                         // Second: set 'json' to 'drone' source.
-                        //
+                        // TODO: Do error handling here as well
                         var json = JSON.parse(this.response);
                         if (  map.getSource('drone') ) {
                             map.getSource('drone').setData(json);

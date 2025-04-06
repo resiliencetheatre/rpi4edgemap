@@ -1829,7 +1829,18 @@ body {
     flex-grow: 1; /* Allows the distance value to take available space */
 }
 
-
+.bottom-center-text {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #F00;
+  opacity: 0.8;
+  font-size: 20px;
+  text-align: center;
+  padding: 10px;
+  z-index: 10;
+}
 
 
 
