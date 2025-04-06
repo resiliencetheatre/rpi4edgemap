@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 #
-# meshpipe (NG) - piping messages to/from FIFO over meshtastic radio
-#
-# NG version reads also Meshtastic locations and delivers them as part
-# of peernode message to map_ng.php. 
+# meshpipe - piping messages to/from FIFO over meshtastic radio
 #
 # Copyright (c) Resilience Theatre, 2024
 # Copyright (c) 2021, datagod
@@ -126,12 +123,6 @@ def DecodePacket(PacketParent,Packet):
   global DeviceRxSnr
   global DeviceHopLimit
   global DeviceRxRssi
-  global DeviceMeshtasticLatitude
-  global DeviceMeshtasticLongitude
-  global DeviceMeshtasticPdop
-  global DeviceMeshtasticGroundSpeed
-  global DeviceMeshtasticSatsInView
-  global DeviceMeshtasticPrecisionBits
   
   if isinstance(Packet, collections.abc.Mapping):
 
@@ -145,10 +136,7 @@ def DecodePacket(PacketParent,Packet):
             pass
         else:
           if not isinstance(Value, bytes):
-            
-            # Use this to see what your meshtastic device provides:
             # print("{: <20} {: <20}".format(Key,Value))
-            
             if(Key=='batteryLevel'):
                 DeviceBat = Value
             if(Key=='airUtilTx'):
@@ -159,18 +147,8 @@ def DecodePacket(PacketParent,Packet):
                 DeviceHopLimit = Value
             if(Key=='rxRssi'):
                 DeviceRxRssi = Value
-            if(Key=='latitude'):
-                DeviceMeshtasticLatitude = Value
-            if(Key=='longitude'):
-                DeviceMeshtasticLongitude = Value                
-            if(Key=='PDOP'):
-                DeviceMeshtasticPdop = Value
-            if(Key=='groundSpeed'):
-                DeviceMeshtasticGroundSpeed = Value
-            if(Key=='satsInView'):
-                DeviceMeshtasticSatsInView = Value
-            if(Key=='precisionBits'):
-                DeviceMeshtasticPrecisionBits = Value
+           
+
   else:
       print('Warning: Not a packet!\n')
   
@@ -192,20 +170,6 @@ def onReceive(packet, interface):
     DeviceRxSnr=None
     DeviceHopLimit=None
     DeviceRxRssi=None
-    # Meshtastic
-    global DeviceMeshtasticLatitude
-    global DeviceMeshtasticLongitude
-    global DeviceMeshtasticPdop
-    global DeviceMeshtasticGroundSpeed
-    global DeviceMeshtasticSatsInView
-    global DeviceMeshtasticPrecisionBits
-    # set to None for later evaluation
-    DeviceMeshtasticLatitude=None
-    DeviceMeshtasticLongitude=None
-    DeviceMeshtasticPdop=None
-    DeviceMeshtasticGroundSpeed=None
-    DeviceMeshtasticSatsInView=None
-    DeviceMeshtasticPrecisionBits=None
     
     PacketsReceived = PacketsReceived + 1
     Decoded  = packet.get('decoded')
@@ -225,7 +189,6 @@ def onReceive(packet, interface):
             fromIdent = fromIdentString[1:]
     
             if(fromIdent):
-                
                 # print('** Packet from: {}'.format(fromIdent))
                 # print('** battery: {}'.format(DeviceBat))
                 # print('** air util: {}'.format( DeviceAirUtilTx ))
@@ -245,25 +208,7 @@ def onReceive(packet, interface):
                 if DeviceRxRssi is None: 
                     DeviceRxRssi='-'
                 
-                # Meshtastic
-                if DeviceMeshtasticLatitude is None:
-                    DeviceMeshtasticLatitude='-'
-                if DeviceMeshtasticLongitude is None:
-                    DeviceMeshtasticLongitude='-'
-                if DeviceMeshtasticPdop is None:
-                    DeviceMeshtasticPdop='-'
-                if DeviceMeshtasticGroundSpeed is None:
-                    DeviceMeshtasticGroundSpeed='-'
-                if DeviceMeshtasticSatsInView is None:
-                    DeviceMeshtasticSatsInView='-'
-                if DeviceMeshtasticPrecisionBits is None:
-                    DeviceMeshtasticPrecisionBits='-'
-                
-                # Question is: how to use meshtastic data? database or just UI ?
-                # I have strong feeling that we could add this information to peernode message
-                # 
-                # meshtasticmessage = "peernode," + fromIdent + "," + str(DeviceBat) + "," + str(DeviceAirUtilTx) + "," + str(DeviceRxSnr) + "," + str(DeviceHopLimit) + "," + str(DeviceRxRssi)
-                meshtasticmessage = "peernode," + fromIdent + "," + str(DeviceBat) + "," + str(DeviceAirUtilTx) + "," + str(DeviceRxSnr) + "," + str(DeviceHopLimit) + "," + str(DeviceRxRssi) + "," + str( DeviceMeshtasticLatitude ) + "," + str( DeviceMeshtasticLongitude ) + "," + str( DeviceMeshtasticPdop ) + "," + str( DeviceMeshtasticGroundSpeed ) + "," + str( DeviceMeshtasticSatsInView ) + "," + str( DeviceMeshtasticPrecisionBits )
+                meshtasticmessage = "peernode," + fromIdent + "," + str(DeviceBat) + "," + str(DeviceAirUtilTx) + "," + str(DeviceRxSnr) + "," + str(DeviceHopLimit) + "," + str(DeviceRxRssi)
                 fifo_write = open('/tmp/statusin', 'w')
                 fifo_write.write(meshtasticmessage)
                 fifo_write.flush()

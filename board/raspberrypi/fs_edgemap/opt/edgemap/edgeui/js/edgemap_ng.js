@@ -78,8 +78,18 @@ class meshtasticRadioList {
             this.rxSnr = [];
             this.hopLimit = [];
             this.rxRssi = [];
+            // Meshtastic provided:
+            this.DeviceMeshtasticLatitude = [];
+            this.DeviceMeshtasticLongitude = [];
+            this.DeviceMeshtasticPdop = [];
+            this.DeviceMeshtasticGroundSpeed = [];
+            this.DeviceMeshtasticSatsInView = [];
+            this.DeviceMeshtasticPrecisionBits = [];
+            
+            
+            
         }
-        add(callsign, timeStamp,DeviceBat,DeviceAirUtilTx,DeviceRxSnr,DeviceHopLimit,DeviceRxRssi) {            
+        add(callsign, timeStamp,DeviceBat,DeviceAirUtilTx,DeviceRxSnr,DeviceHopLimit,DeviceRxRssi,dMeshLat,dMeshLon,dMeshPdop,dMeshSpeed,dMeshSats,dMeshPrecision) {            
             const index = this.members.findIndex(x => x === callsign);
             if (index !== -1) {
                 // Update existing but don't over write existing 
@@ -95,6 +105,21 @@ class meshtasticRadioList {
                     this.hopLimit[index] = DeviceHopLimit;
                 if ( DeviceRxRssi != "-" ) 
                     this.rxRssi[index] = DeviceRxRssi;
+                
+                if ( dMeshLat != "-" ) 
+                    this.DeviceMeshtasticLatitude[index] = dMeshLat;
+                if ( dMeshLon != "-" ) 
+                    this.DeviceMeshtasticLongitude[index] = dMeshLon;
+                if ( dMeshPdop != "-" ) 
+                    this.DeviceMeshtasticPdop[index] = dMeshPdop;
+                if ( dMeshSpeed != "-" ) 
+                    this.DeviceMeshtasticGroundSpeed[index] = dMeshSpeed;
+                if ( dMeshSats != "-" ) 
+                    this.DeviceMeshtasticSatsInView[index] = dMeshSats;
+                if ( dMeshPrecision != "-" ) 
+                    this.DeviceMeshtasticPrecisionBits[index] = dMeshPrecision;
+                
+                
                 return true;
             } else {
                 // Add new
@@ -105,6 +130,14 @@ class meshtasticRadioList {
                 this.rxSnr.push(DeviceRxSnr); 
                 this.hopLimit.push(DeviceHopLimit); 
                 this.rxRssi.push(DeviceRxRssi);
+                
+                this.DeviceMeshtasticLatitude.push( dMeshLat );
+                this.DeviceMeshtasticLongitude.push( dMeshLon );
+                this.DeviceMeshtasticPdop.push( dMeshPdop );
+                this.DeviceMeshtasticGroundSpeed.push( dMeshSpeed );
+                this.DeviceMeshtasticSatsInView.push( dMeshSats );
+                this.DeviceMeshtasticPrecisionBits.push( dMeshPrecision );
+                
                 return true;
             }
             return false;

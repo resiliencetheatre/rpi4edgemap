@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 #
-# meshpipe (NG) - piping messages to/from FIFO over meshtastic radio
-#
-# NG version reads also Meshtastic locations and delivers them as part
-# of peernode message to map_ng.php. 
+# meshpipe - piping messages to/from FIFO over meshtastic radio
 #
 # Copyright (c) Resilience Theatre, 2024
 # Copyright (c) 2021, datagod

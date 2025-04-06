@@ -1079,10 +1079,20 @@
             var trimmedString = incomingMessage.substring(0, 80);
             const nodeArray = trimmedString.split(",");
             
-            // Meshtastic
+            // Meshtastic NG - addming meshtatic location reading into soup
+            // meshpipe_ng.py sends this:
+            // meshtasticmessage = "peernode," + fromIdent + "," + str(DeviceBat) + "," + str(DeviceAirUtilTx) + "," + str(DeviceRxSnr) + "," + str(DeviceHopLimit) + "," + str(DeviceRxRssi) + "," + str( DeviceMeshtasticLatitude ) + "," + str( DeviceMeshtasticLongitude ) + "," + str( DeviceMeshtasticPdop ) + "," + str( DeviceMeshtasticGroundSpeed ) + "," + str( DeviceMeshtasticSatsInView ) + "," + str( DeviceMeshtasticPrecisionBits )
+            
             if ( nodeArray[0] === "peernode" )
             {
-                meshtasticRadiosOnSystem.add( nodeArray[1], Math.round(+new Date()/1000),nodeArray[2],nodeArray[3],nodeArray[4],nodeArray[5],nodeArray[6] );
+                
+                // NG:
+                // Next we need to do geoJson layer of meshtatic located nodes. Don't mix them with edgemap GPS positioned ones.
+                console.log("NG meshtasticRadiosOnSystem.add(): ",  nodeArray[1], Math.round(+new Date()/1000),nodeArray[2],nodeArray[3],nodeArray[4],nodeArray[5],nodeArray[6],nodeArray[7],nodeArray[8],nodeArray[9],nodeArray[10],nodeArray[11],nodeArray[12] );
+                meshtasticRadiosOnSystem.add( nodeArray[1], Math.round(+new Date()/1000),nodeArray[2],nodeArray[3],nodeArray[4],nodeArray[5],nodeArray[6],nodeArray[7],nodeArray[8],nodeArray[9],nodeArray[10],nodeArray[11],nodeArray[12] );
+               
+                // Old:
+                // meshtasticRadiosOnSystem.add( nodeArray[1], Math.round(+new Date()/1000),nodeArray[2],nodeArray[3],nodeArray[4],nodeArray[5],nodeArray[6] );
                 updateMeshtasticRadioListBlock(); 
             }
             
