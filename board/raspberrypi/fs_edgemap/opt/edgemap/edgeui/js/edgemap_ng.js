@@ -2153,8 +2153,8 @@ function svgToImageBitmap(svgString, width, height) {
 // We have to define here, because edgemap_ng.js is loaded before main.js
 var menuSymbolText=[];
 menuSymbolText[0] = "Medical";
-menuSymbolText[1] = "EOD";
-menuSymbolText[2] = "Mine";
+menuSymbolText[1] = "Electricity";
+menuSymbolText[2] = "Jamming"; 
 menuSymbolText[3] = "Water";
 
 // Generate milsymbols for radialmenu (svg) and geojson (bitmap)
@@ -2163,8 +2163,8 @@ async function generateRightMenuSymbolArray(map) {
     var menuSymbols=[];
     var menuSymbolCode=[];
     menuSymbolCode[0] = "130411000011100000000000000000";
-    menuSymbolCode[1] = "130411000000000024001000000000";
-    menuSymbolCode[2] = "130425000028020000000000000000";
+    menuSymbolCode[1] = "130420000012050100000000000000";
+    menuSymbolCode[2] = "130110000015050400000000000000";
     menuSymbolCode[3] = "130311000000000036001000000000";
     
     for (let i = 0; i < menuSymbolCode.length; i++) {
