@@ -567,15 +567,15 @@
     
     // Milsymbol for trackMessage
     const trackMessageMarkerGraph = new ms.Symbol("SFGPUCR-----", { size:20,
-                dtg: "",
-                staffComments: "".toUpperCase(),
-                additionalInformation: "".toUpperCase(),
-                combatEffectiveness: "".toUpperCase(),
-                type: "",
-                padding: 5,
-                infoColor: "#000000",
-                infoBackground: "#FFFFFFD0"
-                });
+        dtg: "",
+        staffComments: "".toUpperCase(),
+        additionalInformation: "".toUpperCase(),
+        combatEffectiveness: "".toUpperCase(),
+        type: "",
+        padding: 5,
+        infoColor: "#000000",
+        infoBackground: "#FFFFFFD0"
+    });
     var trackMessageMarkerGraphDom = trackMessageMarkerGraph.asDOM();
 
     // Sensor globals
@@ -914,24 +914,24 @@
                     const locationNumbers = location.replace(/[\])}[{(]/g, '');
                     const locationArray = locationNumbers.split(",");   
                     createImageMarker(msgFrom,locationArray[0], locationArray[1],msgMessage.slice(0,-2));
-                        var modal = document.getElementById('myModal');
-                        var images = document.getElementsByClassName('myImages');
-                        var modalImg = document.getElementById("img01");
-                        var captionText = document.getElementById("caption");
-                        for (var i = 0; i < images.length; i++) {
-                          var img = images[i];
-                          img.onclick = function(evt) {
-                            modal.style.display = "block";
-                            modalImg.src = this.alt; 
-                            captionText.innerHTML = "Full size image";
-                          }
-                        }
-                        var span = document.getElementsByClassName("close")[0];
-                        span.onclick = function() {
-                          modal.style.display = "none";
-                           modalImg.src = "";
-                        } 
-                        notifyMessage("Image received from " + msgFrom , 5000);
+                    var modal = document.getElementById('myModal');
+                    var images = document.getElementsByClassName('myImages');
+                    var modalImg = document.getElementById("img01");
+                    var captionText = document.getElementById("caption");
+                    for (var i = 0; i < images.length; i++) {
+                      var img = images[i];
+                      img.onclick = function(evt) {
+                        modal.style.display = "block";
+                        modalImg.src = this.alt; 
+                        captionText.innerHTML = "Full size image";
+                      }
+                    }
+                    var span = document.getElementsByClassName("close")[0];
+                    span.onclick = function() {
+                      modal.style.display = "none";
+                       modalImg.src = "";
+                    } 
+                    notifyMessage("Image received from " + msgFrom , 5000);
                 }
             }
             //
@@ -1079,16 +1079,16 @@
             var trimmedString = incomingMessage.substring(0, 80);
             const nodeArray = trimmedString.split(",");
             
-            // Meshtastic NG - adding meshtatic location reading into soup
+            // Meshtastic 
             if ( nodeArray[0] === "peernode" )
             {
                 meshtasticRadiosOnSystem.add( nodeArray[1], Math.round(+new Date()/1000),nodeArray[2],nodeArray[3],nodeArray[4],nodeArray[5],nodeArray[6],nodeArray[7],nodeArray[8],nodeArray[9],nodeArray[10],nodeArray[11],nodeArray[12] );
-                // If we have SN, latitude and longitude, we could update geoJson
+                updateMeshtasticRadioListBlock();
+                // If we have SN, latitude and longitude, update node to map
                 if ( nodeArray[1] != "-" && nodeArray[7] != "-" && nodeArray[8] != "-" ) {
                     console.log("updateMeshtasticNodesToMap(): ", nodeArray[1], nodeArray[7], nodeArray[8]);
                     updateMeshtasticNodesToMap( nodeArray[1], nodeArray[7], nodeArray[8] );
                 }
-                updateMeshtasticRadioListBlock(); 
             }
             
             // Reticulumnode,[callsign],[timestamp],[hash]
@@ -1233,7 +1233,7 @@
             // cotsim -> curlcot -> taky 
             // 
             // getElementItem('#myCallSign').value
-            var geojsonUrlwithCallSign = 'meshtastic_geojson.php?linkline=1&myCallSign=' + getElementItem('#myCallSign').value;
+            var geojsonUrlwithCallSign = 'linkstatus.php?linkline=1&myCallSign=' + getElementItem('#myCallSign').value;
             // request.open('GET', geojsonUrl, true);
             request.open('GET', geojsonUrlwithCallSign, true);
             request.onload = function () {
