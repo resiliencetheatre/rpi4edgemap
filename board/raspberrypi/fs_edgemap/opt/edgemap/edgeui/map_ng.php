@@ -1304,11 +1304,11 @@
             // 'drone' is target layer for geojson data
             // TODO: Calculating icon-offset for symbology text changes 
             // 
-            map.addSource('drone', { type: 'geojson', data: geojsonUrl });
+            map.addSource('nodeLocationGeoJsonSource', { type: 'geojson', data: geojsonUrl });
             map.addLayer({
-                'id': 'drone',
+                'id': 'nodeLocationLayer',
                 'type': 'symbol',
-                'source': 'drone',
+                'source': 'nodeLocationGeoJsonSource',
                 'layout': {
                     'icon-image': ['get', 'targetName'], 
                     'icon-anchor': 'center',

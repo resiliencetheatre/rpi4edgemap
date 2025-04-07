@@ -925,7 +925,7 @@ function showTails() {
 		map.addLayer({
 		'id': 'route',
 		'type': 'line',
-		'source': 'drone',
+		'source': 'nodeLocationGeoJsonSource',
 		'layout': {
             'line-join': 'round',
             'line-cap': 'round'
@@ -937,13 +937,13 @@ function showTails() {
             
 		},
 		'filter': ['==', '$type', 'LineString']
-		},'drone');
+		},'nodeLocationLayer');
         
         // Test labeling link lines with data from geojson
           map.addLayer({
             "id": "symbols",
             "type": "symbol",
-            "source": "drone",
+            "source": "nodeLocationGeoJsonSource",
             "layout": {
               "symbol-placement": "line",
               "text-font": ["Open Sans Regular"],
