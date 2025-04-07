@@ -1234,13 +1234,10 @@
             // 
             // getElementItem('#myCallSign').value
             var geojsonUrlwithCallSign = 'linkstatus.php?linkline=1&myCallSign=' + getElementItem('#myCallSign').value;
-            // request.open('GET', geojsonUrl, true);
             request.open('GET', geojsonUrlwithCallSign, true);
             request.onload = function () {
                     if (this.status >= 200 && this.status < 400) {
-                        // 
                         // First 'geojson' parse to create symbol images
-                        // 
                         if ( this.response == "" ) {
                             return;
                         }
@@ -1271,7 +1268,6 @@
                                     console.warn(`Error handling key "${key}":`, e);
                                     return undefined; // Skip processing this key-value pair
                                 }
-
                                 return value; // Always return value unless skipping
                             });
                         } catch (e) {
@@ -1459,7 +1455,7 @@
         
         
         // Meshtastic units geoJson
-        // This are positions from meshtastic internal GPS (or fixed position)
+        // These are positions from meshtastic internal GPS (or fixed position)
         meshtasticGeoJson = {
             'type': 'FeatureCollection',
             'features': []
@@ -1497,6 +1493,9 @@
         });
         // Generate bitmap for meshtastic geojson units
         generateMeshtasticIcon(map);
+        // Generate milsymbols for right click menu, remember to 
+        // re-run this if you change symbols on fly later.
+        generateRightMenuSymbolArray(map);
         
         console.log("Map loaded.");
         map.setTerrain(null);
@@ -1508,11 +1507,7 @@
         fadeOut(document.getElementById("platform_help") ,1000);
         fadeOut(document.getElementById("platform_logo") ,1000);
         }, 15000 );
-        showTails();
-        
-        // Generate milsymbols for right click menu, remember to 
-        // re-run this if you change symbols on fly later.
-        generateRightMenuSymbolArray(map);
+        // showTails();
         
     });
     
@@ -1575,8 +1570,8 @@
         }
     );
     
+    // Set feather icons
     feather.replace();
-    
     
     // Capture click coordinates to UI 
     map.on('mousedown', function (e) {	
