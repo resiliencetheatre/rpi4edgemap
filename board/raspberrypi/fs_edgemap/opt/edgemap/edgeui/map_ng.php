@@ -473,7 +473,7 @@
     var distanceLineString;
     
     // geojson url for node links
-    var geojsonUrl = 'meshtastic_geojson.php?linkline=1';
+    var geojsonUrl = 'linkstatus.php?linkline=1';
     var geoJsonLayerActive = true;
 	
 	// One user created pin marker for a demo
@@ -1232,17 +1232,16 @@
             // This was initially made to show COT targets on map:
             // cotsim -> curlcot -> taky 
             // 
-            // getElementItem('#myCallSign').value
             var geojsonUrlwithCallSign = 'linkstatus.php?linkline=1&myCallSign=' + getElementItem('#myCallSign').value;
             request.open('GET', geojsonUrlwithCallSign, true);
             request.onload = function () {
+                
                     if (this.status >= 200 && this.status < 400) {
                         // First 'geojson' parse to create symbol images
                         if ( this.response == "" ) {
                             return;
                         }
                         var name;
-                        
                         // Trying to catch errors on JSON
                         try {
                             var another = JSON.parse(this.response, function (key, value) {
@@ -1254,7 +1253,6 @@
                                             createImage(value);
                                         }
                                     }
-
                                     if (key === "time-stamp") {
                                         if (isNaN(Date.parse(value))) return undefined; // Skip if timestamp is invalid
                                         let currentTime = new Date();
@@ -1272,19 +1270,18 @@
                             });
                         } catch (e) {
                             console.error("Failed to parse JSON:", e);
-                            // Optionally: show fallback UI or silently ignore
                         }
-
-                        // Second: set 'json' to 'drone' source.
-                        // TODO: Do error handling here as well
-                        var json = JSON.parse(this.response);
-                        if (  map.getSource('drone') ) {
-                            map.getSource('drone').setData(json);
+                        
+                        // Set json to drone source
+                        let json;
+                        try {
+                            json = JSON.parse(this.response);
+                            if (map.getSource('drone')) {
+                                map.getSource('drone').setData(json);
+                            }
+                        } catch (error) {
+                            console.error("Failed to parse JSON response:", error);
                         }
-                        // Time of update to UI
-                        // var today = new Date();
-                        // document.getElementById('status').innerHTML = today.toISOString();
-                        // indicator.style.backgroundColor = 'transparent';
                     }
                 };
             request.send();
@@ -1507,7 +1504,8 @@
         fadeOut(document.getElementById("platform_help") ,1000);
         fadeOut(document.getElementById("platform_logo") ,1000);
         }, 15000 );
-        // showTails();
+        // NOTE: This affects also to link lines!
+        showTails();
         
     });
     
