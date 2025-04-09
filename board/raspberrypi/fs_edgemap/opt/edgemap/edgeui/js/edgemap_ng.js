@@ -2028,11 +2028,9 @@ function engine(code,read=0) {
     
     // We write to engine 
     if (read == 0) {
-        console.log("Write to engine");
         url = `engine.php?read=0&code=${encodedCode}`;
     }
     if (read == 1) {
-        console.log("Read from engine");
         url = `engine.php?read=1&code=${encodedCode}`;
     }
     
@@ -2044,17 +2042,17 @@ function engine(code,read=0) {
     })
     .then(response => response.text())
     
-    
-    /*.then(data => {
-        console.log('Response from engine: ', data);
-        // TODO: Populate settings dialog dropdown next with data:
-        // serials:["/dev/ttyUSB0","/dev/ttyUSB1"]
-    })*/
-    
     .then(data => {
+        
+        console.log("data before parse: ", data);
+        
         data = JSON.parse(data);
+        
+        console.log("data after parse: ", data);
+        
         // Make sure 'serials' exists and is an array
         if (Array.isArray(data.serials)) {
+            // console.log("serials: ", data.serials);
             const select = document.getElementById("gps-device-select");
             select.innerHTML = ""; // Clear previous options
     
@@ -2068,12 +2066,25 @@ function engine(code,read=0) {
             placeholder.selected = true;
             select.appendChild(placeholder);
             
+            const placeholder2 = document.createElement("option");
+            placeholder2.textContent = "No GPS attached";
+            placeholder2.disabled = false;
+            placeholder2.selected = false;
+            select.appendChild(placeholder2);
+            
+            
             // Add placeholder for meshtastic
             const placeholderMeshtastic = document.createElement("option");
             placeholderMeshtastic.textContent = "-- Select Meshtastic device --";
             placeholderMeshtastic.disabled = true;
             placeholderMeshtastic.selected = true;
             meshtasticSelect.appendChild(placeholderMeshtastic);
+            
+            const placeholderMeshtastic2 = document.createElement("option");
+            placeholderMeshtastic2.textContent = "No meshtastic radio";
+            placeholderMeshtastic2.disabled = false;
+            placeholderMeshtastic2.selected = false;
+            meshtasticSelect.appendChild(placeholderMeshtastic2);
 
             // Add each device from serials
             data.serials.forEach(device => {
@@ -2091,22 +2102,45 @@ function engine(code,read=0) {
                 meshtasticSelect.appendChild(option);
             });
             
-            
-            
         } else {
             console.warn("No serials array found in engine response.");
         }
+         if (Array.isArray(data.callsign)) {
+             document.getElementById("callsign").value = data.callsign;
+         }
+         if (Array.isArray(data.gps_port)) {
+             document.getElementById("current_gps_port").innerHTML = data.gps_port;
+         }
+         if (Array.isArray(data.meshtastic_port)) {
+             document.getElementById("current_meshtastic_port").innerHTML = data.meshtastic_port;
+         }
     })
-
-    
-    
-    
-    
-    
-    
     .catch(error => {
         console.error('Error:', error);
     });
+}
+
+function saveSettingsForm() {
+    
+    callsign = document.getElementById("callsign").value;
+    
+    selectElement = document.getElementById("gps-device-select");
+    const gpsDevicePort = selectElement.options[selectElement.selectedIndex].text;
+    
+    ircServerAddress = document.getElementById("ircTransportServerAddress").value;
+        
+    selectElement = document.getElementById("meshtastic-device-select");
+    const meshtasticDevicePort = selectElement.options[selectElement.selectedIndex].text;
+
+    console.log("saveSettingsForm() ", callsign,gpsDevicePort,ircServerAddress,meshtasticDevicePort );
+    
+    engine_data = "settings_save," + callsign + "," + gpsDevicePort + "," + ircServerAddress + "," + meshtasticDevicePort;
+    console.log("engine data: ", engine_data);
+    
+    // engine(engine_data);
+    
+    // todo: engine("settings_save," callsign,gpsDevicePort,ircServerAddress,meshtasticDevicePort);
+    // engine();
 }
 
 

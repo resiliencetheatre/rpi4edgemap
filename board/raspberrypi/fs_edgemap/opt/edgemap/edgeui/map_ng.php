@@ -211,8 +211,9 @@
     <div class="settings-scroll-container">
         <table class="settings-table">
             <tr class="table-header"><td colspan="2">General</td></tr>
-            <tr><td>Callsign</td><td><input type="text" name="callsign" /></td></tr>
+            <tr><td>Callsign</td><td><input type="text" id="callsign" name="callsign" /></td></tr>
             
+            <!--
             <tr>
               <td>Local GPS</td>
               <td class="radio-inline">
@@ -220,17 +221,17 @@
                 <label><input type="radio" name="localGps" value="off" /> Off</label>
               </td>
             </tr>
+            -->
             
             <tr><td>GPS device</td><td>
-            
+                <span>Currently set port: </span> <span id="current_gps_port"></span>
                 <select name="localGpsDevice" id="gps-device-select" class="settings-select">
                   <!-- Options will be dynamically inserted via JavaScript -->
                 </select>
-            
             </td></tr>
             
-            
             <tr class="table-header"><td colspan="2">Communication</td></tr>
+            <!--
             <tr>
               <td>IRC transport</td>
               <td class="radio-inline">
@@ -238,8 +239,13 @@
                 <label><input type="radio" name="ircTransport" value="off" /> Off</label>
               </td>
             </tr>
-            <tr><td>IRC server</td><td><input type="text" name="ircTransportServer" /></td></tr>
+            -->
             
+            <tr><td>IRC server</td><td><input type="text" id="ircTransportServerAddress" name="ircTransportServer" />
+            <span>[SERVER]:[PORT] or empty (off)</span>
+            </td></tr>
+            
+            <!--
             <tr>
               <td>Meshtastic</td>
               <td class="radio-inline">
@@ -247,16 +253,19 @@
                 <label><input type="radio" name="meshtasticRadio" value="off" /> Off</label>
               </td>
             </tr>
+            -->
             
             <tr><td>Meshtastic device</td><td>
+                    <span>Currently set port: </span> <span id="current_meshtastic_port"></span>
                     <select name="localMeshtasticDevice" id="meshtastic-device-select" class="settings-select">
                       <!-- Options will be dynamically inserted via JavaScript -->
                     </select>
-                </td></tr>
+            </td></tr>
+                
         </table>
 
         <div class="settings-buttons">
-            <button class="settings-save-button" id="settings-save" onclick="engine('read_serials',1);">
+            <button class="settings-save-button" id="settings-save" onclick="saveSettingsForm();">
                 <i data-feather="save" class="feather-mid"></i> Save
             </button>
             <button class="settings-close-button" id="settings-close" onclick="settingsClose();">
@@ -1146,7 +1155,6 @@
                 updateMeshtasticRadioListBlock();
                 // If we have SN, latitude and longitude, update node to map
                 if ( nodeArray[1] != "-" && nodeArray[7] != "-" && nodeArray[8] != "-" ) {
-                    console.log("updateMeshtasticNodesToMap(): ", nodeArray[1], nodeArray[7], nodeArray[8]);
                     updateMeshtasticNodesToMap( nodeArray[1], nodeArray[7], nodeArray[8] );
                 }
             }

@@ -230,6 +230,8 @@ window.onload = function ()
 			// console.log(item);
             
             if ( item.id == "settings" ) {
+                // First ensure that engineroom provides us serial ports to UI
+                engine('read_settings',1);
                 const targetDiv = document.getElementById("settings-box");
                 document.getElementById("settings-box").style.display = "flex";
             }
