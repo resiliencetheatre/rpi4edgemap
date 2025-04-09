@@ -13,9 +13,9 @@
 */
 var menuItems = [
     {
-        id   : 'setlocation',
-        title: 'Set location',
-        icon: '#svg-icon-my-location'
+        id   : 'settings',
+        title: 'Settings',
+        icon: '#svg-icon-settings'
     },
     {
         id   : 'terrain',
@@ -229,8 +229,9 @@ window.onload = function ()
 			// console.log('You have clicked:', item.id, item.title);
 			// console.log(item);
             
-            if ( item.id == "setlocation" ) {
-                 setManualLocationNotifyMessage();
+            if ( item.id == "settings" ) {
+                const targetDiv = document.getElementById("settings-box");
+                document.getElementById("settings-box").style.display = "flex";
             }
             if ( item.id == "terrain" ) {
                  toggleHillShadow();
@@ -357,8 +358,10 @@ window.onload = function ()
             onClick: function(item)
             {
                 if ( item.id == "setlocation" ) {
+                    console.log("document.getElementById('rightMenuLat').innerHTML", document.getElementById('rightMenuLat').innerHTML);
                      lat = document.getElementById('rightMenuLat').innerHTML;
                      lon = document.getElementById('rightMenuLon').innerHTML;
+                     console.log("manualLocationSetFromRightMenu(lat,lon): ", lat,lon);
                      manualLocationSetFromRightMenu(lat,lon);
                      document.getElementById('rightMenuLat').innerHTML = "";
                      document.getElementById('rightMenuLon').innerHTML = "";
@@ -439,6 +442,7 @@ window.onload = function ()
         const y = event.clientY - rect.top;
         // Convert to latitude and longitude
         const lngLat = map.unproject([x, y]);
+        console.log("Registered: ", lngLat.lat, lngLat.lng);
         document.getElementById('rightMenuLat').innerHTML = lngLat.lat;
         document.getElementById('rightMenuLon').innerHTML = lngLat.lng;
         // event.preventDefault();

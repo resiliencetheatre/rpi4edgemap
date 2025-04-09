@@ -2023,9 +2023,19 @@ function systemControl(action) {
 // system functions from UI code with fifo pipe. Consider using
 // this instead of systemControl() above?
 
-function engine(code) {
+function engine(code,read=0) {
     const encodedCode = encodeURIComponent(code);
-    const url = `engine.php?code=${encodedCode}`;
+    
+    // We write to engine 
+    if (read == 0) {
+        console.log("Write to engine");
+        url = `engine.php?read=0&code=${encodedCode}`;
+    }
+    if (read == 1) {
+        console.log("Read from engine");
+        url = `engine.php?read=1&code=${encodedCode}`;
+    }
+    
     fetch(url, {
         method: 'GET',
         headers: {
@@ -2033,13 +2043,75 @@ function engine(code) {
         }
     })
     .then(response => response.text())
+    
+    
+    /*.then(data => {
+        console.log('Response from engine: ', data);
+        // TODO: Populate settings dialog dropdown next with data:
+        // serials:["/dev/ttyUSB0","/dev/ttyUSB1"]
+    })*/
+    
     .then(data => {
-        console.log('Response from engine:', data);
+        data = JSON.parse(data);
+        // Make sure 'serials' exists and is an array
+        if (Array.isArray(data.serials)) {
+            const select = document.getElementById("gps-device-select");
+            select.innerHTML = ""; // Clear previous options
+    
+            const meshtasticSelect = document.getElementById("meshtastic-device-select");
+            meshtasticSelect.innerHTML = ""; // Clear previous options
+
+            // Add placeholder for local GPS
+            const placeholder = document.createElement("option");
+            placeholder.textContent = "-- Select GPS device --";
+            placeholder.disabled = true;
+            placeholder.selected = true;
+            select.appendChild(placeholder);
+            
+            // Add placeholder for meshtastic
+            const placeholderMeshtastic = document.createElement("option");
+            placeholderMeshtastic.textContent = "-- Select Meshtastic device --";
+            placeholderMeshtastic.disabled = true;
+            placeholderMeshtastic.selected = true;
+            meshtasticSelect.appendChild(placeholderMeshtastic);
+
+            // Add each device from serials
+            data.serials.forEach(device => {
+                const option = document.createElement("option");
+                option.value = device;
+                option.textContent = device;
+                select.appendChild(option);
+            });
+            
+            // Add each device from serials
+            data.serials.forEach(device => {
+                const option = document.createElement("option");
+                option.value = device;
+                option.textContent = device;
+                meshtasticSelect.appendChild(option);
+            });
+            
+            
+            
+        } else {
+            console.warn("No serials array found in engine response.");
+        }
     })
+
+    
+    
+    
+    
+    
+    
     .catch(error => {
         console.error('Error:', error);
     });
 }
+
+
+
+
 
 // Experiment to load symbols from /opt/edgemap-persist/symbols.txt file
 function loadLocalSymbols() {
@@ -2352,6 +2424,8 @@ async function generateMeshtasticIcon(map) {
 }
 
 
-
+function settingsClose() {
+    document.getElementById("settings-box").style.display = "none";
+}
 
 

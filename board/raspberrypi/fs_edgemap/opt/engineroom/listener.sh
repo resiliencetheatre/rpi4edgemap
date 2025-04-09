@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # fifo pipe reader, implements functions towards system
-#
+# 
 # ui menu (main.js: engine() ) -> engine.php -> fifo -> listener.sh
 #
 FIFO_PATH="/tmp/engine"
@@ -11,7 +11,7 @@ echo "Listening for messages ( $FIFO_PATH )"
 while true; do
     if IFS= read -r line < "$FIFO_PATH"; then
         echo "Received: $line"
-
+        
         # Placeholders
         if [ "$line" == "poweroff" ]; then
             echo "poweroff"
@@ -37,6 +37,32 @@ while true; do
         if [ "$line" == "pos_random" ]; then
             echo random > /opt/edgemap-persist/pos_interval.txt
         fi
+        
+        if [ "$line" == "read_serials" ]; then
+            
+            # Create the FIFO if it doesn't exist
+            #if [[ ! -p "$fifo" ]]; then
+            #    mkfifo "$fifo"
+            #fi
+            list=""
+            for dev in /dev/ttyUSB* /dev/ttyACM*; do
+                if [ -e "$dev" ]; then
+                    [ -n "$list" ] && list="$list,"
+                    list="$list\"$dev\""
+                fi
+            done
+            # Format as JavaScript-like array
+            echo "{ \"serials\":[$list] }" > /tmp/fromengine
+
+
+            
+            
+            
+            
+            
+        fi
+        
+        
     fi
 done
 
