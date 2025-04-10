@@ -1,0 +1,14 @@
+[Unit]
+Description=mirror geojson between clients
+After=multi-user.target wss-mirror.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/geojsonmirror
+ExecStart=/opt/geojsonmirror/mirror.sh
+Restart=always
+RestartSec=10
+TimeoutStartSec=10
+
+# [Install]
+# WantedBy=multi-user.target

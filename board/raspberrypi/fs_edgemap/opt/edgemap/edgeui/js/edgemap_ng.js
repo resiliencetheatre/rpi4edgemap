@@ -1606,7 +1606,9 @@ function onDrag() {
     var dragLocationPayload = callSign + `|dragMarker|${lngLat.lng},${lngLat.lat}|dragged` + '\n';
     // NOTE: On meshtastic branch, we disable drag delivery over messaging channel
     // messagingSocket.send( dragLocationPayload ); 
+    // mirrorSocket.send( dragLocationPayload );
     // TODO: Handle meshtasticMsgSocket.send( );
+    mirrorSocket.send( dragLocationPayload );
 }
     
 function onDragEnd() {
@@ -1615,7 +1617,9 @@ function onDragEnd() {
     // NOTE: On meshtastic  & reticulum branch, we disable drag delivery over messaging channel
     // console.log("Drag: ", dragLocationPayload);
     // messagingSocket.send( dragLocationPayload );
+    // mirrorSocket.send( dragLocationPayload );
     // TODO: Handle meshtasticMsgSocket.send( );
+    mirrorSocket.send( dragLocationPayload );
 }
 
 //
@@ -2378,6 +2382,17 @@ function addRightClickSymbol(lat, lon, symbolIndex) {
     };
     rightMenuSymbolsGeoJson.features.push(point);
     map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
+    
+    // mirrorSocketConnected
+    if ( mirrorSocketConnected ) {
+            const payload = JSON.stringify({
+                type: 'sync_all',
+                geoJson: rightMenuSymbolsGeoJson
+            }) + '\n'; // Add newline at end
+
+            // console.log("Sending sync_all to mirror: ", payload);
+            mirrorSocket.send(payload);
+    }
 }
 
 // symbolsBar functions

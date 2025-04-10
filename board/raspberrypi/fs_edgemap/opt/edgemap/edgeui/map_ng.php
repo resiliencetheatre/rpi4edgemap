@@ -711,6 +711,9 @@
     var gpsSocket;
     var gpsSocketConnected=false;
     
+    var mirrorSocket; // Work In progress
+    var mirrorSocketConnected = false;
+    
     var wsProtocol = null;
     if(window.location.protocol === 'http:')
             wsProtocol = "ws://";
@@ -1187,8 +1190,85 @@
                 notifyMessage("Clients connected: " + clients_connected, 5000);
             }
         };
-    
     }
+
+        // Work in progress: mirror socket
+    
+        if ( wsProtocol == "ws://" )
+                mirrorSocket = new WebSocket(wsProtocol+wsHost+':8999'); // TODO: CHECK PORT
+        if ( wsProtocol == "wss://" )
+                mirrorSocket = new WebSocket(wsProtocol+wsHost+':9000');
+
+
+        //
+        // messagingSocket connect (8990)
+        //
+        mirrorSocket.onopen = function(event) {
+            console.log("Opened mirror socket");
+            mirrorSocketConnected = true;
+        };
+        
+        mirrorSocket.onclose = function(event) {
+            console.log("Closed mirror socket");
+            mirrorSocketConnected = false;
+        }
+        
+        mirrorSocket.onmessage = function(event) {
+            try {
+                const msg = JSON.parse(event.data);
+                // right click symbols
+                if (msg.type === 'sync_all' && msg.geoJson) {
+                    rightMenuSymbolsGeoJson = msg.geoJson;
+                    map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
+                }
+            } catch (e) {
+                // console.log('Maybe it was not geojson');
+                // copied from messaging socket:
+                var incomingMessage = event.data;   
+                var trimmedString = incomingMessage.substring(0, 200);
+                const msgArray=trimmedString.split("|");
+                const msgFrom =  msgArray[0];
+                const msgType =  msgArray[1];
+                const msgLocation =  msgArray[2];
+                const msgMessage =  msgArray[3];
+                
+                if ( msgArray.length == 4 ) 
+                {
+                    //
+                    // Shared 'drag marker'
+                    //
+                    if ( msgType === "dragMarker" ) {                        
+                        const location = msgLocation;
+                        const locationNumbers = location.replace(/[\])}[{(]/g, '');
+                        const locationArray = locationNumbers.split(",");
+                        dragMarker.setLngLat([ locationArray[0], locationArray[1] ]);
+                        dragMarkerPopup.setText(msgFrom + " " + msgMessage);
+
+                            if ( msgMessage.includes("dragged") ) {
+                                if ( !dragMarkerPopup.isOpen() ) {
+                                    dragMarkerPopup.addTo(map);
+                                }
+                            } 
+                            if ( msgMessage.includes("released") )  {
+                                if ( dragMarkerPopup.isOpen() ) {
+                                    dragMarkerPopup.remove();
+                                }
+                            } 
+                    }
+                }
+            }
+            
+            
+            
+            
+            
+            
+        };
+
+
+
+
+
 
     // Hide development icons
     document.getElementById('trackingIndicator').style="display:none;"; 
@@ -1235,7 +1315,8 @@
     dragMarkerPopup.addTo(map);
     dragMarker.on('dragend', onDragEnd);
     dragMarker.on('drag', onDrag);
-    // dragMarker.addTo(map);
+    // TODO: Mirror development test
+    dragMarker.addTo(map);
     
     //
     // Reference draggable marker with MilSymbols
