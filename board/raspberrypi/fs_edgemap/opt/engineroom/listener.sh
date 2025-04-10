@@ -21,8 +21,8 @@ while true; do
         # Placeholders
         if [ "$line" == "poweroff" ]; then
             echo "poweroff"
-            sync
-            poweroff
+            #sync
+            #poweroff
         fi
         # off,2,4,10,manual,random
         if [ "$line" == "pos_off" ]; then

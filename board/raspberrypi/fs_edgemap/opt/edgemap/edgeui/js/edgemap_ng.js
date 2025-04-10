@@ -2266,6 +2266,13 @@ function uploadGeoJSON(sourceId = 'distanceGeoJsonSource') {
                 const source = map.getSource(sourceId);
                 if (source) {
                     source.setData(geojson);
+                    if ( sourceId == 'distanceGeoJsonSource' ) {
+                        mirrorGeoJson('sync_measurement',geojson);
+                    }
+                    if ( sourceId == 'rightMenuSymbolGeoJsonSource' ) {
+                        mirrorGeoJson('sync_all',geojson);
+                    }
+                    
                 } else {
                     console.error(`Source with ID '${sourceId}' not found.`);
                 }
@@ -2382,18 +2389,21 @@ function addRightClickSymbol(lat, lon, symbolIndex) {
     };
     rightMenuSymbolsGeoJson.features.push(point);
     map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
-    
-    // mirrorSocketConnected
+    mirrorGeoJson('sync_all',rightMenuSymbolsGeoJson);
+}
+
+// Send geoJson ver websocket to others (demo)
+function mirrorGeoJson(type, geoJson) {
     if ( mirrorSocketConnected ) {
             const payload = JSON.stringify({
-                type: 'sync_all',
-                geoJson: rightMenuSymbolsGeoJson
-            }) + '\n'; // Add newline at end
-
-            // console.log("Sending sync_all to mirror: ", payload);
+                type: type,
+                geoJson: geoJson
+            }) + '\n';
             mirrorSocket.send(payload);
     }
 }
+
+
 
 // symbolsBar functions
 function symbolsControlOpenButton() {

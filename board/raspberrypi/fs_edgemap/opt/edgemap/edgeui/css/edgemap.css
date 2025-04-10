@@ -1521,7 +1521,30 @@ body {
     position: relative;
   }
   
-  /* Hidden by default */
+  
+
+  
+   
+  
+  .tooltip {
+    display: none;
+    font: 14px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+    position: absolute;
+    background-color: #333;
+    color: #0F0;
+    
+    border-radius: 5px;
+    
+    white-space: nowrap;
+    z-index: 10;
+    top: 65px; 
+    right: 0%;
+    left: 72%;
+    height: 20px;
+    
+  }
+  
+  /* Hidden by default 
   .tooltip {
     display: none;
     position: absolute;
@@ -1532,10 +1555,12 @@ body {
     font-size: 12px;
     white-space: nowrap;
     z-index: 10;
-    top: 240%; /* Position below the icon */
+    top: 240%; 
     left: 0%;
     transform: translateX(-0%);
   }
+
+*/
 
   /* Show the tooltip on hover */
   .has-tooltip:hover + .tooltip {
@@ -1600,7 +1625,7 @@ body {
 	color: #0f0;
 	position: absolute;
 	border-radius: 5px;
-	top: 45px;
+	top: 50px;
     right: 65%;
     /*width: 60%;*/
     left: 15%;
@@ -1617,7 +1642,7 @@ body {
 	color: #0f0;
 	position: absolute;
 	border-radius: 5px;
-	top: 45px;
+	top: 50px;
     right: 40%;
     /*width: 60%;*/
     left: 40%;
@@ -1635,7 +1660,7 @@ body {
 	color: #0f0;
 	position: absolute;
 	border-radius: 5px;
-	top: 45px;
+	top: 50px;
     right: 15%;
     left: 65%;
 	opacity: 0.9;
@@ -1650,7 +1675,7 @@ body {
 	color: #0f0;
 	position: absolute;
 	border-radius: 5px;
-	top: 68px;
+	top: 75px;
     /* right: 50%;*/
     width: 50%;
     left: 15%;
@@ -1742,12 +1767,12 @@ body {
     color: #0f0;
     position: absolute;
     border-radius: 5px;
-    top: 95px;
+    top: 100px;
     right: 15%;
     left: 15%;
     padding: 2px;
     opacity: 0.9;
-    height: 30px;
+    height: 25px;
     z-index: 1;
     display: none;
     
@@ -1806,7 +1831,7 @@ body {
     left: 15%;
     padding: 2px;
     opacity: 0.9;
-    height: 30px;
+    height: 25px;
     z-index: 1;
     display: none;
     
@@ -1842,6 +1867,21 @@ body {
   z-index: 10;
 }
 
+.bottom-left-text {
+  position: fixed;
+  bottom: 0;
+  right: 10px;
+  color: #0F0;
+  /* opacity: 0.5; */
+  font-size: 10px;
+  text-align: right;
+  padding: 10px;
+  z-index: 10;
+}
+
+.bottom-left-text:hover {
+  opacity: 1.0;
+}
 
 .settings-box {
 	display: none;

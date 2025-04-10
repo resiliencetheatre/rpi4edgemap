@@ -67,6 +67,12 @@
     </div>
     
     <div id="mapStatus" class="bottom-center-text">SIMULATION DATA DISPLAYED</div>
+    <div id="mapStatus" class="bottom-left-text">
+        <center>
+        <img id="euFlag" src="img/eu-flag.svg" style="width: 40px; height: auto; opacity: 0.5;" alt="EU Flag">
+        </center>
+    </div>
+    
 
     <div id="map"></div>
 
@@ -534,6 +540,9 @@
     var intialZoomLevel=1;
 	var symbolSize = 30;
     
+    // ViewSync 
+    var viewSyncMaster=0;
+    
     // geojson for right menu inserted symbols
     var rightMenuSymbolsGeoJson;
     
@@ -708,6 +717,7 @@
     // TODO: Check highrate busy connect
     var highrateSocket;
     var highrateSocketConnected=false;
+    
     var gpsSocket;
     var gpsSocketConnected=false;
     
@@ -1216,11 +1226,40 @@
         mirrorSocket.onmessage = function(event) {
             try {
                 const msg = JSON.parse(event.data);
-                // right click symbols
+                
+                // Sync right click symbols
                 if (msg.type === 'sync_all' && msg.geoJson) {
                     rightMenuSymbolsGeoJson = msg.geoJson;
                     map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
                 }
+                
+                // Sync measurement
+                if (msg.type === 'sync_measurement' && msg.geoJson) {
+                    measurementGeoJson = msg.geoJson;
+                    map.getSource('distanceGeoJsonSource').setData(measurementGeoJson);
+                }
+                
+                
+                // Sync view (center, zoom, bearing, pitch)
+                if (msg.type === 'sync_view' && msg.geoJson && !viewSyncMaster ) {
+                    // console.log("sync_view rx: ", msg.geoJson);
+                    const feature = msg.geoJson;
+                    const coords = feature.geometry.coordinates;
+                    const props = feature.properties || {};
+
+                    map.easeTo({
+                        center: coords,
+                        zoom: props.zoom,
+                        bearing: props.bearing || 0,
+                        pitch: props.pitch || 0,
+                        duration: 500 // Optional: adjust animation speed
+                    });
+                }
+                
+                
+                
+                
+                
             } catch (e) {
                 // console.log('Maybe it was not geojson');
                 // copied from messaging socket:
@@ -1600,6 +1639,100 @@
         });
         
         
+        // Double click to edit symbol text 
+        
+        map.on('dblclick', 'rightClickSymbols', function (e) {
+            const clickedFeature = e.features[0];
+            const clickedId = clickedFeature.properties.id;
+            const currentText = clickedFeature.properties.text;
+            const coords = clickedFeature.geometry.coordinates.slice(); // clone to avoid mutation
+
+            // Create the popup container
+            const popupNode = document.createElement('div');
+            popupNode.style.background = '#333';
+            popupNode.style.padding = '10px';
+            popupNode.style.borderRadius = '6px';
+            popupNode.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+            popupNode.style.display = 'flex';
+            popupNode.style.flexDirection = 'column';
+            popupNode.style.alignItems = 'center';
+            popupNode.style.gap = '6px';
+            popupNode.style.minWidth = '180px';
+
+            // Create input field
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentText;
+            input.style.padding = '4px 6px';
+            input.style.borderRadius = '4px';
+            input.style.border = '1px solid #999';
+            input.style.width = '100%';
+            input.style.fontSize = '14px';
+            popupNode.appendChild(input);
+
+            // Create confirm button
+            const confirmButton = document.createElement('button');
+            confirmButton.textContent = 'Update';
+            confirmButton.style.background = '#333';
+            confirmButton.style.color = '#4CAF50';
+            confirmButton.style.border = '1px solid #4CAF50';
+            confirmButton.style.padding = '4px 8px';
+            confirmButton.style.borderRadius = '4px';
+            confirmButton.style.cursor = 'pointer';
+            confirmButton.style.fontSize = '13px';
+            confirmButton.style.alignSelf = 'flex-end';
+            confirmButton.style.transition = 'all 0.2s ease';
+            popupNode.appendChild(confirmButton);
+
+            confirmButton.onmouseenter = () => {
+                confirmButton.style.background = '#4CAF50';
+                confirmButton.style.color = '#fff';
+            };
+
+            confirmButton.onmouseleave = () => {
+                confirmButton.style.background = '#333';
+                confirmButton.style.color = '#4CAF50';
+            };
+
+            // Create and show the popup
+            const popup = new maplibregl.Popup({ closeOnClick: true })
+                .setLngLat(coords)
+                .setDOMContent(popupNode)
+                .addTo(map);
+            
+            keyEventListener=0;
+            
+            // Handle update on button click
+            confirmButton.addEventListener('click', () => {
+                const newText = input.value.trim();
+                if (newText && newText !== currentText) {
+                    rightMenuSymbolsGeoJson.features = rightMenuSymbolsGeoJson.features.map(f => {
+                        if (f.properties.id === clickedId) {
+                            return {
+                                ...f,
+                                properties: {
+                                    ...f.properties,
+                                    text: newText
+                                }
+                            };
+                        }
+                        return f;
+                    });
+
+                    // Update the source data
+                    map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
+                    mirrorGeoJson('sync_all',rightMenuSymbolsGeoJson);
+                    
+                }
+
+                // Close popup after update
+                popup.remove();
+                keyEventListener=1;
+            });
+        });
+
+        
+        
         // Meshtastic units geoJson
         // These are positions from meshtastic internal GPS (or fixed position)
         meshtasticGeoJson = {
@@ -1877,6 +2010,17 @@
                 document.getElementById("settings-box").style.display = "flex";
                 keyEventListener=0;
             }
+            
+            // ViewSync Toggle
+            if ( key == "M" ) {
+                viewSyncMaster = viewSyncMaster ? 0 : 1; // Toggle 0 <-> 1
+                // console.log("View Sync Master is now:", viewSyncMaster ? "ON" : "OFF");
+                if ( viewSyncMaster )
+                    document.getElementById("euFlag").style.opacity = "1.0";
+                if ( !viewSyncMaster)
+                    document.getElementById("euFlag").style.opacity = "0.5";
+                    
+            }
         }
     });
     
@@ -1947,6 +2091,7 @@
                 distanceValueContainer.appendChild(value);
             }
             map.getSource('distanceGeoJsonSource').setData(distanceGeoJson);
+            mirrorGeoJson('sync_measurement',distanceGeoJson);
         }
         
     });
@@ -1962,6 +2107,89 @@
                 'crosshair';
         }
     });
+    
+    
+    
+    // HIGHLY EXPERIMENTAL VIEW SYNC
+    // Pressing 'M' toggles your master mode. If you are master
+    // other peers will receive your map browsing events.
+    function throttle(func, delay) {
+      let lastCall = 0;
+      return function(...args) {
+        const now = Date.now();
+        if (now - lastCall >= delay) {
+          lastCall = now;
+          func(...args);
+        }
+      };
+    }
+
+
+    function setupViewSync(map, callback) {
+      
+      // This is the function that builds your GeoJSON message
+      function createViewGeoJSON() {
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+        const bearing = map.getBearing();
+        const pitch = map.getPitch();
+
+        return {
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [center.lng, center.lat]
+          },
+          properties: {
+            zoom: zoom,
+            bearing: bearing,
+            pitch: pitch,
+            timestamp: Date.now()
+          }
+        };
+      }
+
+      // This runs after map interactions and calls your callback with the geojson
+      const handler = () => {
+        const geojson = createViewGeoJSON();
+        callback(geojson); // You can send it from here
+      };
+
+      // Hook into map interaction events
+      map.on('moveend', handler);
+      map.on('zoomend', handler);
+      map.on('rotateend', handler);
+      map.on('pitchend', handler);
+    }
+
+    function sendViewUpdate(geojson) {
+        const message = {
+            type: 'sync_view',
+            geoJson: geojson
+        };
+        const payload = JSON.stringify(message) + "\n";
+        if ( mirrorSocketConnected && viewSyncMaster ) {
+            mirrorSocket.send(payload);
+            // console.log("Sent: ", payload);
+        }  
+    }
+    // Setup with throttle value    
+    const throttledSendViewUpdate = throttle(sendViewUpdate, 500);
+    setupViewSync(map, throttledSendViewUpdate);
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
 </script>
 
@@ -2028,11 +2256,13 @@
     <svg id="svg-icon-toggle" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
 	<path fill="#0F0" d="M7.5 2c-1.79 1.15-3 3.18-3 5.5s1.21 4.35 3.03 5.5C4.46 13 2 10.54 2 7.5A5.5 5.5 0 0 1 7.5 2m11.57 1.5l1.43 1.43L4.93 20.5L3.5 19.07zm-6.18 2.43L11.41 5L9.97 6l.42-1.7L9 3.24l1.75-.12l.58-1.65L12 3.1l1.73.03l-1.35 1.13zm-3.3 3.61l-1.16-.73l-1.12.78l.34-1.32l-1.09-.83l1.36-.09l.45-1.29l.51 1.27l1.36.03l-1.05.87zM19 13.5a5.5 5.5 0 0 1-5.5 5.5c-1.22 0-2.35-.4-3.26-1.07l7.69-7.69c.67.91 1.07 2.04 1.07 3.26m-4.4 6.58l2.77-1.15l-.24 3.35zm4.33-2.7l1.15-2.77l2.2 2.54zm1.15-4.96l-1.14-2.78l3.34.24zM9.63 18.93l2.77 1.15l-2.53 2.19z" />
     </svg>
+    
     <svg id="svg-icon-download" width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M8 22.0002H16C18.8284 22.0002 20.2426 22.0002 21.1213 21.1215C22 20.2429 22 18.8286 22 16.0002V15.0002C22 12.1718 22 10.7576 21.1213 9.8789C20.3529 9.11051 19.175 9.01406 17 9.00195M7 9.00195C4.82497 9.01406 3.64706 9.11051 2.87868 9.87889C2 10.7576 2 12.1718 2 15.0002L2 16.0002C2 18.8286 2 20.2429 2.87868 21.1215C3.17848 21.4213 3.54062 21.6188 4 21.749" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
     <path d="M12 2L12 15M12 15L9 11.5M12 15L15 11.5" stroke="#00FF00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     
+
     
     
 
