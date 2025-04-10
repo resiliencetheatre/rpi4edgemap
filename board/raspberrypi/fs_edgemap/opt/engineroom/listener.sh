@@ -45,28 +45,36 @@ while true; do
         fi
         
         # Writing settings values back to system from UI (work in progress)
-
-        # Get the first item
         first_item=$(echo "$line" | cut -d',' -f1)
 
         if [ "$first_item" = "settings_save" ]; then
             # Assign following items to variables using cut
-            var1=$(echo "$line" | cut -d',' -f2)
-            var2=$(echo "$line" | cut -d',' -f3)
+            CALLSIGN=$(echo "$line" | cut -d',' -f2)
+            GPS_PORT=$(echo "$line" | cut -d',' -f3)
             var3=$(echo "$line" | cut -d',' -f4)
-            var4=$(echo "$line" | cut -d',' -f5)
+            MESHTASTIC_PORT=$(echo "$line" | cut -d',' -f5)
 
-            echo "Message:         $first_item"
-            echo "callsign:        $var1"
-            echo "GPS port:        $var2"
-            echo "IRC server:      $var3"
-            echo "Meshtastic port: $var4"
+            # echo "Message:         $first_item"
+            # echo "callsign:        $CALLSIGN"
+            # echo "GPS port:        $GPS_PORT"
+            # echo "IRC server:      $var3"
+            # echo "Meshtastic port: $MESHTASTIC_PORT"
+
+            # TODO: Do some sanity checking to provided data
+            
+            # callsign
+            echo $CALLSIGN > /opt/edgemap-persist/callsign.txt
+            
+            # gpsd port
+            echo "DEVICES=\"$GPS_PORT\"" >  /etc/default/gpsd
+            echo "GPSD_OPTIONS=\"\"" >>  /etc/default/gpsd
+
+            # meshtastic port
+            echo "MESHTASTIC_PORT=\"$MESHTASTIC_PORT\""> /opt/edgemap/meshpipe/meshtastic.env
+        
+            # TODO: Service restart
+        
         fi
-
-
-        
-        
-        
         
         
         
@@ -82,7 +90,7 @@ while true; do
             done
             
             # read callsign, meshtastic port and GPS port
-            callsign=$(cat /opt/edgemap-persist/callsign.txt)
+            CALLSIGN=$(cat /opt/edgemap-persist/callsign.txt)
             MESHTASTIC_PORT=$(grep '^MESHTASTIC_PORT=' /opt/edgemap/meshpipe/meshtastic.env | cut -d= -f2 | tr -d '"')
             GPS_PORT=$(grep '^DEVICES=' /etc/default/gpsd | cut -d= -f2- | tr -d '"')
             
@@ -92,7 +100,7 @@ while true; do
             # restart services
             
             # form json
-            message="{ \"callsign\": [\"$callsign\"], \"serials\":[$list], \"meshtastic_port\": [\"$MESHTASTIC_PORT\"], \"gps_port\": [\"$GPS_PORT\"] }"
+            message="{ \"callsign\": [\"$CALLSIGN\"], \"serials\":[$list], \"meshtastic_port\": [\"$MESHTASTIC_PORT\"], \"gps_port\": [\"$GPS_PORT\"] }"
             # deliver json via FIFO pipe
             echo $message > /tmp/fromengine
         fi

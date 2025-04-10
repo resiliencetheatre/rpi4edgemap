@@ -2137,7 +2137,17 @@ function saveSettingsForm() {
     engine_data = "settings_save," + callsign + "," + gpsDevicePort + "," + ircServerAddress + "," + meshtasticDevicePort;
     engine(engine_data);
     settingsClose();
+    
+    
+    // Take new callsign in use
+    // TODO: Strip old callsign update code later
+    var newCallSign = callsign;
+    document.getElementById('myCallSign').value = newCallSign;
+    document.getElementById('callSignDisplay').innerHTML = newCallSign;
+    newCallSignWithLifeFeed = newCallSign + "\n";
+    
     notifyMessage("Settings saved!", 2000);
+    
 }
 
 
