@@ -15,7 +15,8 @@ chmod 777 $FIFO_PATH_FROM
 echo "Listening for messages ( $FIFO_PATH )"
 while true; do
     if IFS= read -r line < "$FIFO_PATH"; then
-        # echo "Received: $line"
+       
+        echo "Received: $line"
         
         # Placeholders
         if [ "$line" == "poweroff" ]; then
@@ -43,22 +44,24 @@ while true; do
             echo random > /opt/edgemap-persist/pos_interval.txt
         fi
         
-        # Writing settings values back to system from UI
+        # Writing settings values back to system from UI (work in progress)
 
-        
-       # Original string
-       # line="settings_save,edgew,/dev/ttyUSB0,irc.ervert:9999,/dev/ttyUSB1"
+        # Get the first item
+        first_item=$(echo "$line" | cut -d',' -f1)
 
-#IFS=',' read -r prefix var1 var2 var3 var4 <<EOF
-#$line
-#EOF
+        if [ "$first_item" = "settings_save" ]; then
+            # Assign following items to variables using cut
+            var1=$(echo "$line" | cut -d',' -f2)
+            var2=$(echo "$line" | cut -d',' -f3)
+            var3=$(echo "$line" | cut -d',' -f4)
+            var4=$(echo "$line" | cut -d',' -f5)
 
-#if [ "$prefix" = "settings_save" ]; then
-    #echo "Callsign: $var1"
-    #echo "GPS Port: $var2"
-    #echo "IRC Addr: $var3"
-    #echo "Mesh Port: $var4"
-#fi
+            echo "Message:         $first_item"
+            echo "callsign:        $var1"
+            echo "GPS port:        $var2"
+            echo "IRC server:      $var3"
+            echo "Meshtastic port: $var4"
+        fi
 
 
         

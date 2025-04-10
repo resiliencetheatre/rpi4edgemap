@@ -17,7 +17,7 @@ if (isset($_GET['code']) && isset($_GET['read'])) {
     // This only writes FIFO (eg. set interval, shutdown etc)
     if ( $read == 0 ) 
     {
-       # echo "Received write code: " . $code;
+        echo "Received write code: " . $code;
         $fifo = "/tmp/engine";        
         // Open the FIFO in write mode
         $fp = fopen($fifo, 'w');
@@ -29,6 +29,7 @@ if (isset($_GET['code']) && isset($_GET['read'])) {
         fflush($fp); 
         sleep(1); 
         fclose($fp);
+        exit();
     }
     
     // We want to read some result from listener.sh
@@ -44,9 +45,9 @@ if (isset($_GET['code']) && isset($_GET['read'])) {
         $message = $code . "\n";
         fwrite($fp, $message);
         fflush($fp); 
-        sleep(0.5); 
+        sleep(1); 
         fclose($fp);
-        sleep(0.5);
+        sleep(1);
         
         // Read result from FIFO which listener.sh has written (hopefully)
         $fifo = "/tmp/fromengine";

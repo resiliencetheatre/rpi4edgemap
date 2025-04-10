@@ -2024,12 +2024,14 @@ function systemControl(action) {
 // this instead of systemControl() above?
 
 function engine(code,read=0) {
+    
     const encodedCode = encodeURIComponent(code);
     
     // We write to engine 
     if (read == 0) {
         url = `engine.php?read=0&code=${encodedCode}`;
     }
+    // We write and expect to have data back from engine
     if (read == 1) {
         url = `engine.php?read=1&code=${encodedCode}`;
     }
@@ -2044,76 +2046,75 @@ function engine(code,read=0) {
     
     .then(data => {
         
-        console.log("data before parse: ", data);
+        if (read == 1) {
+            
+            // console.log("data before parse: ", data);
+            data = JSON.parse(data);
+            // console.log("data after parse: ", data);
+            
+            // Make sure 'serials' exists and is an array
+            if (Array.isArray(data.serials)) {
+                // console.log("serials: ", data.serials);
+                const select = document.getElementById("gps-device-select");
+                select.innerHTML = ""; // Clear previous options
         
-        data = JSON.parse(data);
-        
-        console.log("data after parse: ", data);
-        
-        // Make sure 'serials' exists and is an array
-        if (Array.isArray(data.serials)) {
-            // console.log("serials: ", data.serials);
-            const select = document.getElementById("gps-device-select");
-            select.innerHTML = ""; // Clear previous options
-    
-            const meshtasticSelect = document.getElementById("meshtastic-device-select");
-            meshtasticSelect.innerHTML = ""; // Clear previous options
+                const meshtasticSelect = document.getElementById("meshtastic-device-select");
+                meshtasticSelect.innerHTML = ""; // Clear previous options
 
-            // Add placeholder for local GPS
-            const placeholder = document.createElement("option");
-            placeholder.textContent = "-- Select GPS device --";
-            placeholder.disabled = true;
-            placeholder.selected = true;
-            select.appendChild(placeholder);
-            
-            const placeholder2 = document.createElement("option");
-            placeholder2.textContent = "No GPS attached";
-            placeholder2.disabled = false;
-            placeholder2.selected = false;
-            select.appendChild(placeholder2);
-            
-            
-            // Add placeholder for meshtastic
-            const placeholderMeshtastic = document.createElement("option");
-            placeholderMeshtastic.textContent = "-- Select Meshtastic device --";
-            placeholderMeshtastic.disabled = true;
-            placeholderMeshtastic.selected = true;
-            meshtasticSelect.appendChild(placeholderMeshtastic);
-            
-            const placeholderMeshtastic2 = document.createElement("option");
-            placeholderMeshtastic2.textContent = "No meshtastic radio";
-            placeholderMeshtastic2.disabled = false;
-            placeholderMeshtastic2.selected = false;
-            meshtasticSelect.appendChild(placeholderMeshtastic2);
+                // Add placeholder for local GPS
+                const placeholder = document.createElement("option");
+                placeholder.textContent = "-- Select GPS device --";
+                placeholder.disabled = true;
+                placeholder.selected = true;
+                select.appendChild(placeholder);
+                const placeholder2 = document.createElement("option");
+                placeholder2.textContent = "No GPS attached";
+                placeholder2.disabled = false;
+                placeholder2.selected = false;
+                select.appendChild(placeholder2);
+                
+                // Add placeholder for meshtastic
+                const placeholderMeshtastic = document.createElement("option");
+                placeholderMeshtastic.textContent = "-- Select Meshtastic device --";
+                placeholderMeshtastic.disabled = true;
+                placeholderMeshtastic.selected = true;
+                meshtasticSelect.appendChild(placeholderMeshtastic);
+                const placeholderMeshtastic2 = document.createElement("option");
+                placeholderMeshtastic2.textContent = "No meshtastic radio";
+                placeholderMeshtastic2.disabled = false;
+                placeholderMeshtastic2.selected = false;
+                meshtasticSelect.appendChild(placeholderMeshtastic2);
 
-            // Add each device from serials
-            data.serials.forEach(device => {
-                const option = document.createElement("option");
-                option.value = device;
-                option.textContent = device;
-                select.appendChild(option);
-            });
-            
-            // Add each device from serials
-            data.serials.forEach(device => {
-                const option = document.createElement("option");
-                option.value = device;
-                option.textContent = device;
-                meshtasticSelect.appendChild(option);
-            });
-            
-        } else {
-            console.warn("No serials array found in engine response.");
-        }
-         if (Array.isArray(data.callsign)) {
-             document.getElementById("callsign").value = data.callsign;
-         }
-         if (Array.isArray(data.gps_port)) {
-             document.getElementById("current_gps_port").innerHTML = data.gps_port;
-         }
-         if (Array.isArray(data.meshtastic_port)) {
-             document.getElementById("current_meshtastic_port").innerHTML = data.meshtastic_port;
-         }
+                // Add each device from serials
+                data.serials.forEach(device => {
+                    const option = document.createElement("option");
+                    option.value = device;
+                    option.textContent = device;
+                    select.appendChild(option);
+                });
+                
+                // Add each device from serials
+                data.serials.forEach(device => {
+                    const option = document.createElement("option");
+                    option.value = device;
+                    option.textContent = device;
+                    meshtasticSelect.appendChild(option);
+                });
+                
+            } else {
+                console.warn("No serials array found in engine response.");
+            }
+             if (Array.isArray(data.callsign)) {
+                 document.getElementById("callsign").value = data.callsign;
+             }
+             if (Array.isArray(data.gps_port)) {
+                 document.getElementById("current_gps_port").innerHTML = data.gps_port;
+             }
+             if (Array.isArray(data.meshtastic_port)) {
+                 document.getElementById("current_meshtastic_port").innerHTML = data.meshtastic_port;
+             }
+        } // if (read == 1) 
+        
     })
     .catch(error => {
         console.error('Error:', error);
@@ -2128,19 +2129,15 @@ function saveSettingsForm() {
     const gpsDevicePort = selectElement.options[selectElement.selectedIndex].text;
     
     ircServerAddress = document.getElementById("ircTransportServerAddress").value;
-        
+
     selectElement = document.getElementById("meshtastic-device-select");
     const meshtasticDevicePort = selectElement.options[selectElement.selectedIndex].text;
 
-    console.log("saveSettingsForm() ", callsign,gpsDevicePort,ircServerAddress,meshtasticDevicePort );
-    
+    // Communicate new settings to listener.sh (engine.service)
     engine_data = "settings_save," + callsign + "," + gpsDevicePort + "," + ircServerAddress + "," + meshtasticDevicePort;
-    console.log("engine data: ", engine_data);
-    
-    // engine(engine_data);
-    
-    // todo: engine("settings_save," callsign,gpsDevicePort,ircServerAddress,meshtasticDevicePort);
-    // engine();
+    engine(engine_data);
+    settingsClose();
+    notifyMessage("Settings saved!", 2000);
 }
 
 
@@ -2460,6 +2457,7 @@ async function generateMeshtasticIcon(map) {
 
 function settingsClose() {
     document.getElementById("settings-box").style.display = "none";
+    keyEventListener=1;
 }
 
 

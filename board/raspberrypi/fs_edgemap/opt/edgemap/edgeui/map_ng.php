@@ -1756,6 +1756,7 @@
                 if ( !isHidden(logDiv) ) closeMessageEntryBox();
                 if ( !isHidden(radiolistblockDiv) ) closeRadioList();
                 if ( !isHidden(reticulumListblockDiv) ) closeReticulumList();
+                settingsClose();
             }
             if (key === "h") {
                 if ( isHidden(logDiv) ) {
@@ -1790,8 +1791,10 @@
             
             // Settings display
             if ( key == "s" ) {
+                engine('read_settings',1);
                 const targetDiv = document.getElementById("settings-box");
                 document.getElementById("settings-box").style.display = "flex";
+                keyEventListener=0;
             }
         }
     });
