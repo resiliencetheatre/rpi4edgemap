@@ -1255,10 +1255,7 @@
                         duration: 500 // Optional: adjust animation speed
                     });
                 }
-                
-                
-                
-                
+
                 
             } catch (e) {
                 // console.log('Maybe it was not geojson');
@@ -1296,17 +1293,8 @@
                     }
                 }
             }
-            
-            
-            
-            
-            
-            
+
         };
-
-
-
-
 
 
     // Hide development icons
@@ -1590,58 +1578,12 @@
                 'filter': ['==', '$type', 'Point']
         });
         
-        // Click to delete symbol
-        map.on('click', 'rightClickSymbols', function (e) {
-            if (!e.features.length) return;
-
-            const feature = e.features[0];
-            const coordinates = feature.geometry.coordinates.slice();
-            const id = feature.properties.id;
-
-            // Create popup container
-            const popupNode = document.createElement('div');
-            popupNode.style.background = '#333';
-            popupNode.style.padding = '2px';
-            popupNode.style.borderRadius = '6px';
-            popupNode.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
-            popupNode.style.display = 'flex';
-            popupNode.style.justifyContent = 'center';
-
-            // Create delete button
-            const deleteButton = document.createElement('button');
-            deleteButton.id = 'deleteSymbol';
-            deleteButton.innerText = 'Delete';
-            deleteButton.style.background = 'transparent';
-            deleteButton.style.border = '2px solid #0F0';
-            deleteButton.style.color = '#0F0';
-            deleteButton.style.borderRadius = '6px';
-            deleteButton.style.padding = '6px 12px';
-            deleteButton.style.cursor = 'pointer';
-
-            popupNode.appendChild(deleteButton);
-
-            const popup = new maplibregl.Popup({ offset: [0, -30] }) // 30px above point
-                .setLngLat(coordinates)
-                .setDOMContent(popupNode)
-                .addTo(map);
-
-            deleteButton.addEventListener('click', function () {
-                deleteFeatureFromGeoJsonSource(id);
-                popup.remove();
-            });
-        });
-
-        map.on('mouseenter', 'rightClickSymbols', () => {
-            map.getCanvas().style.cursor = 'pointer';
-        });
-        map.on('mouseleave', 'rightClickSymbols', () => {
-            map.getCanvas().style.cursor = '';
-        });
         
-        
-        // Double click to edit symbol text 
-        
+        // Update and delete on same doubleclick
         map.on('dblclick', 'rightClickSymbols', function (e) {
+            
+            map.doubleClickZoom.disable();
+            
             const clickedFeature = e.features[0];
             const clickedId = clickedFeature.properties.id;
             const currentText = clickedFeature.properties.text;
@@ -1670,7 +1612,38 @@
             input.style.fontSize = '14px';
             popupNode.appendChild(input);
 
-            // Create confirm button
+            // Create a button container
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.display = 'flex';
+            buttonContainer.style.justifyContent = 'space-between';
+            buttonContainer.style.gap = '8px';
+            buttonContainer.style.width = '100%';
+            popupNode.appendChild(buttonContainer);
+
+            // Create delete button
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.style.background = '#333';
+            deleteButton.style.color = '#f44336';
+            deleteButton.style.border = '1px solid #f44336';
+            deleteButton.style.padding = '4px 8px';
+            deleteButton.style.borderRadius = '4px';
+            deleteButton.style.cursor = 'pointer';
+            deleteButton.style.fontSize = '13px';
+            deleteButton.style.transition = 'all 0.2s ease';
+            buttonContainer.appendChild(deleteButton);
+
+            deleteButton.onmouseenter = () => {
+                deleteButton.style.background = '#f44336';
+                deleteButton.style.color = '#fff';
+            };
+
+            deleteButton.onmouseleave = () => {
+                deleteButton.style.background = '#333';
+                deleteButton.style.color = '#f44336';
+            };
+
+            // Create confirm button (Update)
             const confirmButton = document.createElement('button');
             confirmButton.textContent = 'Update';
             confirmButton.style.background = '#333';
@@ -1680,9 +1653,8 @@
             confirmButton.style.borderRadius = '4px';
             confirmButton.style.cursor = 'pointer';
             confirmButton.style.fontSize = '13px';
-            confirmButton.style.alignSelf = 'flex-end';
             confirmButton.style.transition = 'all 0.2s ease';
-            popupNode.appendChild(confirmButton);
+            buttonContainer.appendChild(confirmButton);
 
             confirmButton.onmouseenter = () => {
                 confirmButton.style.background = '#4CAF50';
@@ -1701,7 +1673,21 @@
                 .addTo(map);
             
             keyEventListener=0;
-            
+        
+            // Handle delete on button click
+            deleteButton.addEventListener('click', () => {
+                rightMenuSymbolsGeoJson.features = rightMenuSymbolsGeoJson.features.filter(
+                    f => f.properties.id !== clickedId
+                );
+
+                map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
+                mirrorGeoJson('sync_all', rightMenuSymbolsGeoJson);
+
+                popup.remove();
+                keyEventListener = 1;
+                map.doubleClickZoom.enable();
+            });
+
             // Handle update on button click
             confirmButton.addEventListener('click', () => {
                 const newText = input.value.trim();
@@ -1722,15 +1708,13 @@
                     // Update the source data
                     map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
                     mirrorGeoJson('sync_all',rightMenuSymbolsGeoJson);
-                    
+                    map.doubleClickZoom.enable();
                 }
-
                 // Close popup after update
                 popup.remove();
                 keyEventListener=1;
             });
         });
-
         
         
         // Meshtastic units geoJson
