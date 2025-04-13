@@ -71,7 +71,7 @@
         <div id="caption"></div>
     </div>
     
-    <div id="mapStatus" class="bottom-center-text">SIMULATION DATA DISPLAYED</div>
+    <div id="mapStatusText" class="bottom-center-text">SIMULATION DATA DISPLAYED!</div>
     <div id="mapStatus" class="bottom-left-text">
         <center>
         <img id="euFlag" src="img/eu-flag.svg" style="width: 40px; height: auto; opacity: 0.5;" alt="EU Flag">
@@ -331,7 +331,7 @@
 
     <div class="coordinateSearch" id="coordinateSearchEntry">
         
-        <input id="coordinateInput" type="text" placeholder="[latitude,longitude]" class="coordinateSearchInput" maxlength="20" onkeypress="handleKeyPress(event)" onfocus="ensureVisible(this)">
+        <input id="coordinateInput" type="text" placeholder="[lat,lon] or MGRS" class="coordinateSearchInput" maxlength="20" onkeypress="handleKeyPress(event)" onfocus="ensureVisible(this)">
         <i data-feather="x-circle" class="feather-closeCoordinateSearch" onClick='closeCoordinateSearchEntryBox();' ></i>
             
     </div>
@@ -1899,7 +1899,7 @@
                 source: 'mgrsGrid',
                 layout: {
                   'text-field': '{mgrs}', // Display the MGRS reference
-                  'text-size': 12,
+                  'text-size': 14,
                   'text-anchor': 'center',
                   'text-allow-overlap': true
                 },
@@ -1916,6 +1916,7 @@
                 layout: {},
                 paint: {
                   'line-color': '#0000FF', // Box color (blue)
+                  'line-dasharray': [ 1, 5], 
                   'line-width': 2
                 }
               });
@@ -1934,13 +1935,52 @@
                 }
             }
         };
+        
         // Draw the MGRS grid when the map moves
         map.on('moveend', drawMGRSGrid);
         // Initial call to draw the grid
         drawMGRSGrid();
         
+        // Enable click-to-copy for MGRS labels
+        map.on('click', 'mgrsGrid', (e) => {
+          if (e.features && e.features.length > 0) {
+            const mgrsText = e.features[0].properties.mgrs;
+            if (mgrsText) {
+              navigator.clipboard.writeText(mgrsText)
+                .then(() => {
+                  const popup = new maplibregl.Popup({ closeButton: false })
+                    .setLngLat(e.lngLat)
+                    .setHTML("<strong>Copied: " + mgrsText + "</strong>")
+                    .addTo(map);
+                  setTimeout(() => popup.remove(), 2000);
+                })
+                .catch(err => {
+                  console.error('Failed to copy MGRS to clipboard', err);
+                });
+            }
+          }
+        });
+        // Change cursor to pointer when hovering over MGRS points
+        map.on('mouseenter', 'mgrsGrid', () => {
+          map.getCanvas().style.cursor = 'pointer';
+        });
+        map.on('mouseleave', 'mgrsGrid', () => {
+          map.getCanvas().style.cursor = '';
+        });
         
-    });
+        
+
+
+
+
+
+        
+    }); // map onload
+    
+    
+    
+    
+    
     
     // map feature debug if off by default (use D to enable)
     document.getElementById('features').style.display = 'none';     
@@ -2055,15 +2095,30 @@
         if (keyEventListener) {
          var key=e.keyCode || e.which;
           if (key==13){
-            let inputValue = document.getElementById('coordinateInput').value;
+            
+            // Take search input and try lat,lon or MGRS
+            let inputValue = document.getElementById('coordinateInput').value.trim();
+            if (!inputValue) return;
             const coordValue = inputValue.split(",");
-            if ( check_lat_lon(coordValue[1],coordValue[0]) == true) {
-                console.log("AddDot: ",coordValue[1],coordValue[0]);
+            const isLatLon = coordValue.length === 2 && check_lat_lon(coordValue[1], coordValue[0]);
+            if (isLatLon) {
+                // console.log("AddDot (Lat/Lon):", coordValue[1], coordValue[0]);
                 removeDot();
-                addDot(coordValue[1],coordValue[0]);
+                addDot(coordValue[1], coordValue[0]);
+            } else {
+                try {
+                    const [lng, lat] = mgrs.toPoint(inputValue);
+                    console.log("AddDot (MGRS):", lng, lat );
+                    removeDot();
+                    addDot(lng, lat);
+                } catch (err) {
+                    console.error("Invalid input:", err);
+                    alert("Invalid input: please enter lat,lon or MGRS coordinate.");
+                }
             }
-            document.getElementById('coordinateInput').value="";   
+            document.getElementById('coordinateInput').value = "";
             closeCoordinateSearchEntryBox();
+
           }
       }
     }
@@ -2138,40 +2193,40 @@
                     }
                 }
             }
-            
-            // Info display
-            if ( key == "i" ) {
-                const targetDiv = document.getElementById("info-box");
-                targetDiv.style.display = "block";
-                const btn = document.getElementById("infobox-close");
-                const infoIcon = document.getElementById("info-icon");
-                btn.onclick = function () {
-                  if (targetDiv.style.display !== "none") {
-                    targetDiv.style.display = "none";
-                  } else {
+            // Only capture i,s,M if logDiv (messaging) is hidden (not active)
+            if ( isHidden(logDiv) ) {
+                // Info display
+                if ( key == "i" ) {
+                    const targetDiv = document.getElementById("info-box");
                     targetDiv.style.display = "block";
-                  }
-                };
+                    const btn = document.getElementById("infobox-close");
+                    const infoIcon = document.getElementById("info-icon");
+                    btn.onclick = function () {
+                      if (targetDiv.style.display !== "none") {
+                        targetDiv.style.display = "none";
+                      } else {
+                        targetDiv.style.display = "block";
+                      }
+                    };
+                }
+                // Settings display
+                if ( key == "s" ) {
+                    engine('read_settings',1);
+                    const targetDiv = document.getElementById("settings-box");
+                    document.getElementById("settings-box").style.display = "flex";
+                    keyEventListener=0;
+                }
+                // ViewSync Toggle
+                if ( key == "M" ) {
+                    viewSyncMaster = viewSyncMaster ? 0 : 1; // Toggle 0 <-> 1
+                    // console.log("View Sync Master is now:", viewSyncMaster ? "ON" : "OFF");
+                    if ( viewSyncMaster )
+                        document.getElementById("euFlag").style.opacity = "1.0";
+                    if ( !viewSyncMaster)
+                        document.getElementById("euFlag").style.opacity = "0.5";
+                }
             }
             
-            // Settings display
-            if ( key == "s" ) {
-                engine('read_settings',1);
-                const targetDiv = document.getElementById("settings-box");
-                document.getElementById("settings-box").style.display = "flex";
-                keyEventListener=0;
-            }
-            
-            // ViewSync Toggle
-            if ( key == "M" ) {
-                viewSyncMaster = viewSyncMaster ? 0 : 1; // Toggle 0 <-> 1
-                // console.log("View Sync Master is now:", viewSyncMaster ? "ON" : "OFF");
-                if ( viewSyncMaster )
-                    document.getElementById("euFlag").style.opacity = "1.0";
-                if ( !viewSyncMaster)
-                    document.getElementById("euFlag").style.opacity = "0.5";
-                    
-            }
         }
     });
     

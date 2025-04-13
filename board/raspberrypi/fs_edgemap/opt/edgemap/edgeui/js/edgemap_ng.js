@@ -1388,6 +1388,7 @@ function closeReticulumList() {
 
 function openMessageEntryBox() {
     const canVibrate = window.navigator.vibrate
+    document.getElementById("mapStatusText").style.display = "none";  
     if (canVibrate) window.navigator.vibrate(100)
     if ( logDiv.style.display == "" || logDiv.style.display == "none" )
     {
@@ -1411,6 +1412,7 @@ function openMessageEntryBox() {
 
 function closeMessageEntryBox() {
     console.log("closeMessageEntryBox()");
+    document.getElementById("mapStatusText").style.display = "block";
     // return; // new menu debug
     if ( logDiv.style.display == "" )
     {
@@ -2498,3 +2500,35 @@ function settingsClose() {
 }
 
 
+function searchMGRS() {
+          const input = document.getElementById('mgrs-search').value.trim();
+          
+          if (!input) {
+            alert("Please enter an MGRS coordinate.");
+            return;
+          }
+
+          try {
+            // Convert MGRS to [lng, lat]
+            const [lng, lat] = mgrs.toPoint(input); // returns [longitude, latitude]
+
+            // Pan and zoom the map to that location
+            map.flyTo({
+              center: [lng, lat],
+              zoom: 17, // Adjust this zoom level if needed
+              essential: true
+            });
+
+            // Optional: Add a marker or highlight the location
+            const marker = new maplibregl.Marker()
+              .setLngLat([lng, lat])
+              .addTo(map);
+
+            // Optional: Auto-remove the marker after a few seconds
+            setTimeout(() => marker.remove(), 5000);
+
+          } catch (err) {
+            console.error("Invalid MGRS:", err);
+            alert("Invalid MGRS coordinate. Please try again.");
+          }
+        }
