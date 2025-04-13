@@ -18,9 +18,10 @@
     <script src="js/main.js"></script>
     <link href="css/edgemap.css" rel="stylesheet" />
     
-    
     <link href="js/terra-draw-js/maplibre-gl-terradraw.css" rel="stylesheet" /> 
     <script src="js/terra-draw-js/maplibre-gl-terradraw.umd.js"></script>
+    
+    <script src="js/mgrs/mgrs.min.js"></script>
     
     <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
@@ -1784,11 +1785,159 @@
         // AreaUnit: "metric" | "imperial"
         const draw = new window.MaplibreTerradrawControl.MaplibreMeasureControl({
             modes: ['render', 'point', 'linestring', 'polygon', 'rectangle', 'circle', 'freehand', 'angled-rectangle', 'sensor', 'sector', 'select', 'delete-selection', 'delete', 'download'],
+            distanceUnit: 'kilometers',
+            areaUnit: 'metric',
             open: false,
             computeElevation: true,
-            
         });
         map.addControl(draw, 'bottom-left');
+        
+        //
+        // Experimental MGRS 
+        //
+        // Function to create a bounding box for the MGRS grid square
+        const createBoundingBox = (lng, lat, size = 10) => {
+          const bounds = [
+            [lng, lat], // Bottom-left corner
+            [lng + size, lat], // Bottom-right corner
+            [lng + size, lat + size], // Top-right corner
+            [lng, lat + size], // Top-left corner
+            [lng, lat] // Close the loop
+          ];
+          return bounds;
+        };
+
+    // MGRS Grid Layer    
+    const drawMGRSGrid = () => {
+        var mapZoomLevel =  map.getZoom();
+        // Show mgrs only on higher zoom levels
+        if ( mapZoomLevel > 16 ) {
+        
+            const bounds = map.getBounds();
+            const minLng = bounds.getWest();
+            const minLat = bounds.getSouth();
+            const maxLng = bounds.getEast();
+            const maxLat = bounds.getNorth();
+            const mgrsGrid = [];
+            const gridBoxes = [];
+            
+            // https://en.wikipedia.org/wiki/Decimal_degrees
+            var step=0.001; // 111 m
+
+            // For simplicity, generate grid points within the visible bounds at a fixed step (10 degrees)
+            for (let lat = minLat; lat <= maxLat; lat += step) {
+                for (let lng = minLng; lng <= maxLng; lng += step) {
+                  const mgrsCoord = mgrs.forward([lng, lat]); // Convert to MGRS coordinates
+
+                  // Create bounding box for the grid square
+                  const box = createBoundingBox(lng, lat, step); // Size of the box in degrees
+
+                  gridBoxes.push({
+                    type: 'Feature',
+                    geometry: {
+                      type: 'Polygon',
+                      coordinates: [box] // Bounding box polygon
+                    },
+                    properties: {
+                      mgrs: mgrsCoord // Store the MGRS reference
+                    }
+                  });
+
+                  // Add point for center (optional)
+                  mgrsGrid.push({
+                    type: 'Feature',
+                    geometry: {
+                      type: 'Point',
+                      coordinates: [lng + (step/2) , lat + (step/2) ] // Center of the grid square
+                    },
+                    properties: {
+                      mgrs: mgrsCoord // Store the MGRS reference
+                    }
+                  });
+                }
+              }
+
+              // Clear previous MGRS grid (optional)
+              if (map.getSource('mgrsGrid')) {
+                map.removeLayer('mgrsGrid');
+                map.removeSource('mgrsGrid');
+              }
+
+              // Clear previous grid boxes (optional)
+              if (map.getSource('mgrsBoxes')) {
+                map.removeLayer('mgrsBoxes');
+                map.removeSource('mgrsBoxes');
+              }
+
+              // Add grid squares as a source and layer (GeoJSON format)
+              const mgrsGeoJSON = {
+                type: 'FeatureCollection',
+                features: mgrsGrid
+              };
+
+              const mgrsBoxGeoJSON = {
+                type: 'FeatureCollection',
+                features: gridBoxes
+              };
+
+              // Add grid squares (points) as source
+              map.addSource('mgrsGrid', {
+                type: 'geojson',
+                data: mgrsGeoJSON
+              });
+
+              // Add grid boxes (polygons) as source
+              map.addSource('mgrsBoxes', {
+                type: 'geojson',
+                data: mgrsBoxGeoJSON
+              });
+
+              // Add points (MGRS grid centers) layer
+              map.addLayer({
+                id: 'mgrsGrid',
+                type: 'symbol',
+                source: 'mgrsGrid',
+                layout: {
+                  'text-field': '{mgrs}', // Display the MGRS reference
+                  'text-size': 12,
+                  'text-anchor': 'center',
+                  'text-allow-overlap': true
+                },
+                paint: {
+                  'text-color': '#FF0000' // Make the text red for visibility
+                }
+              });
+
+              // Add bounding box layer
+              map.addLayer({
+                id: 'mgrsBoxes',
+                type: 'line',
+                source: 'mgrsBoxes',
+                layout: {},
+                paint: {
+                  'line-color': '#0000FF', // Box color (blue)
+                  'line-width': 2
+                }
+              });
+            } // in zoom
+            else {
+                // Clear previous MGRS grid (optional)
+                if (map.getSource('mgrsGrid')) {
+                    map.removeLayer('mgrsGrid');
+                    map.removeSource('mgrsGrid');
+                }
+
+                // Clear previous grid boxes (optional)
+                if (map.getSource('mgrsBoxes')) {
+                    map.removeLayer('mgrsBoxes');
+                    map.removeSource('mgrsBoxes');
+                }
+            }
+        };
+        // Draw the MGRS grid when the map moves
+        map.on('moveend', drawMGRSGrid);
+        // Initial call to draw the grid
+        drawMGRSGrid();
         
         
     });
