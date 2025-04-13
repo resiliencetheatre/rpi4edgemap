@@ -1,0 +1,2 @@
+export declare const AvailableModes: readonly ["render", "point", "linestring", "polygon", "rectangle", "circle", "freehand", "angled-rectangle", "sensor", "sector", "select", "delete-selection", "delete", "download"];
+//# sourceMappingURL=AvailableModes.d.ts.map

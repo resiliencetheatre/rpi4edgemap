@@ -2314,6 +2314,7 @@ menuSymbolText[1] = "Electricity";
 menuSymbolText[2] = "Jamming"; 
 menuSymbolText[3] = "Water";
 menuSymbolText[4] = "Shelter";
+menuSymbolText[5] = "POI";
 
 // Generate milsymbols for radialmenu (svg) and geojson (bitmap)
 async function generateRightMenuSymbolArray(map) {
@@ -2325,6 +2326,7 @@ async function generateRightMenuSymbolArray(map) {
     menuSymbolCode[2] = "130110000015050400000000000000";
     menuSymbolCode[3] = "130311000000000036001000000000";
     menuSymbolCode[4] = "130425000028090000000000000000";
+    menuSymbolCode[5] = "130425000013010000000000000000";
     
     for (let i = 0; i < menuSymbolCode.length; i++) {
         // Size here determines size on menu

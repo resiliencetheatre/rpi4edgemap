@@ -18,6 +18,10 @@
     <script src="js/main.js"></script>
     <link href="css/edgemap.css" rel="stylesheet" />
     
+    
+    <link href="js/terra-draw-js/maplibre-gl-terradraw.css" rel="stylesheet" /> 
+    <script src="js/terra-draw-js/maplibre-gl-terradraw.umd.js"></script>
+    
     <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
@@ -539,7 +543,7 @@
     const edgemapUiVersion = "v0.8";
     var intialZoomLevel=1;
 	var symbolSize = 30;
-    
+
     // ViewSync 
     var viewSyncMaster=0;
     
@@ -1558,7 +1562,7 @@
             'layout': {
                 'icon-image': ['get', 'milSymbol'], 
                 'icon-anchor': 'center',
-                'icon-offset': [0,0],   
+                'icon-offset': [0,-5],   
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true, 
                 'text-allow-overlap': true,
@@ -1772,6 +1776,20 @@
         }, 15000 );
         // NOTE: This affects also to link lines!
         showTails();
+        
+        
+        // Terradraw
+        // https://watergis.github.io/maplibre-gl-terradraw/interfaces/interfaces_MeasureControlOptions.MeasureControlOptions.html
+        // DistanceUnit: "degrees" | "radians" | "miles" | "kilometers"
+        // AreaUnit: "metric" | "imperial"
+        const draw = new window.MaplibreTerradrawControl.MaplibreMeasureControl({
+            modes: ['render', 'point', 'linestring', 'polygon', 'rectangle', 'circle', 'freehand', 'angled-rectangle', 'sensor', 'sector', 'select', 'delete-selection', 'delete', 'download'],
+            open: false,
+            computeElevation: true,
+            
+        });
+        map.addControl(draw, 'bottom-left');
+        
         
     });
     

@@ -1,0 +1,1 @@
+{"version":3,"file":"TerrainSource.d.ts","sourceRoot":"","sources":["../../../src/lib/interfaces/TerrainSource.ts"],"names":[],"mappings":"AAGA,MAAM,WAAW,aAAa;IAO7B,GAAG,EAAE,MAAM,CAAC;IAQZ,QAAQ,CAAC,EAAE,WAAW,GAAG,QAAQ,CAAC;IAKlC,QAAQ,CAAC,EAAE,GAAG,GAAG,GAAG,CAAC;IAIrB,OAAO,CAAC,EAAE,MAAM,CAAC;IAIjB,OAAO,CAAC,EAAE,MAAM,CAAC;IAIjB,GAAG,CAAC,EAAE,OAAO,CAAC;CACd"}
