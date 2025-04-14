@@ -135,7 +135,7 @@ var menuItems = [
             },
             {
                 id   : 'coordinate',
-                title: 'Coordinates',
+                title: 'Search',
                 icon: '#svg-icon-coordinate-search'
             },
             {

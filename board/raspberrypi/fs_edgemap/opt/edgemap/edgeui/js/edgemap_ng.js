@@ -2532,3 +2532,23 @@ function searchMGRS() {
             alert("Invalid MGRS coordinate. Please try again.");
           }
         }
+
+
+// Coordinate or mgrs search -> fly to location
+function flyTo(lat,lng) {
+    map.flyTo({
+      center: [lng, lat],
+      zoom: 17, // Adjust this zoom level if needed
+      essential: true
+    });
+    const marker = new maplibregl.Marker()
+      .setLngLat([lng, lat])
+      .addTo(map);
+      
+    setTimeout(() => marker.remove(), 10000);
+}
+
+
+
+
+

@@ -71,7 +71,7 @@
         <div id="caption"></div>
     </div>
     
-    <div id="mapStatusText" class="bottom-center-text">SIMULATION DATA DISPLAYED!</div>
+    <div id="mapStatusText" class="bottom-center-text">SIMULATION DATA DISPLAYED</div>
     <div id="mapStatus" class="bottom-left-text">
         <center>
         <img id="euFlag" src="img/eu-flag.svg" style="width: 40px; height: auto; opacity: 0.5;" alt="EU Flag">
@@ -471,6 +471,9 @@
     <div id="mode_localgps" style="display: none;"></div>
     <div id="rightMenuLat" style="display: none;"></div>
     <div id="rightMenuLon" style="display: none;"></div>
+
+
+    
 
         
 <script>    
@@ -1792,6 +1795,22 @@
         });
         map.addControl(draw, 'bottom-left');
         
+     
+
+       
+    
+      
+    
+       
+    
+
+
+
+        
+        
+        
+        
+        
         //
         // Experimental MGRS 
         //
@@ -2087,6 +2106,9 @@
             let zoom = map.getZoom();
     });
    
+   
+    
+   
 
     //
     // Keypress functions
@@ -2102,15 +2124,15 @@
             const coordValue = inputValue.split(",");
             const isLatLon = coordValue.length === 2 && check_lat_lon(coordValue[1], coordValue[0]);
             if (isLatLon) {
-                // console.log("AddDot (Lat/Lon):", coordValue[1], coordValue[0]);
-                removeDot();
-                addDot(coordValue[1], coordValue[0]);
+                // removeDot();
+                // addDot(coordValue[1], coordValue[0]);
+                flyTo(coordValue[0],coordValue[1] );
             } else {
                 try {
                     const [lng, lat] = mgrs.toPoint(inputValue);
-                    console.log("AddDot (MGRS):", lng, lat );
-                    removeDot();
-                    addDot(lng, lat);
+                    // removeDot();
+                    // addDot(lng, lat);
+                    flyTo(lat,lng);
                 } catch (err) {
                     console.error("Invalid input:", err);
                     alert("Invalid input: please enter lat,lon or MGRS coordinate.");
