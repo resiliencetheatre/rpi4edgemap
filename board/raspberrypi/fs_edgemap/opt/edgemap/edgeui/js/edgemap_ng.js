@@ -432,7 +432,7 @@ function toggleReticulumList() {
 // 
 function sendMessageToAllBearers(messagepayload) {
     if ( messagingSocketConnected ) {
-        messagingSocket.send( messagepayload );
+        messagingSocket.send( messagepayload + "\n" ); // TODO: Check with meshtastic, irc: \n usage
     }
 }
 

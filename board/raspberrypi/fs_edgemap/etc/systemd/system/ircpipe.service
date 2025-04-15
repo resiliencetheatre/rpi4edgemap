@@ -1,0 +1,14 @@
+[Unit]
+Description=irc messaging
+After=multi-user.target wss-messaging-irc.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/ircpipe
+ExecStart=/usr/bin/ircpipe
+Restart=always
+RestartSec=10
+TimeoutStartSec=10
+
+# [Install]
+# WantedBy=multi-user.target

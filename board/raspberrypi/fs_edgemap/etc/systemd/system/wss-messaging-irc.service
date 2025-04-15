@@ -1,12 +1,12 @@
 [Unit]
 Description=gwsocket for messaging (ssl/8990)
 After=multi-user.target
-Conflicts=wss-messaging-irc.service
+Conflicts=wss-messaging.service
 
 [Service]
 WorkingDirectory=/opt/edgemap
 KillMode=process
-ExecStart=gwsocket -p 8990 --pipein=/tmp/msgchannel --pipeout=/tmp/msgincoming --ssl-cert=/etc/apache2/edgemap.crt --ssl-key=/etc/apache2/edgemap.key
+ExecStart=gwsocket -p 8990 --pipein=/tmp/channelmessages --pipeout=/tmp/outmessages --ssl-cert=/etc/apache2/edgemap.crt --ssl-key=/etc/apache2/edgemap.key
 Restart=always
 RestartSec=5
 TimeoutStartSec=5
