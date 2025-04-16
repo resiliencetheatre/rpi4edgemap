@@ -2392,6 +2392,18 @@ function addRightClickSymbol(lat, lon, symbolIndex) {
         }
     };
     rightMenuSymbolsGeoJson.features.push(point);
+    
+    // Optional sending right click menu symbols over msg based channel
+    // Be aware that length of message for LoRA might be long. So maybe
+    // this will fit into IRC delivery where max length is 512 characters.
+    if ( sendRightClickSymbolsOverMsgChannel ) {
+        const jsonString = JSON.stringify(point);
+        const messageSymbol = `SYM||${jsonString}`;
+        const msgPayload = getElementItem('#myCallSign').value + '|' + messageSymbol;  
+        sendMessageToAllBearers(msgPayload);
+    }
+    
+    // Update local map and send also mirror message over to websocket connected clients
     map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
     mirrorGeoJson('sync_all',rightMenuSymbolsGeoJson);
 }

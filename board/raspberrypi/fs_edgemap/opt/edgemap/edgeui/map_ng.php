@@ -366,7 +366,6 @@
                 <i data-feather="x-circle" class="feather-closeMsgEntry" onClick='closeMessageEntryBox();' ></i> <p>
                 <i data-feather="map-pin" class="feather-cmdButtons" onClick='createNewDragableMarker();'></i><p>
                 <i data-feather="trash" class="feather-cmdButtons" onClick='eraseMsgLog();' ></i><p>
-                <i data-feather="at-sign" class="feather-cmdButtons" onClick='openCallSignEntryBox();'></i>
             </td>
         </tr>
         </table>
@@ -580,6 +579,10 @@
 	var dragPopups = [];
 	var indexOfDraggedMarker;
 	var lastDraggedMarkerId;
+
+    // If using IRC channel, we can send right click created symbols
+    // to other peers.
+    sendRightClickSymbolsOverMsgChannel = true;
 
 	//
 	// Generate random callsign for a demo (not in use)
@@ -1023,7 +1026,23 @@
                     } 
                     notifyMessage("Image received from " + msgFrom , 5000);
                 }
+                
+                // Add right click symbol from SYM message. This is experiment for IRC delivery.
+                if ( msgType == "SYM" ) {
+                    const feature = JSON.parse(msgMessage);
+                    // Find index of existing feature with the same ID and either create or update symbol
+                    const index = rightMenuSymbolsGeoJson.features.findIndex(f => f.properties.id === feature.properties.id);
+                    if (index !== -1) {
+                        rightMenuSymbolsGeoJson.features[index] = feature;
+                    } else {
+                        rightMenuSymbolsGeoJson.features.push(feature);
+                    }
+                    // Update geojson
+                    map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
+                }
             }
+            
+            
             //
             // Normal message 
             // TODO: sanitize, validate & parse etc (this is just an demo)
@@ -1051,7 +1070,6 @@
     }); 
     
     getElementItem('#sendMsg').onclick = function(e) {
-        console.log("Send message debug: ", getElementItem('#myCallSign').value);
         var msgPayload = getElementItem('#myCallSign').value + '|' + getElementItem('#msgInput').value + '\n';       
         
         // This is for reticulum ACK message demonstration
@@ -1716,6 +1734,34 @@
                     // Update the source data
                     map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
                     mirrorGeoJson('sync_all',rightMenuSymbolsGeoJson);
+                    
+                    // TODO: Update also remote peers with messaging, if it's possible?
+                    // Optional sending right click menu symbols over msg based channel
+                    // Be aware that length of message for LoRA might be long. So maybe
+                    // this will fit into IRC delivery where max length is 512 characters.
+                    
+                    const newTextForUpdateMsg = input.value.trim();
+                    const minimalFeature = {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: clickedFeature.geometry.coordinates.slice() // Original, unmodified
+                        },
+                        properties: {
+                            id: clickedFeature.properties.id,
+                            text: newTextForUpdateMsg,
+                            milSymbol: clickedFeature.properties.milSymbol
+                        }
+                    };
+
+                    // Send updated symbol over msg channel
+                    if ( sendRightClickSymbolsOverMsgChannel ) {
+                        const jsonString = JSON.stringify(minimalFeature);
+                        const messageSymbol = `SYM||${jsonString}`;
+                        const msgPayload = getElementItem('#myCallSign').value + '|' + messageSymbol;  
+                        sendMessageToAllBearers(msgPayload);
+                    }
+                    
                     map.doubleClickZoom.enable();
                 }
                 // Close popup after update
