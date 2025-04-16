@@ -534,23 +534,15 @@ function submitImage() {
             
             // Create image marker
             createImageMarker("myself",submit_form_latitude, submit_form_longitude, payload );
-            // TODO: can we share this over mirror socket?
-            var subLat = submit_form_latitude.substr(0,10);
-            var subLon = submit_form_longitude.substr(0,10);
-            var myCallSign=getElementItem('#myCallSign').value;
-            var imgMsg = myCallSign + `|imageMarker|[`+subLat+`,`+subLon+`]|`+ payload +  "\n";
             
+            // Demo with mirror socket, share image over to other peers connected to this instance
             if ( mirrorSocketConnected ) {
+                var subLat = submit_form_latitude.substr(0,10);
+                var subLon = submit_form_longitude.substr(0,10);
+                var myCallSign=getElementItem('#myCallSign').value;
+                var imgMsg = myCallSign + `|imageMarker|[`+subLat+`,`+subLon+`]|`+ payload +  "\n";
                 mirrorSocket.send(imgMsg);
             }
-            
-            
-            
-            
-            
-            
-            
-            
             
             var modal = document.getElementById('myModal');
             var images = document.getElementsByClassName('myImages');
