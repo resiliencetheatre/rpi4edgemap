@@ -377,6 +377,8 @@ window.onload = function ()
                     // Take location clicked 
                     lat = document.getElementById('rightMenuLat').innerHTML;
                     lon = document.getElementById('rightMenuLon').innerHTML;
+                    lat = lat.substr(0,10);
+                    lon = lon.substr(0,10);
                     // Populate upload form with latitude, longitude
                     const formInfo = document.forms['uploadform'];
                     formInfo.lat.value = lat;

@@ -1253,6 +1253,8 @@
             try {
                 const msg = JSON.parse(event.data);
                 
+                console.log("mirrorSocket.onmessage #1: ", msg);
+                
                 // Sync right click symbols
                 if (msg.type === 'sync_all' && msg.geoJson) {
                     rightMenuSymbolsGeoJson = msg.geoJson;
@@ -1287,7 +1289,10 @@
                 // console.log('Maybe it was not geojson');
                 // copied from messaging socket:
                 var incomingMessage = event.data;   
-                var trimmedString = incomingMessage.substring(0, 200);
+                var trimmedString = incomingMessage.substring(0, 512);
+                
+                console.log("mirrorSocket.onMessage()", trimmedString)
+                
                 const msgArray=trimmedString.split("|");
                 const msgFrom =  msgArray[0];
                 const msgType =  msgArray[1];
@@ -1317,6 +1322,39 @@
                                 }
                             } 
                     }
+                    
+                    
+                    //
+                    // Image marker: [FROM]|imageMarker|[LAT,LON]|[FILENAME]
+                    // 
+                    if ( msgType == "imageMarker" ) {
+                        const location = msgLocation;
+                        const locationNumbers = location.replace(/[\])}[{(]/g, '');
+                        const locationArray = locationNumbers.split(",");   
+                        // I just hate \n on different transports
+                        createImageMarker(msgFrom,locationArray[0], locationArray[1],msgMessage.slice(0,-1));
+                        var modal = document.getElementById('myModal');
+                        var images = document.getElementsByClassName('myImages');
+                        var modalImg = document.getElementById("img01");
+                        var captionText = document.getElementById("caption");
+                        for (var i = 0; i < images.length; i++) {
+                          var img = images[i];
+                          img.onclick = function(evt) {
+                            modal.style.display = "block";
+                            modalImg.src = this.alt; 
+                            captionText.innerHTML = "Full size image";
+                          }
+                        }
+                        var span = document.getElementsByClassName("close")[0];
+                        span.onclick = function() {
+                          modal.style.display = "none";
+                           modalImg.src = "";
+                        } 
+                        notifyMessage("Image received from " + msgFrom , 5000);
+                    }
+                    
+                    
+                    
                 }
             }
 
