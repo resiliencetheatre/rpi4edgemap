@@ -1,6 +1,6 @@
 /**
  * MapLibre GL JS
- * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.3.0/LICENSE.txt
+ * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.3.1/LICENSE.txt
  */
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -10,7 +10,7 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 var name = "maplibre-gl";
 var description = "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library";
-var version$2 = "5.3.0";
+var version$2 = "5.3.1";
 var main = "dist/maplibre-gl.js";
 var style = "dist/maplibre-gl.css";
 var license = "BSD-3-Clause";
@@ -75,41 +75,41 @@ var devDependencies = {
 	"@types/minimist": "^1.2.5",
 	"@types/murmurhash-js": "^1.0.6",
 	"@types/nise": "^1.4.5",
-	"@types/node": "^22.13.13",
+	"@types/node": "^22.14.1",
 	"@types/offscreencanvas": "^2019.7.3",
 	"@types/pixelmatch": "^5.2.6",
 	"@types/pngjs": "^6.0.5",
-	"@types/react": "^19.0.12",
-	"@types/react-dom": "^19.0.4",
+	"@types/react": "^19.1.1",
+	"@types/react-dom": "^19.1.2",
 	"@types/request": "^2.48.12",
 	"@types/shuffle-seed": "^1.1.3",
 	"@types/window-or-global": "^1.0.6",
-	"@typescript-eslint/eslint-plugin": "^8.28.0",
-	"@typescript-eslint/parser": "^8.28.0",
-	"@vitest/coverage-v8": "3.0.9",
-	"@vitest/ui": "3.0.9",
+	"@typescript-eslint/eslint-plugin": "^8.29.1",
+	"@typescript-eslint/parser": "^8.29.1",
+	"@vitest/coverage-v8": "3.1.1",
+	"@vitest/ui": "3.1.1",
 	address: "^2.0.3",
 	autoprefixer: "^10.4.21",
 	benchmark: "^2.1.4",
 	canvas: "^3.1.0",
-	cspell: "^8.17.5",
+	cspell: "^8.18.1",
 	cssnano: "^7.0.6",
 	d3: "^7.9.0",
 	"d3-queue": "^3.0.7",
-	"devtools-protocol": "^0.0.1436416",
+	"devtools-protocol": "^0.0.1445099",
 	diff: "^7.0.0",
 	"dts-bundle-generator": "^9.5.1",
-	eslint: "^9.23.0",
+	eslint: "^9.24.0",
 	"eslint-plugin-html": "^8.1.2",
 	"eslint-plugin-import": "^2.31.0",
-	"eslint-plugin-react": "^7.37.4",
+	"eslint-plugin-react": "^7.37.5",
 	"eslint-plugin-tsdoc": "0.4.0",
 	"eslint-plugin-vitest": "^0.5.4",
 	expect: "^29.7.0",
 	glob: "^11.0.1",
 	globals: "^16.0.0",
 	"is-builtin-module": "^5.0.0",
-	jsdom: "^26.0.0",
+	jsdom: "^26.1.0",
 	"junit-report-builder": "^5.1.1",
 	minimist: "^1.2.8",
 	"mock-geolocation": "^1.0.11",
@@ -126,24 +126,24 @@ var devDependencies = {
 	"pretty-bytes": "^6.1.1",
 	puppeteer: "^24.1.1",
 	react: "^19.0.0",
-	"react-dom": "^19.0.0",
-	rollup: "^4.37.0",
+	"react-dom": "^19.1.0",
+	rollup: "^4.40.0",
 	"rollup-plugin-sourcemaps2": "^0.5.0",
 	rw: "^1.3.3",
 	semver: "^7.7.1",
-	sharp: "^0.33.5",
+	sharp: "^0.34.1",
 	"shuffle-seed": "^1.1.6",
 	"source-map-explorer": "^2.5.3",
 	st: "^3.0.1",
-	stylelint: "^16.16.0",
-	"stylelint-config-standard": "^37.0.0",
+	stylelint: "^16.18.0",
+	"stylelint-config-standard": "^38.0.0",
 	"ts-node": "^10.9.2",
 	tslib: "^2.8.1",
-	typedoc: "^0.28.1",
-	"typedoc-plugin-markdown": "^4.6.0",
+	typedoc: "^0.28.2",
+	"typedoc-plugin-markdown": "^4.6.2",
 	"typedoc-plugin-missing-exports": "^4.0.0",
-	typescript: "^5.8.2",
-	vitest: "3.0.9",
+	typescript: "^5.8.3",
+	vitest: "3.1.1",
 	"vitest-webgl-canvas-mock": "^1.1.0"
 };
 var scripts = {
@@ -32949,6 +32949,9 @@ class Texture {
         if (this.useMipmap && this.isSizePowerOfTwo()) {
             gl.generateMipmap(gl.TEXTURE_2D);
         }
+        context.pixelStoreUnpackFlipY.setDefault();
+        context.pixelStoreUnpack.setDefault();
+        context.pixelStoreUnpackPremultiplyAlpha.setDefault();
     }
     bind(filter, wrap, minFilter) {
         const { context } = this;
@@ -62287,7 +62290,9 @@ class Marker extends Evented {
     addTo(map) {
         this.remove();
         this._map = map;
-        this._element.setAttribute('aria-label', map._getUIString('Marker.Title'));
+        if (!this._element.hasAttribute('aria-label')) {
+            this._element.setAttribute('aria-label', map._getUIString('Marker.Title'));
+        }
         map.getCanvasContainer().appendChild(this._element);
         map.on('move', this._update);
         map.on('moveend', this._update);
@@ -63801,9 +63806,6 @@ class Popup extends Evented {
             if (this._container) {
                 DOM.remove(this._container);
                 delete this._container;
-            }
-            if (this._closeButton) {
-                this._closeButton.removeEventListener('click', this._onClose);
             }
             if (this._map) {
                 this._map.off('move', this._update);
