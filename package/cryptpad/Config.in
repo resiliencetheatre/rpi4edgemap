@@ -1,0 +1,7 @@
+config BR2_PACKAGE_CRYPTPAD
+    bool "cryptpad"
+    depends on BR2_PACKAGE_NODEJS
+    help
+      CryptPad is a collaboration suite, end-to-end encrypted.
+
+      https://github.com/cryptpad/cryptpad
