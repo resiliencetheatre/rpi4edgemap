@@ -5,10 +5,6 @@ After=multi-user.target
 [Service]
 WorkingDirectory=/opt/edgemap
 KillMode=process
-ExecStartPre=rm /tmp/inpipe
-ExecStartPre=rm /tmp/outpipe
-ExecStartPre=mkfifo /tmp/inpipe
-ExecStartPre=mkfifo /tmp/outpipe
 ExecStart=gwsocket -p 9000 --pipein=/tmp/inpipe --pipeout=/tmp/outpipe --ssl-cert=/etc/apache2/edgemap.crt --ssl-key=/etc/apache2/edgemap.key
 Restart=always
 RestartSec=5
