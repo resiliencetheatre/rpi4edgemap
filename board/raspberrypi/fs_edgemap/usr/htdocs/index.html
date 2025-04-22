@@ -123,6 +123,7 @@
             document.getElementById("button1").href = baseUrl + "/myCA.crt";
             document.getElementById("button2").href = "https://" + window.location.hostname + "/edgeui"; // Force HTTPS
             document.getElementById("button3").href = "http://" + window.location.hostname + "/excalidraw"; // Force HTTP
+            document.getElementById("button4").href = "http://" + window.location.hostname + ":3000"; // Force HTTP
         });
     </script>
 </head>
@@ -150,6 +151,13 @@
                 Excalidraw <br> [HTTP]
             </button>
         </a>
+        <a id="button4" target="_blank">
+            <button>
+                <img src="img/cryptpad.png" alt="Button Logo"> <!-- Placeholder for logo on Button 4 -->
+                Cryptpad <br> [HTTP]
+            </button>
+        </a>
+        
     </div>
 
     <div class="free-text">
