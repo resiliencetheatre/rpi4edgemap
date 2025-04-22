@@ -364,6 +364,52 @@ DEVICES="/dev/ttyUSB1"
 
 Daemon (gpsd) and 'gpsreader' is started automatically after you plug GPS in USB port.
 
+## Cryptpad
+
+If you built `rpi4_edgemap_6.13_nodejs_defconfig` configuration, there is experimental [cryptpad](https://github.com/cryptpad/cryptpad) 
+built into edgemap image. It needs following configuration step before it can be used.
+
+Complete cryptpad installation by visiting installation URL. It's shown on first (manual) run of Cryptpad.
+
+```
+# Let's make sure we don't run cryptpad service (as root):
+systemctl stop cryptpad
+# Change user to 'cryptpad'
+su cryptpad
+# Manually execute server.js (as cryptpad):
+cd
+node server.js
+```
+
+Visit given URL and setup cryptpad admin user and password on web interface. After this step
+is completed, you may enable cryptpad service:
+
+```
+systemctl enable cryptpad
+```
+
+Starting this service or rebooting edgemap instance, should make cryptpad working on your instance.
+
+### Reset cryptpad
+
+If you screw up, like I've done, you can 'reset' cryptpad from installation directory.
+
+Remove /opt/cryptmap on edgemap:
+
+```
+rm -rf /opt/cryptmap
+```
+
+Copy build directory from buildroot directory to edgemap:
+
+```
+cd [your buildroot directory]
+scp -r output/target/opt/cryptpad/ [EDGEMAP_IP]:/opt
+```
+
+Then re-configure like described in “first run” section above. 
+
+
 ## Links
 
 * https://jvns.ca/blog/2024/11/29/why-pipes-get-stuck-buffering/
