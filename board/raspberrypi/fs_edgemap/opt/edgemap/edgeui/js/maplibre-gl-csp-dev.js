@@ -1,6 +1,6 @@
 /**
  * MapLibre GL JS
- * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.3.1/LICENSE.txt
+ * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.4.0/LICENSE.txt
  */
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -10,7 +10,7 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 var name = "maplibre-gl";
 var description = "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library";
-var version$2 = "5.3.1";
+var version$2 = "5.4.0";
 var main = "dist/maplibre-gl.js";
 var style = "dist/maplibre-gl.css";
 var license = "BSD-3-Clause";
@@ -79,27 +79,27 @@ var devDependencies = {
 	"@types/offscreencanvas": "^2019.7.3",
 	"@types/pixelmatch": "^5.2.6",
 	"@types/pngjs": "^6.0.5",
-	"@types/react": "^19.1.1",
+	"@types/react": "^19.1.2",
 	"@types/react-dom": "^19.1.2",
 	"@types/request": "^2.48.12",
 	"@types/shuffle-seed": "^1.1.3",
 	"@types/window-or-global": "^1.0.6",
-	"@typescript-eslint/eslint-plugin": "^8.29.1",
-	"@typescript-eslint/parser": "^8.29.1",
+	"@typescript-eslint/eslint-plugin": "^8.30.1",
+	"@typescript-eslint/parser": "^8.30.1",
 	"@vitest/coverage-v8": "3.1.1",
 	"@vitest/ui": "3.1.1",
 	address: "^2.0.3",
 	autoprefixer: "^10.4.21",
 	benchmark: "^2.1.4",
 	canvas: "^3.1.0",
-	cspell: "^8.18.1",
+	cspell: "^8.19.2",
 	cssnano: "^7.0.6",
 	d3: "^7.9.0",
 	"d3-queue": "^3.0.7",
-	"devtools-protocol": "^0.0.1445099",
+	"devtools-protocol": "^0.0.1449119",
 	diff: "^7.0.0",
 	"dts-bundle-generator": "^9.5.1",
-	eslint: "^9.24.0",
+	eslint: "^9.25.0",
 	"eslint-plugin-html": "^8.1.2",
 	"eslint-plugin-import": "^2.31.0",
 	"eslint-plugin-react": "^7.37.5",
@@ -113,7 +113,7 @@ var devDependencies = {
 	"junit-report-builder": "^5.1.1",
 	minimist: "^1.2.8",
 	"mock-geolocation": "^1.0.11",
-	"monocart-coverage-reports": "^2.12.3",
+	"monocart-coverage-reports": "^2.12.4",
 	nise: "^6.1.1",
 	"npm-font-open-sans": "^1.1.0",
 	"npm-run-all": "^4.1.5",
@@ -139,7 +139,7 @@ var devDependencies = {
 	"stylelint-config-standard": "^38.0.0",
 	"ts-node": "^10.9.2",
 	tslib: "^2.8.1",
-	typedoc: "^0.28.2",
+	typedoc: "^0.28.3",
 	"typedoc-plugin-markdown": "^4.6.2",
 	"typedoc-plugin-missing-exports": "^4.0.0",
 	typescript: "^5.8.3",
@@ -38107,6 +38107,81 @@ class SourceFeatureState {
     }
 }
 
+/*
+* The maximum angle to use for the Mercator horizon. This must be less than 90
+* to prevent errors in `MercatorTransform::_calcMatrices()`. It shouldn't be too close
+* to 90, or the distance to the horizon will become very large, unnecessarily increasing
+* the number of tiles needed to render the map.
+*/
+const maxMercatorHorizonAngle = 89.25;
+/**
+ * Returns mercator coordinates in range 0..1 for given coordinates inside a specified tile.
+ * @param inTileX - X coordinate in tile units - range [0..EXTENT].
+ * @param inTileY - Y coordinate in tile units - range [0..EXTENT].
+ * @param canonicalTileID - Tile canonical ID - mercator X, Y and zoom.
+ * @returns Mercator coordinates of the specified point in range [0..1].
+ */
+function tileCoordinatesToMercatorCoordinates(inTileX, inTileY, canonicalTileID) {
+    const scale = 1.0 / (1 << canonicalTileID.z);
+    return new MercatorCoordinate(inTileX / EXTENT$1 * scale + canonicalTileID.x * scale, inTileY / EXTENT$1 * scale + canonicalTileID.y * scale);
+}
+/**
+ * Returns LngLat for given in-tile coordinates and tile ID.
+ * @param inTileX - X coordinate in tile units - range [0..EXTENT].
+ * @param inTileY - Y coordinate in tile units - range [0..EXTENT].
+ * @param canonicalTileID - Tile canonical ID - mercator X, Y and zoom.
+ */
+function tileCoordinatesToLocation(inTileX, inTileY, canonicalTileID) {
+    return tileCoordinatesToMercatorCoordinates(inTileX, inTileY, canonicalTileID).toLngLat();
+}
+/**
+ * Convert from LngLat to world coordinates (Mercator coordinates scaled by world size).
+ * @param worldSize - Mercator world size computed from zoom level and tile size.
+ * @param lnglat - The location to convert.
+ * @returns Point
+ */
+function projectToWorldCoordinates(worldSize, lnglat) {
+    const lat = clamp$1(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
+    return new Point(mercatorXfromLng(lnglat.lng) * worldSize, mercatorYfromLat(lat) * worldSize);
+}
+/**
+ * Convert from world coordinates (mercator coordinates scaled by world size) to LngLat.
+ * @param worldSize - Mercator world size computed from zoom level and tile size.
+ * @param point - World coordinate.
+ * @returns LngLat
+ */
+function unprojectFromWorldCoordinates(worldSize, point) {
+    return new MercatorCoordinate(point.x / worldSize, point.y / worldSize).toLngLat();
+}
+/**
+ * Calculate pixel height of the visible horizon in relation to map-center (e.g. height/2),
+ * multiplied by a static factor to simulate the earth-radius.
+ * The calculated value is the horizontal line from the camera-height to sea-level.
+ * @returns Horizon above center in pixels.
+ */
+function getMercatorHorizon(transform) {
+    return transform.cameraToCenterDistance * Math.min(Math.tan(degreesToRadians(90 - transform.pitch)) * 0.85, Math.tan(degreesToRadians(maxMercatorHorizonAngle - transform.pitch)));
+}
+function calculateTileMatrix(unwrappedTileID, worldSize) {
+    const canonical = unwrappedTileID.canonical;
+    const scale = worldSize / zoomScale(canonical.z);
+    const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
+    const worldMatrix = identity$2(new Float64Array(16));
+    translate$2(worldMatrix, worldMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
+    scale$5(worldMatrix, worldMatrix, [scale / EXTENT$1, scale / EXTENT$1, 1]);
+    return worldMatrix;
+}
+function cameraMercatorCoordinateFromCenterAndRotation(center, elevation, pitch, bearing, distance) {
+    const centerMercator = MercatorCoordinate.fromLngLat(center, elevation);
+    const mercUnitsPerMeter = mercatorZfromAltitude(1, center.lat);
+    const dMercator = distance * mercUnitsPerMeter;
+    const dzMercator = dMercator * Math.cos(degreesToRadians(pitch));
+    const dhMercator = Math.sqrt(dMercator * dMercator - dzMercator * dzMercator);
+    const dxMercator = dhMercator * Math.sin(degreesToRadians(-bearing));
+    const dyMercator = dhMercator * Math.cos(degreesToRadians(-bearing));
+    return new MercatorCoordinate(centerMercator.x + dxMercator, centerMercator.y + dyMercator, centerMercator.z + dzMercator);
+}
+
 /**
  * A simple/heuristic function that returns whether the tile is visible under the current transform.
  * @returns an {@link IntersectionResult}.
@@ -38125,31 +38200,55 @@ function isTileVisible(frustum, aabb, plane) {
     }
     return 1 /* IntersectionResult.Partial */;
 }
-function calculateTileZoom(requestedCenterZoom, distanceToTile2D, distanceToTileZ, distanceToCenter3D, cameraVerticalFOV) {
-    /**
-    * Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
-    * tiles to be loaded. At 0, tiles are loaded with approximately constant screen X resolution.
-    * At 1, tiles are loaded with approximately constant screen area.
-    * At 2, tiles are loaded with approximately constant screen Y resolution.
-    */
-    const pitchTileLoadingBehavior = 1.0;
-    /**
-    * Controls how tiles are loaded at high pitch angles. Controls how different the distance to a tile must be (compared with the center point)
-    * before a new zoom level is requested. For example, if tileZoomDeadband = 1 and the center zoom is 14, tiles distant enough to be loaded at
-    * z13 will be loaded at z14, and tiles distant enough to be loaded at z14 will be loaded at z15. A higher number causes more tiles to be loaded
-    * at the center zoom level. This also results in more tiles being loaded overall.
-    */
-    const tileZoomDeadband = 0.0;
-    let thisTileDesiredZ = requestedCenterZoom;
-    const thisTilePitch = Math.atan(distanceToTile2D / distanceToTileZ);
-    const distanceToTile3D = Math.hypot(distanceToTile2D, distanceToTileZ);
-    // if distance to candidate tile is a tiny bit farther than distance to center,
-    // use the same zoom as the center. This is achieved by the scaling distance ratio by cos(fov/2)
-    thisTileDesiredZ = requestedCenterZoom + scaleZoom(distanceToCenter3D / distanceToTile3D / Math.max(0.5, Math.cos(degreesToRadians(cameraVerticalFOV / 2))));
-    thisTileDesiredZ += pitchTileLoadingBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2;
-    thisTileDesiredZ = thisTileDesiredZ + clamp$1(requestedCenterZoom - thisTileDesiredZ, -tileZoomDeadband, tileZoomDeadband);
-    return thisTileDesiredZ;
+/**
+ * Definite integral of cos(x)^p. The analytical solution is described in `developer-guides/covering-tiles.md`,
+ * but here the integral is evaluated numerically.
+ * @param p - the power to raise cos(x) to inside the itegral
+ * @param x1 - the starting point of the integral.
+ * @param x2 - the ending point of the integral.
+ * @return the integral of cos(x)^p from x=x1 to x=x2
+ */
+function integralOfCosXByP(p, x1, x2) {
+    const numPoints = 10;
+    let sum = 0;
+    const dx = (x2 - x1) / numPoints;
+    // Midpoint integration
+    for (let i = 0; i < numPoints; i++) {
+        const x = x1 + (i + 0.5) / numPoints * (x2 - x1);
+        sum += dx * Math.pow(Math.cos(x), p);
+    }
+    return sum;
 }
+function createCalculateTileZoomFunction(maxZoomLevelsOnScreen, tileCountMaxMinRatio) {
+    return function (requestedCenterZoom, distanceToTile2D, distanceToTileZ, distanceToCenter3D, cameraVerticalFOV) {
+        /**
+        * Controls how tiles are loaded at high pitch angles. Higher numbers cause fewer, lower resolution
+        * tiles to be loaded. Calculate the value that will result in the selected number of zoom levels in
+        * the worst-case condition (when the horizon is at the top of the screen). For more information, see
+        * `developer-guides/covering-tiles.md`
+        */
+        const pitchTileLoadingBehavior = 2 * ((maxZoomLevelsOnScreen - 1) /
+            scaleZoom(Math.cos(degreesToRadians(maxMercatorHorizonAngle - cameraVerticalFOV)) /
+                Math.cos(degreesToRadians(maxMercatorHorizonAngle))) - 1);
+        const centerPitch = Math.acos(distanceToTileZ / distanceToCenter3D);
+        const tileCountPitch0 = 2 * integralOfCosXByP(pitchTileLoadingBehavior - 1, 0, degreesToRadians(cameraVerticalFOV / 2));
+        const highestPitch = Math.min(degreesToRadians(maxMercatorHorizonAngle), centerPitch + degreesToRadians(cameraVerticalFOV / 2));
+        const lowestPitch = Math.min(highestPitch, centerPitch - degreesToRadians(cameraVerticalFOV / 2));
+        const tileCount = integralOfCosXByP(pitchTileLoadingBehavior - 1, lowestPitch, highestPitch);
+        const thisTilePitch = Math.atan(distanceToTile2D / distanceToTileZ);
+        const distanceToTile3D = Math.hypot(distanceToTile2D, distanceToTileZ);
+        let thisTileDesiredZ = requestedCenterZoom;
+        // if distance to candidate tile is a tiny bit farther than distance to center,
+        // use the same zoom as the center. This is achieved by the scaling distance ratio by cos(fov/2)
+        thisTileDesiredZ = thisTileDesiredZ + scaleZoom(distanceToCenter3D / distanceToTile3D / Math.max(0.5, Math.cos(degreesToRadians(cameraVerticalFOV / 2))));
+        thisTileDesiredZ += pitchTileLoadingBehavior * scaleZoom(Math.cos(thisTilePitch)) / 2;
+        thisTileDesiredZ -= scaleZoom(Math.max(1, tileCount / tileCountPitch0 / tileCountMaxMinRatio)) / 2;
+        return thisTileDesiredZ;
+    };
+}
+const defaultMaxZoomLevelsOnScreen = 9.314;
+const defaultTileCountMaxMinRatio = 3.0;
+const defaultCalculateTileZoom = createCalculateTileZoomFunction(defaultMaxZoomLevelsOnScreen, defaultTileCountMaxMinRatio);
 /**
  * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
  * @param options - The options, most importantly the source's tile size.
@@ -38227,7 +38326,7 @@ function coveringTiles(transform, options) {
         const distToTile2d = detailsProvider.distanceToTile2d(cameraCoord.x, cameraCoord.y, tileID, aabb);
         let thisTileDesiredZ = desiredZ;
         if (allowVariableZoom) {
-            const tileZoomFunc = options.calculateTileZoom || calculateTileZoom;
+            const tileZoomFunc = options.calculateTileZoom || defaultCalculateTileZoom;
             thisTileDesiredZ = tileZoomFunc(transform.zoom + scaleZoom(transform.tileSize / options.tileSize), distToTile2d, distanceZ, distanceToCenter3d, transform.fov);
         }
         thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(thisTileDesiredZ);
@@ -39075,7 +39174,7 @@ class SourceCache extends Evented {
                 // Tiles held for fading are covered by tiles that are closer to ideal
                 continue;
             }
-            const tileID = tile.tileID;
+            const tileID = transform.getCoveringTilesDetailsProvider().allowWorldCopies() ? tile.tileID : tile.tileID.unwrapTo(0);
             const scale = Math.pow(2, transform.zoom - tile.tileID.overscaledZ);
             const queryPadding = maxPitchScaleFactor * tile.queryPadding * EXTENT$1 / tile.tileSize / scale;
             const tileSpaceBounds = [
@@ -43968,81 +44067,6 @@ class MercatorProjection {
     }
 }
 
-/*
-* The maximum angle to use for the Mercator horizon. This must be less than 90
-* to prevent errors in `MercatorTransform::_calcMatrices()`. It shouldn't be too close
-* to 90, or the distance to the horizon will become very large, unnecessarily increasing
-* the number of tiles needed to render the map.
-*/
-const maxMercatorHorizonAngle = 89.25;
-/**
- * Returns mercator coordinates in range 0..1 for given coordinates inside a specified tile.
- * @param inTileX - X coordinate in tile units - range [0..EXTENT].
- * @param inTileY - Y coordinate in tile units - range [0..EXTENT].
- * @param canonicalTileID - Tile canonical ID - mercator X, Y and zoom.
- * @returns Mercator coordinates of the specified point in range [0..1].
- */
-function tileCoordinatesToMercatorCoordinates(inTileX, inTileY, canonicalTileID) {
-    const scale = 1.0 / (1 << canonicalTileID.z);
-    return new MercatorCoordinate(inTileX / EXTENT$1 * scale + canonicalTileID.x * scale, inTileY / EXTENT$1 * scale + canonicalTileID.y * scale);
-}
-/**
- * Returns LngLat for given in-tile coordinates and tile ID.
- * @param inTileX - X coordinate in tile units - range [0..EXTENT].
- * @param inTileY - Y coordinate in tile units - range [0..EXTENT].
- * @param canonicalTileID - Tile canonical ID - mercator X, Y and zoom.
- */
-function tileCoordinatesToLocation(inTileX, inTileY, canonicalTileID) {
-    return tileCoordinatesToMercatorCoordinates(inTileX, inTileY, canonicalTileID).toLngLat();
-}
-/**
- * Convert from LngLat to world coordinates (Mercator coordinates scaled by world size).
- * @param worldSize - Mercator world size computed from zoom level and tile size.
- * @param lnglat - The location to convert.
- * @returns Point
- */
-function projectToWorldCoordinates(worldSize, lnglat) {
-    const lat = clamp$1(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
-    return new Point(mercatorXfromLng(lnglat.lng) * worldSize, mercatorYfromLat(lat) * worldSize);
-}
-/**
- * Convert from world coordinates (mercator coordinates scaled by world size) to LngLat.
- * @param worldSize - Mercator world size computed from zoom level and tile size.
- * @param point - World coordinate.
- * @returns LngLat
- */
-function unprojectFromWorldCoordinates(worldSize, point) {
-    return new MercatorCoordinate(point.x / worldSize, point.y / worldSize).toLngLat();
-}
-/**
- * Calculate pixel height of the visible horizon in relation to map-center (e.g. height/2),
- * multiplied by a static factor to simulate the earth-radius.
- * The calculated value is the horizontal line from the camera-height to sea-level.
- * @returns Horizon above center in pixels.
- */
-function getMercatorHorizon(transform) {
-    return transform.cameraToCenterDistance * Math.min(Math.tan(degreesToRadians(90 - transform.pitch)) * 0.85, Math.tan(degreesToRadians(maxMercatorHorizonAngle - transform.pitch)));
-}
-function calculateTileMatrix(unwrappedTileID, worldSize) {
-    const canonical = unwrappedTileID.canonical;
-    const scale = worldSize / zoomScale(canonical.z);
-    const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
-    const worldMatrix = identity$2(new Float64Array(16));
-    translate$2(worldMatrix, worldMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
-    scale$5(worldMatrix, worldMatrix, [scale / EXTENT$1, scale / EXTENT$1, 1]);
-    return worldMatrix;
-}
-function cameraMercatorCoordinateFromCenterAndRotation(center, elevation, pitch, bearing, distance) {
-    const centerMercator = MercatorCoordinate.fromLngLat(center, elevation);
-    const mercUnitsPerMeter = mercatorZfromAltitude(1, center.lat);
-    const dMercator = distance * mercUnitsPerMeter;
-    const dzMercator = dMercator * Math.cos(degreesToRadians(pitch));
-    const dhMercator = Math.sqrt(dMercator * dMercator - dzMercator * dzMercator);
-    const dxMercator = dhMercator * Math.sin(degreesToRadians(-bearing));
-    const dyMercator = dhMercator * Math.cos(degreesToRadians(-bearing));
-    return new MercatorCoordinate(centerMercator.x + dxMercator, centerMercator.y + dyMercator, centerMercator.z + dzMercator);
-}
-
 /**
  * An `EdgeInset` object represents screen space padding applied to the edges of the viewport.
  * This shifts the apparent center or the vanishing point of the map. This is useful for adding floating UI elements
@@ -46383,6 +46407,44 @@ function sphereSurfacePointToCoordinates(surface) {
         return new LngLat(0.0, latDegrees);
     }
 }
+/**
+ * Given a normalized horizon plane in Ax+By+Cz+D=0 format, compute the center and radius of
+ * the circle in that plain that contains the entire visible portion of the unit sphere from horizon
+ * to horizon.
+ * @param horizonPlane - The plane that passes through visible horizon in Ax + By + Cz + D = 0 format where mag(A,B,C)=1
+ * @returns the center point and radius of the disc that passes through the entire visible horizon
+ */
+function horizonPlaneToCenterAndRadius(horizonPlane) {
+    const center = createVec3f64();
+    center[0] = horizonPlane[0] * -horizonPlane[3];
+    center[1] = horizonPlane[1] * -horizonPlane[3];
+    center[2] = horizonPlane[2] * -horizonPlane[3];
+    /*
+                     .*******
+                 ****|\
+               **    | \
+             **      |  1
+            * radius |   \
+           *         |    \
+           *  center +--D--+(0,0,0)
+     */
+    const radius = Math.sqrt(1 - horizonPlane[3] * horizonPlane[3]);
+    return { center, radius };
+}
+/**
+ * Computes the closest point on a sphere to `point`.
+ * @param center - Center of the sphere
+ * @param radius - Radius of the sphere
+ * @param point - Point inside or outside the sphere
+ * @returns A 3d vector of the point on the sphere closest to `point`
+ */
+function clampToSphere(center, radius, point) {
+    const relativeToCenter = createVec3f64();
+    sub$2(relativeToCenter, point, center);
+    const clamped = createVec3f64();
+    scaleAndAdd$2(clamped, center, relativeToCenter, radius / len$4(relativeToCenter));
+    return clamped;
+}
 function planetScaleAtLatitude(latitudeDegrees) {
     return Math.cos(latitudeDegrees * Math.PI / 180);
 }
@@ -46965,9 +47027,8 @@ class VerticalPerspectiveTransform {
         rotateZ$2(planeVector, planeVector, [0, 0, 0], -this.bearingInRadians);
         rotateX$2(planeVector, planeVector, [0, 0, 0], -1 * this.center.lat * Math.PI / 180.0);
         rotateY$2(planeVector, planeVector, [0, 0, 0], this.center.lng * Math.PI / 180.0);
-        // Scale the plane vector up
-        // we don't want the actually visible parts of the sphere to end up beyond distance 1 from the plane - otherwise they would be clipped by the near plane.
-        const scale = 0.25;
+        // Normalize the plane vector
+        const scale = 1 / length$4(planeVector);
         scale$4(planeVector, planeVector, scale);
         return [...planeVector, -tangentPlaneDistanceToC * scale];
     }
@@ -47453,8 +47514,9 @@ class VerticalPerspectiveTransform {
         }
         // Ray does not intersect the sphere -> find the closest point on the horizon to the ray.
         // Intersect the ray with the clipping plane, since we know that the intersection of the clipping plane and the sphere is the horizon.
-        const directionDotPlaneXyz = this._cachedClippingPlane[0] * rayDirection[0] + this._cachedClippingPlane[1] * rayDirection[1] + this._cachedClippingPlane[2] * rayDirection[2];
-        const originToPlaneDistance = pointPlaneSignedDistance(this._cachedClippingPlane, rayOrigin);
+        const horizonPlane = this._cachedClippingPlane;
+        const directionDotPlaneXyz = horizonPlane[0] * rayDirection[0] + horizonPlane[1] * rayDirection[1] + horizonPlane[2] * rayDirection[2];
+        const originToPlaneDistance = pointPlaneSignedDistance(horizonPlane, rayOrigin);
         const distanceToIntersection = -originToPlaneDistance / directionDotPlaneXyz;
         const maxRayLength = 2.0; // One globe diameter
         const planeIntersection = createVec3f64();
@@ -47481,8 +47543,8 @@ class VerticalPerspectiveTransform {
                 this._cachedClippingPlane[2] * distanceFromPlane
             ]);
         }
-        const closestOnHorizon = createVec3f64();
-        normalize$4(closestOnHorizon, planeIntersection);
+        const horizonDisk = horizonPlaneToCenterAndRadius(horizonPlane);
+        const closestOnHorizon = clampToSphere(horizonDisk.center, horizonDisk.radius, planeIntersection);
         return sphereSurfacePointToCoordinates(closestOnHorizon);
     }
     getMatrixForModel(location, altitude) {
@@ -55020,7 +55082,6 @@ class TwoFingersTouchHandler {
         delete this._firstTwoTouches;
     }
     touchstart(e, points, mapTouches) {
-        //log('touchstart', points, e.target.innerHTML, e.targetTouches.length ? e.targetTouches[0].target.innerHTML: undefined);
         if (this._firstTwoTouches || mapTouches.length < 2)
             return;
         this._firstTwoTouches = [
@@ -60488,6 +60549,42 @@ let Map$1 = class Map extends Camera {
         return this.style.getSource(id);
     }
     /**
+     * Change the tile Level of Detail behavior of the specified source. These parameters have no effect when
+     * pitch == 0, and the largest effect when the horizon is visible on screen.
+     *
+     * @param maxZoomLevelsOnScreen - The maximum number of distinct zoom levels allowed on screen at a time.
+     * There will generally be fewer zoom levels on the screen, the maximum can only be reached when the horizon
+     * is at the top of the screen. Increasing the maximum number of zoom levels causes the zoom level to decay
+     * faster toward the horizon.
+     * @param tileCountMaxMinRatio - The ratio of the maximum number of tiles loaded (at high pitch) to the minimum
+     * number of tiles loaded. Increasing this ratio allows more tiles to be loaded at high pitch angles. If the ratio
+     * would otherwise be exceeded, the zoom level is reduced uniformly to keep the number of tiles within the limit.
+     * @param sourceId - The ID of the source to set tile LOD parameters for. All sources will be updated if unspecified.
+     * If `sourceId` is specified but a corresponding source does not exist, an error is thrown.
+     * @example
+     * ```ts
+     * map.setSourceTileLodParams(4.0, 3.0, 'terrain');
+     * ```
+     * @see [Modify Level of Detail behavior](https://maplibre.org/maplibre-gl-js/docs/examples/lod-control/)
+
+     */
+    setSourceTileLodParams(maxZoomLevelsOnScreen, tileCountMaxMinRatio, sourceId) {
+        if (sourceId) {
+            const source = this.getSource(sourceId);
+            if (!source) {
+                throw new Error(`There is no source with ID "${sourceId}", cannot set LOD parameters`);
+            }
+            source.calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
+        }
+        else {
+            for (const id in this.style.sourceCaches) {
+                this.style.sourceCaches[id].getSource().calculateTileZoom = createCalculateTileZoomFunction(Math.max(1, maxZoomLevelsOnScreen), Math.max(1, tileCountMaxMinRatio));
+            }
+        }
+        this._update(true);
+        return this;
+    }
+    /**
      * Add an image to the style. This image can be displayed on the map like any other icon in the style's
      * sprite using the image's ID with
      * [`icon-image`](https://maplibre.org/maplibre-style-spec/layers/#layout-symbol-icon-image),
@@ -61950,7 +62047,10 @@ function checkGeolocationSupport() {
  * map center changes by ±360° due to automatic wrapping, and when about to go off screen,
  * should wrap just enough to avoid doing so.
  */
-function smartWrap(lngLat, priorPos, transform) {
+function smartWrap(lngLat, priorPos, transform, useNormalWrap = false) {
+    if (useNormalWrap || !transform.getCoveringTilesDetailsProvider().allowWorldCopies()) {
+        return lngLat === null || lngLat === void 0 ? void 0 : lngLat.wrap();
+    }
     const originalLngLat = new LngLat(lngLat.lng, lngLat.lat);
     lngLat = new LngLat(lngLat.lng, lngLat.lat);
     // First, try shifting one world in either direction, and see if either is closer to the
@@ -62062,19 +62162,13 @@ class Marker extends Evented {
             }
         };
         this._update = (e) => {
-            var _a;
             if (!this._map)
                 return;
             const isFullyLoaded = this._map.loaded() && !this._map.isMoving();
             if ((e === null || e === void 0 ? void 0 : e.type) === 'terrain' || ((e === null || e === void 0 ? void 0 : e.type) === 'render' && !isFullyLoaded)) {
                 this._map.once('render', this._update);
             }
-            if (this._map.transform.renderWorldCopies) {
-                this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
-            }
-            else {
-                this._lngLat = (_a = this._lngLat) === null || _a === void 0 ? void 0 : _a.wrap();
-            }
+            this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
             this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
             if (this._map.terrain) {
                 // flat position is saved because smartWrap needs non-elevated points
@@ -63831,7 +63925,6 @@ class Popup extends Evented {
             this._update(event.point);
         };
         this._update = (cursor) => {
-            var _a;
             const hasPosition = this._lngLat || this._trackPointer;
             if (!this._map || !hasPosition || !this._content) {
                 return;
@@ -63855,12 +63948,7 @@ class Popup extends Evented {
             if (this.options.maxWidth && this._container.style.maxWidth !== this.options.maxWidth) {
                 this._container.style.maxWidth = this.options.maxWidth;
             }
-            if (this._map.transform.renderWorldCopies && !this._trackPointer) {
-                this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
-            }
-            else {
-                this._lngLat = (_a = this._lngLat) === null || _a === void 0 ? void 0 : _a.wrap();
-            }
+            this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform, this._trackPointer);
             if (this._trackPointer && !cursor)
                 return;
             const pos = this._flatPos = this._pos = this._trackPointer && cursor ? cursor : this._map.project(this._lngLat);
