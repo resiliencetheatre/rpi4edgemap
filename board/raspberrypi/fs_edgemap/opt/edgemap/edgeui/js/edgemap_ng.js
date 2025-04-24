@@ -2575,14 +2575,20 @@ function deleteFeatureFromGeoJsonSource(featureId) {
 
 
 // Add or update meshtastic node to meshtasticGeoJson
-function updateMeshtasticNodesToMap(unitSerial, unitLatitude, unitLongitude) {
+async function updateMeshtasticNodesToMap(unitSerial, unitLatitude, unitLongitude) {
     const featureId = unitSerial;
-
+    // Wait for the resolveCallsign promise to resolve and use the result
+    var displayedId;
+    const callSign = await resolveCallsign(unitSerial);
+    if (callSign != null) {
+        displayedId = callSign;
+    } else {
+        displayedId = unitSerial.toUpperCase();
+    }
     // Check if the feature already exists
     let existingFeature = meshtasticGeoJson.features.find(
         (f) => f.properties.id === featureId
     );
-
     if (existingFeature) {
         // Update coordinates if feature exists
         existingFeature.geometry.coordinates = [unitLongitude, unitLatitude];
@@ -2596,13 +2602,12 @@ function updateMeshtasticNodesToMap(unitSerial, unitLatitude, unitLongitude) {
             },
             properties: {
                 id: featureId, // ID stored in properties
-                text: unitSerial.toUpperCase(),
+                text: displayedId, // unitSerial.toUpperCase(),
                 milSymbol: 'meshtasticSymbol'
             }
         };
         meshtasticGeoJson.features.push(newFeature);
     }
-
     // Update the source data
     map.getSource('meshtasticGeoJsonSource').setData(meshtasticGeoJson);
 }
