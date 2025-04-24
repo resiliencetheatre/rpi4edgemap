@@ -278,14 +278,14 @@ class reticulumPeerList {
 
 
 
-function updateMeshtasticRadioListBlock() {
+async function updateMeshtasticRadioListBlock() {
     document.getElementById("radiolist").innerHTML = "";
     var radioLoop=0;
     var radioListContent = "";
     // List with hop limit
     // radioListContent = "<table width=90%><tr ><td style='border-bottom: 1px solid #0F0;' >Radio</td><td style='border-bottom: 1px solid #0F0;' >Bat</td><td style='border-bottom: 1px solid #0F0;'>Air Util</td><td style='border-bottom: 1px solid #0F0;' align='center'>Hop</td><td style='border-bottom: 1px solid #0F0;' align='center'>S/N</td><td style='border-bottom: 1px solid #0F0;' align='center'>RSSI</td><td style='border-bottom: 1px solid #0F0;' align='center'>Age</td></tr>";
     // List without hop limit
-    radioListContent = "<table width=90%><tr ><td style='border-bottom: 1px solid #0F0;' >Radio</td><td style='border-bottom: 1px solid #0F0;' >Bat</td><td style='border-bottom: 1px solid #0F0;'>Air Util</td><td style='border-bottom: 1px solid #0F0;' align='center'>S/N</td><td style='border-bottom: 1px solid #0F0;' align='center'>RSSI</td><td style='border-bottom: 1px solid #0F0;' align='center' title='Age in minutes' >Age</td></tr>";
+    radioListContent = "<table width=90% id='radioTable'><tr ><td style='border-bottom: 1px solid #0F0;' >Radio</td><td style='border-bottom: 1px solid #0F0;' >Bat</td><td style='border-bottom: 1px solid #0F0;'>Air Util</td><td style='border-bottom: 1px solid #0F0;' align='center'>S/N</td><td style='border-bottom: 1px solid #0F0;' align='center'>RSSI</td><td style='border-bottom: 1px solid #0F0;' align='center' title='Age in minutes' >Age</td></tr>";
     for ( radioLoop = 0; radioLoop < meshtasticRadiosOnSystem.getSize(); radioLoop++) { 
         // Calculate age
         let currentTime = Math.round(+new Date()/1000);
@@ -294,11 +294,125 @@ function updateMeshtasticRadioListBlock() {
         if ( age > 60 ) {
             age = ">60";
         }
-        // radioListContent += "<tr><td>" + meshtasticRadiosOnSystem.members[radioLoop] + "</td><td>" + meshtasticRadiosOnSystem.battery[radioLoop] + " %</td><td>" + meshtasticRadiosOnSystem.airUtilTx[radioLoop] + " %</td><td align='center'>" + meshtasticRadiosOnSystem.hopLimit[radioLoop] + "</td><td align='center'>" + meshtasticRadiosOnSystem.rxSnr[radioLoop] + "</td><td align='center'>" + meshtasticRadiosOnSystem.rxRssi[radioLoop] + "</td><td align='center'>" + age + "</td></tr>";
-        radioListContent += "<tr><td>" + meshtasticRadiosOnSystem.members[radioLoop] + "</td><td>" + meshtasticRadiosOnSystem.battery[radioLoop] + " %</td><td>" + meshtasticRadiosOnSystem.airUtilTx[radioLoop] + " %</td><td align='center'>" + meshtasticRadiosOnSystem.rxSnr[radioLoop] + "</td><td align='center'>" + meshtasticRadiosOnSystem.rxRssi[radioLoop] + "</td><td align='center'>" + age + "</td></tr>";
+        
+        // Wait for the resolveCallsign promise to resolve and use the result
+        const callSign = await resolveCallsign(meshtasticRadiosOnSystem.members[radioLoop]);
+        if (callSign != null) {
+            // Use callSign if it can be resolved
+            radioListContent += "<tr><td class='radio-id-cell' title='" + meshtasticRadiosOnSystem.members[radioLoop] + "'>" + callSign + "</td><td>" + meshtasticRadiosOnSystem.battery[radioLoop] + " %</td><td>" + meshtasticRadiosOnSystem.airUtilTx[radioLoop] + " %</td><td align='center'>" + meshtasticRadiosOnSystem.rxSnr[radioLoop] + "</td><td align='center'>" + meshtasticRadiosOnSystem.rxRssi[radioLoop] + "</td><td align='center'>" + age + "</td></tr>";
+        } else {
+            // If there is no set callsign, use radio serial
+            radioListContent += "<tr><td class='radio-id-cell'title='" + meshtasticRadiosOnSystem.members[radioLoop] + "'>" + meshtasticRadiosOnSystem.members[radioLoop] + "</td><td>" + meshtasticRadiosOnSystem.battery[radioLoop] + " %</td><td>" + meshtasticRadiosOnSystem.airUtilTx[radioLoop] + " %</td><td align='center'>" + meshtasticRadiosOnSystem.rxSnr[radioLoop] + "</td><td align='center'>" + meshtasticRadiosOnSystem.rxRssi[radioLoop] + "</td><td align='center'>" + age + "</td></tr>"; 
+        }
     }
     radioListContent += "</table>";
     document.getElementById("radiolist").innerHTML = radioListContent;
+    
+    
+    document.getElementById('radioTable').addEventListener('dblclick', async (e) => {
+        const cell = e.target.closest('.radio-id-cell');
+        if (!cell) return;
+        // const radioId = cell.textContent.trim();
+        const radioId = cell.getAttribute('title');
+        keyEventListener=0;
+
+        // Remove existing popup if any
+        document.querySelectorAll('.callsign-popup').forEach(p => p.remove());
+
+        // Create the styled popup
+        const popupNode = document.createElement('div');
+        popupNode.classList.add('callsign-popup');
+        popupNode.style.position = 'absolute';
+        popupNode.style.left = `${e.pageX + 30}px`;  // offset right
+        popupNode.style.top = `${e.pageY - 80}px`;   // offset up
+        popupNode.style.background = '#333';
+        popupNode.style.padding = '10px';
+        popupNode.style.borderRadius = '6px';
+        popupNode.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+        popupNode.style.display = 'flex';
+        popupNode.style.flexDirection = 'column';
+        popupNode.style.alignItems = 'center';
+        popupNode.style.gap = '6px';
+        popupNode.style.minWidth = '180px';
+        popupNode.style.zIndex = '1000';
+
+        const label = document.createElement('div');
+        label.style.color = '#fff';
+        label.textContent = `Set Callsign for ${radioId}`;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Enter callsign';
+        input.style.padding = '6px';
+        input.style.borderRadius = '4px';
+        input.style.border = 'none';
+        input.style.width = '100%';
+
+        // Create button container
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.gap = '8px';
+        buttonContainer.style.marginTop = '6px';
+
+        // Save Button
+        const saveButton = document.createElement('button');
+        saveButton.textContent = 'Save';
+        saveButton.style.padding = '6px 12px';
+        saveButton.style.border = 'none';
+        saveButton.style.borderRadius = '4px';
+        saveButton.style.background = '#4CAF50';
+        saveButton.style.color = '#fff';
+        saveButton.style.cursor = 'pointer';
+
+        // Close Button
+        const closeButton = document.createElement('button');
+        closeButton.textContent = 'Close';
+        closeButton.style.padding = '6px 12px';
+        closeButton.style.border = 'none';
+        closeButton.style.borderRadius = '4px';
+        closeButton.style.background = '#f44336';
+        closeButton.style.color = '#fff';
+        closeButton.style.cursor = 'pointer';
+
+        // Button actions
+        saveButton.onclick = async () => {
+        const callSign = input.value.trim();
+        if (callSign) {
+          await setCallsign(radioId, callSign);
+          popupNode.remove();
+          keyEventListener = 1;
+        }
+        };
+
+        closeButton.onclick = () => {
+        popupNode.remove();
+        keyEventListener = 1;
+        };
+
+        buttonContainer.appendChild(saveButton);
+        buttonContainer.appendChild(closeButton);
+
+        popupNode.appendChild(label);
+        popupNode.appendChild(input);
+        popupNode.appendChild(buttonContainer);
+        document.body.appendChild(popupNode);
+        input.focus();
+
+        // Optional: close popup on outside click
+        function removePopup(ev) {
+            if (!popupNode.contains(ev.target)) {
+              popupNode.remove();
+              document.removeEventListener('click', removePopup);
+            }
+        }
+        setTimeout(() => document.addEventListener('click', removePopup), 0);
+    });
+
+
+    
+    
+    
+    
 }
 
 
@@ -2569,6 +2683,33 @@ function flyTo(lat,lng) {
     setTimeout(() => marker.remove(), 10000);
 }
 
+async function setCallsign(radio_id, callSign) {
+    const res = await fetch('set_callsign.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            radio_id: radio_id,
+            call_sign: callSign
+        })
+    });
+    const data = await res.json();
+    if (data.status !== 'ok') {
+        console.error('Failed to set callsign:', data.message);
+    }
+}
+
+async function resolveCallsign(radio_id) {
+    const res = await fetch(`resolve_callsign.php?radio_id=${encodeURIComponent(radio_id)}`);
+    const data = await res.json();
+    if (data.status === 'ok') {
+        return data.call_sign;
+    } else {
+        console.warn('Callsign not found for', radio_id);
+        return null;
+    }
+}
 
 
 

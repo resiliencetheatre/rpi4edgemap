@@ -559,7 +559,7 @@
     
     // geojson url for node links
     var geojsonUrl = 'linkstatus.php?linkline=1';
-    var geoJsonLayerActive = true;
+    var geoJsonLayerActive = false;
 	
 	// One user created pin marker for a demo
 	const mapPinMarker = [];
@@ -1809,6 +1809,9 @@
         });
         
         
+        
+        
+        
         // Meshtastic units geoJson
         // These are positions from meshtastic internal GPS (or fixed position)
         meshtasticGeoJson = {
@@ -2072,6 +2075,23 @@
         });
         
         
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

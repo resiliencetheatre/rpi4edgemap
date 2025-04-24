@@ -2047,7 +2047,10 @@ body {
 }
 
 
-
+.radio-id-cell {
+  user-select: none;
+  cursor: pointer;
+}
 
 
 
