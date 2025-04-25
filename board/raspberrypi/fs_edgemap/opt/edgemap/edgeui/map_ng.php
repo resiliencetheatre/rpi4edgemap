@@ -1182,7 +1182,7 @@
             var incomingMessage = event.data;
             var trimmedString = incomingMessage.substring(0, 80);
             const nodeArray = trimmedString.split(",");
-            
+            appendSpaceLog("Incoming status message");
             // Meshtastic 
             if ( nodeArray[0] === "peernode" )
             {
@@ -1560,6 +1560,7 @@
             });
             // Enable tails for targets
             // showTails();
+            appendSpaceLog("Added link layer");
         }
         
         // Distance distanceGeoJson source
@@ -1592,6 +1593,7 @@
             },
             filter: ['in', '$type', 'LineString']
         });
+        appendSpaceLog("Added measure layer");
         
         // Right menu symbols geoJson
         rightMenuSymbolsGeoJson = {
@@ -1628,6 +1630,7 @@
                 },
                 'filter': ['==', '$type', 'Point']
         });
+        appendSpaceLog("Added symbols layer");
         
         
         // Update and delete on same doubleclick
@@ -1737,6 +1740,7 @@
                 popup.remove();
                 keyEventListener = 1;
                 map.doubleClickZoom.enable();
+                appendSpaceLog("Deleted one symbol");
             });
 
             // Handle update on button click
@@ -1788,6 +1792,7 @@
                     }
                     
                     map.doubleClickZoom.enable();
+                    appendSpaceLog("Updated symbol");
                 }
                 // Close popup after update
                 popup.remove();
@@ -1832,7 +1837,7 @@
                 },
                 'filter': ['==', '$type', 'Point']
         });
-        
+        appendSpaceLog("Added meshtastic node layer");
         // Generate bitmap for meshtastic geojson units
         generateMeshtasticIcon(map);
         // Generate milsymbols for right click menu, remember to 

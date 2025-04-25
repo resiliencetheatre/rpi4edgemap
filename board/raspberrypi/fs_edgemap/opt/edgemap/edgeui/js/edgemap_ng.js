@@ -28,50 +28,7 @@
  
 */
 
-/* TODO: REMOVE
-class peerList {
-        constructor() {
-            this.members = [];
-            this.timestamps = [];
-        }
-        add(callsign, timeStamp) {            
-            const index = this.members.findIndex(x => x === callsign);
-            if (index !== -1) {
-                // Update existing
-                this.members[index] = callsign;
-                this.timestamps[index] = timeStamp;
-                return true;
-            } else {
-                // Add new
-                this.members.push(callsign);  
-                this.timestamps.push(timeStamp); 
-                return true;
-            }
-            return false;
-        }
-        remove(callsign) {
-            const index = this.members.findIndex(x => x === callsign);
-            if (index !== -1) {
-                this.members.splice(index, 1);
-                this.timestamps.splice(index, 1);
-                return true;
-            }
-            return false;
-        }
-        present(callsign) {
-            const index = this.members.findIndex(x => x === callsign);
-            if (index !== -1) {
-                return true;
-            }
-            return false;
-        }
-        getSize() {
-            return this.members.length;
-        }
-}
-*/
-
-// Meshtastic radio list
+// Meshtastic radio class
 class meshtasticRadioList {
         constructor() {
             this.members = [];
@@ -196,22 +153,7 @@ function localSensorMarkerCreate(messageData) {
         }
     }
 }
-/*
-function appendSpaceLog(message) {
-    const logDiv = document.getElementById('spaceLog');
-    const now = new Date();
-    const timestamp = now.toLocaleTimeString('en-GB'); // 24H format
-    const logEntry = document.createElement('div');
-    logEntry.textContent = `[${timestamp}] ${message}`;
-    logDiv.appendChild(logEntry);
-    logDiv.scrollTop = logDiv.scrollHeight;
-}
 
-function clearSpaceLog() {
-    const logDiv = document.getElementById('spaceLog');
-    logDiv.innerHTML = '';
-}
-*/
 function appendSpaceLog(message) {
     const logDiv = document.querySelector('#spaceLog .spaceLogContent');
     const now = new Date();
@@ -225,7 +167,6 @@ function appendSpaceLog(message) {
 function clearSpaceLog() {
     document.querySelector('#spaceLog .spaceLogContent').innerHTML = '';
 }
-
 
 function toggleStyle() {
     if ( currentStyle == "bright" ) {
@@ -306,7 +247,7 @@ class reticulumPeerList {
 }
 
 
-
+// Updates meshtastic radio list on UI
 async function updateMeshtasticRadioListBlock() {
     document.getElementById("radiolist").innerHTML = "";
     var radioLoop=0;
@@ -323,7 +264,6 @@ async function updateMeshtasticRadioListBlock() {
         if ( age > 60 ) {
             age = ">60";
         }
-        
         // Wait for the resolveCallsign promise to resolve and use the result
         const callSign = await resolveCallsign(meshtasticRadiosOnSystem.members[radioLoop]);
         if (callSign != null) {
@@ -337,17 +277,15 @@ async function updateMeshtasticRadioListBlock() {
     radioListContent += "</table>";
     document.getElementById("radiolist").innerHTML = radioListContent;
     
-    
+    // Add double click for renaming 
     document.getElementById('radioTable').addEventListener('dblclick', async (e) => {
         const cell = e.target.closest('.radio-id-cell');
         if (!cell) return;
         // const radioId = cell.textContent.trim();
         const radioId = cell.getAttribute('title');
         keyEventListener=0;
-
         // Remove existing popup if any
         document.querySelectorAll('.callsign-popup').forEach(p => p.remove());
-
         // Create the styled popup
         const popupNode = document.createElement('div');
         popupNode.classList.add('callsign-popup');
@@ -410,6 +348,7 @@ async function updateMeshtasticRadioListBlock() {
           await setCallsign(radioId, callSign);
           popupNode.remove();
           keyEventListener = 1;
+          appendSpaceLog("[" + radioId.toUpperCase() + "] Callsign: " + callSign);
         }
         };
 
@@ -2552,6 +2491,7 @@ function addRightClickSymbol(lat, lon, symbolIndex) {
     // Update local map and send also mirror message over to websocket connected clients
     map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
     mirrorGeoJson('sync_all',rightMenuSymbolsGeoJson);
+    appendSpaceLog("Added symbol to map");
 }
 
 // Send geoJson ver websocket to others (demo)
@@ -2582,6 +2522,7 @@ function symbolsControlResetButton() {
     rightMenuSymbolsGeoJson.features = [];
     map.getSource('rightMenuSymbolGeoJsonSource').setData(rightMenuSymbolsGeoJson);
     document.getElementById('symbols-value').innerHTML = '<div></div>';
+    appendSpaceLog("Symbols cleared");
 }
 
 // Click to delete for right click symbols
@@ -2608,6 +2549,7 @@ async function updateMeshtasticNodesToMap(unitSerial, unitLatitude, unitLongitud
     } else {
         displayedId = unitSerial.toUpperCase();
     }
+    
     // Check if the feature already exists
     let existingFeature = meshtasticGeoJson.features.find(
         (f) => f.properties.id === featureId
@@ -2633,6 +2575,7 @@ async function updateMeshtasticNodesToMap(unitSerial, unitLatitude, unitLongitud
     }
     // Update the source data
     map.getSource('meshtasticGeoJsonSource').setData(meshtasticGeoJson);
+    appendSpaceLog("Meshtastic: "  + displayedId + " [" + unitSerial.toUpperCase() + "]" );
 }
 
 // Generate milsymbol for meshtastic
@@ -2654,7 +2597,7 @@ async function generateMeshtasticIcon(map) {
     if (!map.hasImage(imageId)) {
         map.addImage(imageId, bitmap);
     }
-    appendSpaceLog("Created meshtastic target");
+    
 }
 
 
@@ -2804,27 +2747,22 @@ function sendViewUpdate(geojson) {
 
 
 //
-// Keypress functions
+// Keypress function for coordinate search
 //
 function handleKeyPress(e){
     if (keyEventListener) {
      var key=e.keyCode || e.which;
       if (key==13){
-        
         // Take search input and try lat,lon or MGRS
         let inputValue = document.getElementById('coordinateInput').value.trim();
         if (!inputValue) return;
         const coordValue = inputValue.split(",");
         const isLatLon = coordValue.length === 2 && check_lat_lon(coordValue[1], coordValue[0]);
         if (isLatLon) {
-            // removeDot();
-            // addDot(coordValue[1], coordValue[0]);
             flyTo(coordValue[0],coordValue[1] );
         } else {
             try {
                 const [lng, lat] = mgrs.toPoint(inputValue);
-                // removeDot();
-                // addDot(lng, lat);
                 flyTo(lat,lng);
             } catch (err) {
                 console.error("Invalid input:", err);
@@ -2833,7 +2771,6 @@ function handleKeyPress(e){
         }
         document.getElementById('coordinateInput').value = "";
         closeCoordinateSearchEntryBox();
-
       }
   }
 }
