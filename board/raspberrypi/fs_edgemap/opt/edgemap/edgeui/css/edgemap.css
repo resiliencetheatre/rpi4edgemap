@@ -2052,27 +2052,14 @@ body {
   cursor: pointer;
 }
 
-/*
-.spaceLog {
-   position: absolute;
-    top:180px;
-    left: 20px;
-    color: #00FF00;
-	height: 120px;
-    overflow: scroll;
-    overflow-x:hidden;
-    font-size: 14px;
-}
-*/
-
-
 .spaceLog {
     position: absolute;
     top: 120px;
-    left: 20px;
+    left: 5px;
     width: 300px;
-    height: 120px;
-
+    /*height: 120px;*/
+    height: 50%;
+    opacity: 0.8;
     background-color: #000000;
     color: #00FF00;
 
@@ -2082,11 +2069,11 @@ body {
     overflow-y: auto;
     overflow-x: hidden;
     padding: 8px;
-
+    /*
     border: 1px solid #00FF00;
     border-radius: 6px;
     box-shadow: 0 0 5px #00FF00aa;
-
+    */
     text-shadow: 0 0 3px #00FF00;
 }
 
