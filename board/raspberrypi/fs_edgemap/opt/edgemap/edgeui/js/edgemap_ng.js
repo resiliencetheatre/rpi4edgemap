@@ -27,6 +27,8 @@
     [3] https://protomaps.com/
  
 */
+
+/* TODO: REMOVE
 class peerList {
         constructor() {
             this.members = [];
@@ -67,6 +69,7 @@ class peerList {
             return this.members.length;
         }
 }
+*/
 
 // Meshtastic radio list
 class meshtasticRadioList {
@@ -85,9 +88,6 @@ class meshtasticRadioList {
             this.DeviceMeshtasticGroundSpeed = [];
             this.DeviceMeshtasticSatsInView = [];
             this.DeviceMeshtasticPrecisionBits = [];
-            
-            
-            
         }
         add(callsign, timeStamp,DeviceBat,DeviceAirUtilTx,DeviceRxSnr,DeviceHopLimit,DeviceRxRssi,dMeshLat,dMeshLon,dMeshPdop,dMeshSpeed,dMeshSats,dMeshPrecision) {            
             const index = this.members.findIndex(x => x === callsign);
@@ -195,6 +195,35 @@ function localSensorMarkerCreate(messageData) {
             createSensorMarker(locationArray[0], locationArray[1],sensorId,sensorStatus,sensorSymbol);
         }
     }
+}
+/*
+function appendSpaceLog(message) {
+    const logDiv = document.getElementById('spaceLog');
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString('en-GB'); // 24H format
+    const logEntry = document.createElement('div');
+    logEntry.textContent = `[${timestamp}] ${message}`;
+    logDiv.appendChild(logEntry);
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+function clearSpaceLog() {
+    const logDiv = document.getElementById('spaceLog');
+    logDiv.innerHTML = '';
+}
+*/
+function appendSpaceLog(message) {
+    const logDiv = document.querySelector('#spaceLog .spaceLogContent');
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString('en-GB');
+    const logEntry = document.createElement('div');
+    logEntry.textContent = `[${timestamp}] ${message}`;
+    logDiv.appendChild(logEntry);
+    logDiv.parentElement.scrollTop = logDiv.parentElement.scrollHeight;
+}
+
+function clearSpaceLog() {
+    document.querySelector('#spaceLog .spaceLogContent').innerHTML = '';
 }
 
 
@@ -407,12 +436,6 @@ async function updateMeshtasticRadioListBlock() {
         }
         setTimeout(() => document.addEventListener('click', removePopup), 0);
     });
-
-
-    
-    
-    
-    
 }
 
 
@@ -2631,6 +2654,7 @@ async function generateMeshtasticIcon(map) {
     if (!map.hasImage(imageId)) {
         map.addImage(imageId, bitmap);
     }
+    appendSpaceLog("Created meshtastic target");
 }
 
 
@@ -2647,7 +2671,6 @@ function searchMGRS() {
             alert("Please enter an MGRS coordinate.");
             return;
           }
-
           try {
             // Convert MGRS to [lng, lat]
             const [lng, lat] = mgrs.toPoint(input); // returns [longitude, latitude]
@@ -2666,6 +2689,8 @@ function searchMGRS() {
 
             // Optional: Auto-remove the marker after a few seconds
             setTimeout(() => marker.remove(), 5000);
+            
+            
 
           } catch (err) {
             console.error("Invalid MGRS:", err);
@@ -2832,3 +2857,6 @@ function createNewDragableMarker() {
 function getElementItem(selector) {
     return document.querySelector(selector);
 }
+
+
+

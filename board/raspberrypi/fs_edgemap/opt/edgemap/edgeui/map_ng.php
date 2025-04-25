@@ -17,17 +17,13 @@
     <script src="js/RadialMenu.js"></script>
     <script src="js/main.js"></script>
     <link href="css/edgemap.css" rel="stylesheet" />
-    
     <link href="js/terra-draw-js/maplibre-gl-terradraw.css" rel="stylesheet" /> 
     <script src="js/terra-draw-js/maplibre-gl-terradraw.umd.js"></script>
-    
     <script src="js/mgrs/mgrs.min.js"></script>
-    
     <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
     <link rel="manifest" href="favicon/site.webmanifest">
-    
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="app-icon/ms-icon-144x144.png">
     <meta name="theme-color" content="#ffffff">
@@ -41,14 +37,21 @@
 </head>
    
 <body  style="background-color:#000000" >
-    
+    <!--
     <div id="platform_status" class="space-holder" >
         <table style="border:0px solid; padding: 5px;">
-            <tr><td style="padding-right: 15px;">Comms:</td><td>Active</td></tr>
-            <tr><td>RF:</td><td>Active</td></tr>
+            <tr><td style="padding-right: 15px;">Comms:</td><td><span id="commStatus">-</span></td></tr>
+            <tr><td style="padding-right: 15px;">Mirror:</td><td><span id="mirrorStatus">-</span></td></tr>
             <tr><td>Crypto:</td><td>Plain</td></tr>
         </table>
     </div>
+    -->
+    
+    
+    <div id="spaceLog" class="spaceLog">
+    <div class="spaceLogContent"></div>
+    </div>
+    
     
     <div id="platform_logo" class="space-logo" >
         <img src="img/edgemap-map-logo.png" width=100px>
@@ -666,7 +669,7 @@
     // Remember to run gwsocket systemd service along enabling these!
     // 
     
-    // Development variable for enabling / disabling messaging
+    // Development variable for enabling / disabling messaging 
     var messagingFeatureEnabled = 1
     // Development variable for enabling / disabling highrate target
     var highrateFeatureEnabled = 0
@@ -677,7 +680,7 @@
     // Geojson for node links
     var geoJsonLayerActive = false;
     
-
+    appendSpaceLog("Opening websockets");
     // ==========
     // Websockets
     // ==========
@@ -810,11 +813,13 @@
             document.getElementById('highRateSocketStatus').style="display:block;";
             document.getElementById('highRateSocketStatusRed').style="display:none;";
             highrateSocketConnected = true;
+            appendSpaceLog("Highrate socket connected");
         };
         highrateSocket.onclose = function(event) {
             document.getElementById('highRateSocketStatus').style="display:none;";
             document.getElementById('highRateSocketStatusRed').style="display:block;";
             highrateSocketConnected=false;
+            appendSpaceLog("Highrate socket disconnected");
         };
         highrateSocket.onmessage = function(event) {
                 var incomingMessage = event.data;
@@ -843,7 +848,8 @@
     
     /* Work in progress to unify meshtastic and reticulum handling */
     
-    if ( messagingFeatureEnabled ) {    
+    if ( messagingFeatureEnabled ) {
+        
         //
         // messagingSocket (8990)
         //
@@ -859,6 +865,7 @@
             document.getElementById('messagingSocketStatus').style="display:block; padding-left: 5px; padding-top:5px;"; 
             document.getElementById('messagingSocketStatusRed').style="display:none;";
             messagingSocketConnected = true;
+            appendSpaceLog("Messaging socket connected");
         };
         //
         // messagingSocket disconnect (8990)
@@ -868,6 +875,7 @@
             document.getElementById('messagingSocketStatusRed').style="display:block; padding-left: 5px; padding-top:5px;"; 
             notifyMessage("Message channel disconnected! Try reloading page.", 5000);
             messagingSocketConnected=false;
+            appendSpaceLog("Messaging socket disconnected");
         };
         
         //
@@ -881,6 +889,8 @@
             const msgType =  msgArray[1];
             const msgLocation =  msgArray[2];
             const msgMessage =  msgArray[3];
+            
+            appendSpaceLog("Incoming message");
             
             if ( getElementItem('#myCallSign').value === msgFrom) {
                 console.log("My own message detected, discarding.");
@@ -1066,7 +1076,7 @@
             fadeOut(deliveryStatusDiv,1000);
             }, 20000 );
         }
-        
+        appendSpaceLog("Sending message");
         // Send based on socket connection
         sendMessageToAllBearers( msgPayload );
         localSensorMarkerCreate( msgPayload );
@@ -1159,11 +1169,13 @@
             document.getElementById('statusSocketStatus').style="display:block; padding-top:5px;"; 
             document.getElementById('statusSocketStatusRed').style="display:none;";
             statusSocketConnected=true;
+            appendSpaceLog("Status socket connected");
         };
         statusSocket.onclose = function(event) {
             document.getElementById('statusSocketStatusRed').style="display:block; padding-top:5px;";
             document.getElementById('statusSocketStatus').style="display:none;";
             statusSocketConnected=false;
+            appendSpaceLog("Status socket disconnected");
         };
         
         statusSocket.onmessage = function(event) {
@@ -1223,11 +1235,15 @@
         mirrorSocket.onopen = function(event) {
             console.log("Opened mirror socket");
             mirrorSocketConnected = true;
+            
+            appendSpaceLog("Mirror socket connected");
         };
         
         mirrorSocket.onclose = function(event) {
             console.log("Closed mirror socket");
             mirrorSocketConnected = false;
+            
+            appendSpaceLog("Mirror socket disconnected");
         }
         
         mirrorSocket.onmessage = function(event) {
@@ -1422,6 +1438,7 @@
     window.setInterval(function () {
         checkMeshtasticRadioExpiry();
         updateMeshtasticRadioListBlock();
+        appendSpaceLog("Updated radio list");
         if ( messagingFeatureEnabled ) {
             checkReticulumRadioExpiry();
             updateReticulumBlock(); 
@@ -1821,11 +1838,14 @@
         // Generate milsymbols for right click menu, remember to 
         // re-run this if you change symbols on fly later.
         generateRightMenuSymbolArray(map);
+        appendSpaceLog("Generated symbols");
         
         // Set terrain 
         map.setTerrain(null);
+        appendSpaceLog("Disabling terrain");
         loadCallSign();
         setSkyFromUi();
+        appendSpaceLog("Set sky properties");
         // Fade out help
         window.setInterval(function () {
         fadeOut(document.getElementById("platform_help") ,1000);
@@ -2008,6 +2028,7 @@
                     .setHTML("<strong>Copied: " + mgrsText + "</strong>")
                     .addTo(map);
                   setTimeout(() => popup.remove(), 2000);
+                  appendSpaceLog("Copied MGRS to clipboard");
                 })
                 .catch(err => {
                   console.error('Failed to copy MGRS to clipboard', err);
@@ -2025,6 +2046,7 @@
         
         mapLoaded = true;
         console.log("Map loaded.");
+        appendSpaceLog("Map load completed");
         
     }); // map onload
     
