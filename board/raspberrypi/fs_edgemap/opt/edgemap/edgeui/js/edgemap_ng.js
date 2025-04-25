@@ -2716,6 +2716,119 @@ async function resolveCallsign(radio_id) {
     }
 }
 
+//
+// HIGHLY EXPERIMENTAL VIEW SYNC
+// Pressing 'M' toggles your master mode (viewSyncMaster). 
+// If you are master, other peers will receive your map browsing events.
+// Requires mirror websocket and backend routing those between all connected peers.
+// See mirror.service (/opt/geojsonmirror/mirror.sh) and wss-mirror.service
+//
+function throttle(func, delay) {
+  let lastCall = 0;
+  return function(...args) {
+    const now = Date.now();
+    if (now - lastCall >= delay) {
+      lastCall = now;
+      func(...args);
+    }
+  };
+}
+
+function setupViewSync(map, callback) {      
+  function createViewGeoJSON() {
+    const center = map.getCenter();
+    const zoom = map.getZoom();
+    const bearing = map.getBearing();
+    const pitch = map.getPitch();
+    return {
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: [center.lng, center.lat]
+      },
+      properties: {
+        zoom: zoom,
+        bearing: bearing,
+        pitch: pitch,
+        timestamp: Date.now()
+      }
+    };
+  }
+  // This runs after map interactions and calls your callback with the geojson
+  const handler = () => {
+    const geojson = createViewGeoJSON();
+    callback(geojson); // You can send it from here
+  };
+  // Hook into map interaction events
+  map.on('moveend', handler);
+  map.on('zoomend', handler);
+  map.on('rotateend', handler);
+  map.on('pitchend', handler);
+}
+
+function sendViewUpdate(geojson) {
+    const message = {
+        type: 'sync_view',
+        geoJson: geojson
+    };
+    const payload = JSON.stringify(message) + "\n";
+    if ( mirrorSocketConnected && viewSyncMaster ) {
+        mirrorSocket.send(payload);
+    }  
+}
 
 
+//
+// Keypress functions
+//
+function handleKeyPress(e){
+    if (keyEventListener) {
+     var key=e.keyCode || e.which;
+      if (key==13){
+        
+        // Take search input and try lat,lon or MGRS
+        let inputValue = document.getElementById('coordinateInput').value.trim();
+        if (!inputValue) return;
+        const coordValue = inputValue.split(",");
+        const isLatLon = coordValue.length === 2 && check_lat_lon(coordValue[1], coordValue[0]);
+        if (isLatLon) {
+            // removeDot();
+            // addDot(coordValue[1], coordValue[0]);
+            flyTo(coordValue[0],coordValue[1] );
+        } else {
+            try {
+                const [lng, lat] = mgrs.toPoint(inputValue);
+                // removeDot();
+                // addDot(lng, lat);
+                flyTo(lat,lng);
+            } catch (err) {
+                console.error("Invalid input:", err);
+                alert("Invalid input: please enter lat,lon or MGRS coordinate.");
+            }
+        }
+        document.getElementById('coordinateInput').value = "";
+        closeCoordinateSearchEntryBox();
 
+      }
+  }
+}
+
+// Set sky as you like
+function setSkyFromUi() {
+    map.setSky({
+        'sky-color': "#0f0881",
+        'sky-horizon-blend': 0.16,
+        'horizon-color': "#ed333b",
+        'horizon-fog-blend': 0.58,
+        'fog-color': "#9a9996",
+        'fog-ground-blend': 0.65
+    });
+}
+
+// Create marker from messaging window
+function createNewDragableMarker() {
+    newDragableMarker();
+}
+function getElementItem(selector) {
+    return document.querySelector(selector);
+}

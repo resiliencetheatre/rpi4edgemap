@@ -459,7 +459,6 @@ window.onload = function ()
         const y = event.clientY - rect.top;
         // Convert to latitude and longitude
         const lngLat = map.unproject([x, y]);
-        console.log("Registered: ", lngLat.lat, lngLat.lng);
         document.getElementById('rightMenuLat').innerHTML = lngLat.lat;
         document.getElementById('rightMenuLon').innerHTML = lngLat.lng;
         // event.preventDefault();

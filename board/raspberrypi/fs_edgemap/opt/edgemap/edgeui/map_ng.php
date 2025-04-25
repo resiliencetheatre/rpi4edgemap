@@ -531,8 +531,9 @@
     Work in progress.
 
 */
-    
-    
+    // 
+    // Global variables, better not touch
+    //
     var map = new maplibregl.Map({
           container: 'map',
           zoom: 1,
@@ -547,7 +548,7 @@
     var intialZoomLevel=1;
 	var symbolSize = 30;
 
-    // ViewSync 
+    // ViewSync state
     var viewSyncMaster=0;
     
     // geojson for right menu inserted symbols
@@ -559,8 +560,7 @@
     
     // geojson url for node links
     var geojsonUrl = 'linkstatus.php?linkline=1';
-    var geoJsonLayerActive = false;
-	
+    	
 	// One user created pin marker for a demo
 	const mapPinMarker = [];
 	const mapPinMarkerPopup = [];
@@ -580,9 +580,12 @@
 	var indexOfDraggedMarker;
 	var lastDraggedMarkerId;
 
-    // If using IRC channel, we can send right click created symbols
-    // to other peers.
-    sendRightClickSymbolsOverMsgChannel = true;
+     // Sensor globals
+    var sensorToBeCreated=0;
+    var keyEventListener=1;
+    var unknownSensorCreateInProgress=0;
+    // Manual location globals
+    var manualLocationCreateInProgress=0;
 
 	//
 	// Generate random callsign for a demo (not in use)
@@ -637,15 +640,6 @@
     const trackMessageMarkers = []; 
     var lastKnownCoordinates;
     
-    // Remember to run gwsocket systemd service along enabling these:
-    
-    // Development variable for enabling / disabling messaging
-    var messagingFeatureEnabled = 1
-    // Development variable for enabling / disabling highrate target
-    var highrateFeatureEnabled = 0
-    // Development variable for enabling / disabling securePTT
-    var securepttFeatureEnabled = 0
-    
     // We track 'radios' on mesh - not their location on map.
     // We don't want to enforce or use meshtastic internal
     // positioning reports (or capability to use GPS) since it's an OPSEC
@@ -667,34 +661,23 @@
     });
     var trackMessageMarkerGraphDom = trackMessageMarkerGraph.asDOM();
 
-    // Sensor globals
-    var sensorToBeCreated=0;
-    var keyEventListener=1;
-    var unknownSensorCreateInProgress=0;
+    // 
+    // Features enable/disable globals, allows you to set UI features on/off.
+    // Remember to run gwsocket systemd service along enabling these!
+    // 
     
-    // Manual location globals
-    var manualLocationCreateInProgress=0;
-
-    // Set sky as you like
-    function setSkyFromUi() {
-        map.setSky({
-            'sky-color': "#0f0881",
-            'sky-horizon-blend': 0.16,
-            'horizon-color': "#ed333b",
-            'horizon-fog-blend': 0.58,
-            'fog-color': "#9a9996",
-            'fog-ground-blend': 0.65
-        });
-    }
-
-    // Create marker from messaging window
-	function createNewDragableMarker() {
-		newDragableMarker();
-	}
-    function getElementItem(selector) {
-        return document.querySelector(selector);
-    }
+    // Development variable for enabling / disabling messaging
+    var messagingFeatureEnabled = 1
+    // Development variable for enabling / disabling highrate target
+    var highrateFeatureEnabled = 0
+    // Development variable for enabling / disabling securePTT
+    var securepttFeatureEnabled = 0
+    // If using IRC channel, we can send right click created symbols to other peers.
+    sendRightClickSymbolsOverMsgChannel = true;
+    // Geojson for node links
+    var geoJsonLayerActive = false;
     
+
     // ==========
     // Websockets
     // ==========
@@ -710,6 +693,7 @@
     Highrate marker         7890    8890
     messaging (ng)          7990    8990        /tmp/msgchannel /tmp/msgincoming 
     status  (ng)            7997    8997        /tmp/statusin
+    mirror (demo)           TBD     9000        /tmp/inpipe /tmp/outpipe
     
     Old & to be removed:
     ==========================================================
@@ -767,15 +751,15 @@
 			var trimmedString = incomingMessage.substring(0, 80);
             const localGpsArray = trimmedString.split(",");
             if ( localGpsArray[0] == "n/a" ) 
-                displayString = "GPS: No fix";
+                displayString = "No fix";
             if ( localGpsArray[0] == "None" ) 
-                displayString = "GPS: No fix";
+                displayString = "No fix";
             if ( localGpsArray[0] == "2D" ) 
-                displayString = "GPS: 2D fix";
+                displayString = "2D fix";
             if ( localGpsArray[0] == "3D" ) 
-                displayString = "GPS: 3D fix";
+                displayString = "3D fix";
             if ( localGpsArray[0] == "Manual" ) 
-                displayString = "GPS: Manual";
+                displayString = "Manual";
             document.getElementById("gpsDisplay").innerHTML = displayString;
             /*  localGpsArray[0] : text 
                 localGpsArray[1] : enum
@@ -1228,17 +1212,14 @@
         };
     }
 
-        // Work in progress: mirror socket
-    
+        // 
+        // Mirror socket, sharing over 'mirroring' websocket
+        //
         if ( wsProtocol == "ws://" )
-                mirrorSocket = new WebSocket(wsProtocol+wsHost+':8999'); // TODO: CHECK PORT
+                mirrorSocket = new WebSocket(wsProtocol+wsHost+':8999'); // TODO: CHECK PORT FOR NON TLS
         if ( wsProtocol == "wss://" )
                 mirrorSocket = new WebSocket(wsProtocol+wsHost+':9000');
 
-
-        //
-        // messagingSocket connect (8990)
-        //
         mirrorSocket.onopen = function(event) {
             console.log("Opened mirror socket");
             mirrorSocketConnected = true;
@@ -1252,8 +1233,7 @@
         mirrorSocket.onmessage = function(event) {
             try {
                 const msg = JSON.parse(event.data);
-                
-                console.log("mirrorSocket.onmessage #1: ", msg);
+                // console.log("mirrorSocket.onmessage #1: ", msg);
                 
                 // Sync right click symbols
                 if (msg.type === 'sync_all' && msg.geoJson) {
@@ -1267,14 +1247,11 @@
                     map.getSource('distanceGeoJsonSource').setData(measurementGeoJson);
                 }
                 
-                
                 // Sync view (center, zoom, bearing, pitch)
                 if (msg.type === 'sync_view' && msg.geoJson && !viewSyncMaster ) {
-                    // console.log("sync_view rx: ", msg.geoJson);
                     const feature = msg.geoJson;
                     const coords = feature.geometry.coordinates;
                     const props = feature.properties || {};
-
                     map.easeTo({
                         center: coords,
                         zoom: props.zoom,
@@ -1283,16 +1260,11 @@
                         duration: 500 // Optional: adjust animation speed
                     });
                 }
-
-                
             } catch (e) {
-                // console.log('Maybe it was not geojson');
                 // copied from messaging socket:
                 var incomingMessage = event.data;   
                 var trimmedString = incomingMessage.substring(0, 512);
-                
-                console.log("mirrorSocket.onMessage()", trimmedString)
-                
+                // console.log("mirrorSocket.onMessage()", trimmedString)
                 const msgArray=trimmedString.split("|");
                 const msgFrom =  msgArray[0];
                 const msgType =  msgArray[1];
@@ -1352,12 +1324,8 @@
                         } 
                         notifyMessage("Image received from " + msgFrom , 5000);
                     }
-                    
-                    
-                    
                 }
             }
-
         };
 
 
@@ -1369,6 +1337,7 @@
     document.getElementById('messagingSocketStatusRed').style="display:none;";
     document.getElementById('statusSocketStatusRed').style="display:none;";
 
+    // TODO: Clean this mess
     const logIcon = document.getElementById("log-icon");
     const logDiv = document.getElementById("log-window");
     const bottomBarDiv = document.getElementById("bottomBar");
@@ -1446,6 +1415,7 @@
         }).asCanvas().toDataURL();
     //document.getElementById('debugImage').src = milSymbolTest;
     //document.getElementById('debugImage').style="display:none;";
+
 
     // Update meshtastic and reticulum nodes every 30 s to UI
     // Note: updateReticulumBlock() has also age checking 
@@ -1808,10 +1778,6 @@
             });
         });
         
-        
-        
-        
-        
         // Meshtastic units geoJson
         // These are positions from meshtastic internal GPS (or fixed position)
         meshtasticGeoJson = {
@@ -1849,16 +1815,16 @@
                 },
                 'filter': ['==', '$type', 'Point']
         });
+        
         // Generate bitmap for meshtastic geojson units
         generateMeshtasticIcon(map);
         // Generate milsymbols for right click menu, remember to 
         // re-run this if you change symbols on fly later.
         generateRightMenuSymbolArray(map);
         
-        console.log("Map loaded.");
+        // Set terrain 
         map.setTerrain(null);
         loadCallSign();
-        mapLoaded = true;
         setSkyFromUi();
         // Fade out help
         window.setInterval(function () {
@@ -1869,7 +1835,7 @@
         showTails();
         
         
-        // Terradraw
+        // Terradraw plugin
         // https://watergis.github.io/maplibre-gl-terradraw/interfaces/interfaces_MeasureControlOptions.MeasureControlOptions.html
         // DistanceUnit: "degrees" | "radians" | "miles" | "kilometers"
         // AreaUnit: "metric" | "imperial"
@@ -1881,22 +1847,6 @@
             computeElevation: true,
         });
         map.addControl(draw, 'bottom-left');
-        
-     
-
-       
-    
-      
-    
-       
-    
-
-
-
-        
-        
-        
-        
         
         //
         // Experimental MGRS 
@@ -1918,7 +1868,6 @@
         var mapZoomLevel =  map.getZoom();
         // Show mgrs only on higher zoom levels
         if ( mapZoomLevel > 16 ) {
-        
             const bounds = map.getBounds();
             const minLng = bounds.getWest();
             const minLat = bounds.getSouth();
@@ -2074,35 +2023,10 @@
           map.getCanvas().style.cursor = '';
         });
         
-        
-
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        mapLoaded = true;
+        console.log("Map loaded.");
         
     }); // map onload
-    
-    
-    
-    
     
     
     // map feature debug if off by default (use D to enable)
@@ -2211,49 +2135,10 @@
     });
    
    
-    
-   
-
-    //
-    // Keypress functions
-    //
-    function handleKeyPress(e){
-        if (keyEventListener) {
-         var key=e.keyCode || e.which;
-          if (key==13){
-            
-            // Take search input and try lat,lon or MGRS
-            let inputValue = document.getElementById('coordinateInput').value.trim();
-            if (!inputValue) return;
-            const coordValue = inputValue.split(",");
-            const isLatLon = coordValue.length === 2 && check_lat_lon(coordValue[1], coordValue[0]);
-            if (isLatLon) {
-                // removeDot();
-                // addDot(coordValue[1], coordValue[0]);
-                flyTo(coordValue[0],coordValue[1] );
-            } else {
-                try {
-                    const [lng, lat] = mgrs.toPoint(inputValue);
-                    // removeDot();
-                    // addDot(lng, lat);
-                    flyTo(lat,lng);
-                } catch (err) {
-                    console.error("Invalid input:", err);
-                    alert("Invalid input: please enter lat,lon or MGRS coordinate.");
-                }
-            }
-            document.getElementById('coordinateInput').value = "";
-            closeCoordinateSearchEntryBox();
-
-          }
-      }
-    }
 
     document.addEventListener("keyup", function(event) {
         const key = event.key;
-        
         if (keyEventListener) {
-        
             // Messaging
             if (key === "m") {
                if ( isHidden(logDiv) ) openMessageEntryBox();
@@ -2345,7 +2230,6 @@
                 // ViewSync Toggle
                 if ( key == "M" ) {
                     viewSyncMaster = viewSyncMaster ? 0 : 1; // Toggle 0 <-> 1
-                    // console.log("View Sync Master is now:", viewSyncMaster ? "ON" : "OFF");
                     if ( viewSyncMaster )
                         document.getElementById("euFlag").style.opacity = "1.0";
                     if ( !viewSyncMaster)
@@ -2361,13 +2245,11 @@
     // 
     const distanceValueContainer = document.getElementById('distance-value');
     distanceMeasurementActive = false;
-
     // GeoJSON object to hold our measurement features
     distanceGeoJson = {
         'type': 'FeatureCollection',
         'features': []
     };
-
     // Used to draw a line between points
      distanceLineString = {
         'type': 'Feature',
@@ -2440,88 +2322,10 @@
         }
     });
     
-    
-    
-    // HIGHLY EXPERIMENTAL VIEW SYNC
-    // Pressing 'M' toggles your master mode. If you are master
-    // other peers will receive your map browsing events.
-    function throttle(func, delay) {
-      let lastCall = 0;
-      return function(...args) {
-        const now = Date.now();
-        if (now - lastCall >= delay) {
-          lastCall = now;
-          func(...args);
-        }
-      };
-    }
-
-
-    function setupViewSync(map, callback) {
-      
-      // This is the function that builds your GeoJSON message
-      function createViewGeoJSON() {
-        const center = map.getCenter();
-        const zoom = map.getZoom();
-        const bearing = map.getBearing();
-        const pitch = map.getPitch();
-
-        return {
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: [center.lng, center.lat]
-          },
-          properties: {
-            zoom: zoom,
-            bearing: bearing,
-            pitch: pitch,
-            timestamp: Date.now()
-          }
-        };
-      }
-
-      // This runs after map interactions and calls your callback with the geojson
-      const handler = () => {
-        const geojson = createViewGeoJSON();
-        callback(geojson); // You can send it from here
-      };
-
-      // Hook into map interaction events
-      map.on('moveend', handler);
-      map.on('zoomend', handler);
-      map.on('rotateend', handler);
-      map.on('pitchend', handler);
-    }
-
-    function sendViewUpdate(geojson) {
-        const message = {
-            type: 'sync_view',
-            geoJson: geojson
-        };
-        const payload = JSON.stringify(message) + "\n";
-        if ( mirrorSocketConnected && viewSyncMaster ) {
-            mirrorSocket.send(payload);
-            // console.log("Sent: ", payload);
-        }  
-    }
-    // Setup with throttle value    
+    // Setup experimental viewSync with throttle value    
     const throttledSendViewUpdate = throttle(sendViewUpdate, 500);
     setupViewSync(map, throttledSendViewUpdate);
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     
 </script>
 
