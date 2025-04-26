@@ -17,13 +17,17 @@
     
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="../app-icon/ms-icon-144x144.png">
+    <script src="../js/edgemap_ng.js"></script>
     
 </head>
 <body>
-     <input style="display: none;" type="text" id="filePath" value="symbols.txt" placeholder="Enter file name on server">
+    <input style="display: none;" type="text" id="filePath" value="symbols.txt" placeholder="Enter file name on server">
+    <input style="display: none;" type="text" id="filePathAsc" value="symbols.txt.asc" placeholder="Enter file name on server">
     
     <button onclick="loadFile()">Load</button>
     <button onclick="saveFile()" style="margin-left: 5px;">Save</button>
+    <button onclick="encryptSymbols()" style="margin-left: 10px;">Encrypt</button>
+    <button onclick="decryptSymbols()" style="margin-left: 5px;">Decrypt</button>
     <button onclick="backToMap()" style="margin-left: 10px;">Back to map</button>
     
     <div class="status" id="status">Editor ready. Load symbols or paste new data.</div>
@@ -57,6 +61,7 @@
         
         const editor = document.getElementById('editor');
         const filePathInput = document.getElementById('filePath');
+        const filePathAscInput = document.getElementById('filePathAsc');
 
         function loadFile() {
             const fileName = filePathInput.value;
@@ -73,6 +78,23 @@
                 .then(text => editor.value = text)
                 .catch(error => alert("Error: " + error.message));
                 updateStatus("Symbols file loaded!");
+        }
+        
+        function loadAscFile() {
+            const fileName = filePathAscInput.value;
+            if (!fileName) {
+                alert("Please enter a file name.");
+                return;
+            }
+            
+            fetch(`file-handler.php?file=${encodeURIComponent(fileName)}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('File not found');
+                    return response.text();
+                })
+                .then(text => editor.value = text)
+                .catch(error => alert("Error: " + error.message));
+                updateStatus("Copy paste encrypted payload to transport!");
         }
 
         function saveFile() {
@@ -95,6 +117,48 @@
             .catch(error => alert("Error: " + error.message));
             updateStatus("Symbols saved " + getTimestamp() );
         }
+        
+        function saveAscFile() {
+            const fileName = filePathAscInput.value;
+            if (!fileName) {
+                alert("Please enter a file name.");
+                return;
+            }
+            
+            fetch('file-handler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ file: fileName, content: editor.value })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to save file');
+                return response.text();
+            })
+            .then(message => console.log(message))
+            .catch(error => alert("Error: " + error.message));
+            updateStatus("Symbols saved " + getTimestamp() );
+        }
+        
+        
+        function encryptSymbols() {
+            console.log("encryptSymbols()");
+            saveFile();
+            // encrypt
+            engine("encrypt_symbols");
+            // load encrypted to UI
+            loadAscFile();
+        }
+        
+        function decryptSymbols() {
+            console.log("decryptSymbols()");
+            // save asc
+            saveAscFile();
+            // decrypt
+            engine("decrypt_symbols");
+            // load decrypted to UI
+            loadFile();
+        }
+        
     </script>
 </body>
 </html>

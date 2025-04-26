@@ -64,7 +64,7 @@
             <tr><td>Meshtastic radios</td><td align="center">r</td></tr>
             <tr><td>Reticulum radios</td><td align="center">R</td></tr>
             <tr><td>Terrain</td><td align="center">h</td></tr>
-            <tr><td>Coordinate search</td><td align="center">f</td></tr>
+            <tr><td>Coordinate/MGRS search</td><td align="center">f</td></tr>
         </table>
     </div>
 
@@ -524,6 +524,13 @@
     * Own location with manual setting with right click menu
     * Image upload to map location via right click menu
     * Image upload to own location (browser location) (disabled)
+    * MGRS display & search
+    * Meshtastic radio SN to Callsign renaming
+    * "space log" of events
+    * mirror socket to synchronize web UI and markers for demo
+    * Meshtastic positions creates green unit on map
+    * terradraw plugin for measurements on map
+    * IP based messaging over IRC
     
     [1] https://www.spatialillusions.com/milsymbol/documentation.html
     [2] https://maplibre.org/maplibre-gl-js/docs/API/
