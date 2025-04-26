@@ -24,7 +24,7 @@
     <input style="display: none;" type="text" id="filePath" value="symbols.txt" placeholder="Enter file name on server">
     <input style="display: none;" type="text" id="filePathAsc" value="symbols.txt.asc" placeholder="Enter file name on server">
     
-    <button onclick="loadFile()">Load</button>
+    <button onclick="loadFile('Symbols file loaded!')">Load</button>
     <button onclick="saveFile()" style="margin-left: 5px;">Save</button>
     <button onclick="encryptSymbols()" style="margin-left: 10px;">Encrypt</button>
     <button onclick="decryptSymbols()" style="margin-left: 5px;">Decrypt</button>
@@ -63,7 +63,7 @@
         const filePathInput = document.getElementById('filePath');
         const filePathAscInput = document.getElementById('filePathAsc');
 
-        function loadFile() {
+        function loadFile(message) {
             const fileName = filePathInput.value;
             if (!fileName) {
                 alert("Please enter a file name.");
@@ -77,7 +77,7 @@
                 })
                 .then(text => editor.value = text)
                 .catch(error => alert("Error: " + error.message));
-                updateStatus("Symbols file loaded!");
+                updateStatus(message);
         }
         
         function loadAscFile() {
@@ -139,24 +139,17 @@
             updateStatus("Symbols saved " + getTimestamp() );
         }
         
-        
+        // TODO: Add error handling if needed
         function encryptSymbols() {
-            console.log("encryptSymbols()");
             saveFile();
-            // encrypt
             engine("encrypt_symbols");
-            // load encrypted to UI
             loadAscFile();
         }
         
         function decryptSymbols() {
-            console.log("decryptSymbols()");
-            // save asc
             saveAscFile();
-            // decrypt
             engine("decrypt_symbols");
-            // load decrypted to UI
-            loadFile();
+            loadFile('Decrypted symbols displayed. Save if needed.');
         }
         
     </script>
