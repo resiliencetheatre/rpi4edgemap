@@ -5,6 +5,7 @@ After=multi-user.target gpsd.service wss-gpssocket.service
 [Service]
 WorkingDirectory=/opt/edgemap
 KillMode=process
+ExecStartPre=/bin/sh -c 'echo 0 > /proc/sys/kernel/sysrq'
 ExecStart=/usr/bin/gpsreader
 Restart=always
 RestartSec=10
