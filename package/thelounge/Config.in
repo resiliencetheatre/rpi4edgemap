@@ -1,0 +1,7 @@
+config BR2_PACKAGE_THELOUNGE
+    bool "thelounge"
+    depends on BR2_PACKAGE_NODEJS
+    help
+      The self-hosted web IRC client
+
+      https://thelounge.chat/
