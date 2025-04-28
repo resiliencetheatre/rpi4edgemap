@@ -11,12 +11,12 @@ function I() {
     return s;
   }, I.apply(null, arguments);
 }
-var M;
+var w;
 (function(s) {
   s.Commit = "commit", s.Provisional = "provisional", s.Finish = "finish";
-})(M || (M = {}));
-const T = { SELECTED: "selected", MID_POINT: "midPoint", SELECTION_POINT: "selectionPoint" }, V = "edited", st = "closingPoint", Lt = "snappingPoint", kt = "coordinatePoint", rt = "coordinatePointIds";
-function wt(s) {
+})(w || (w = {}));
+const T = { SELECTED: "selected", MID_POINT: "midPoint", SELECTION_POINT: "selectionPoint" }, V = "edited", rt = "closingPoint", _t = "snappingPoint", kt = "coordinatePoint", nt = "coordinatePointIds";
+function Mt(s) {
   return !!(s && typeof s == "object" && s !== null && !Array.isArray(s));
 }
 function zt(s) {
@@ -79,9 +79,9 @@ let N = class {
     if (this._state === "unregistered") throw new Error("Mode must be registered");
     const e = function(i, o) {
       let r;
-      if (wt(i)) if (i.id == null) r = "Feature has no id";
+      if (Mt(i)) if (i.id == null) r = "Feature has no id";
       else if (typeof i.id != "string" && typeof i.id != "number") r = "Feature must be string or number as per GeoJSON spec";
-      else if (o(i.id)) if (wt(i.geometry)) if (wt(i.properties)) if (typeof i.geometry.type == "string" && ["Polygon", "LineString", "Point"].includes(i.geometry.type)) if (Array.isArray(i.geometry.coordinates)) {
+      else if (o(i.id)) if (Mt(i.geometry)) if (Mt(i.properties)) if (typeof i.geometry.type == "string" && ["Polygon", "LineString", "Point"].includes(i.geometry.type)) if (Array.isArray(i.geometry.coordinates)) {
         if (!i.properties.mode || typeof i.properties.mode != "string") return { valid: !1, reason: "Feature does not have a valid mode property" };
       } else r = "Feature coordinates is not an array";
       else r = "Feature is not Point, LineString or Polygon";
@@ -92,7 +92,7 @@ let N = class {
       return r ? { valid: !1, reason: r } : { valid: !0 };
     }(t, this.store.idStrategy.isValidId);
     if (this.validate) {
-      const i = this.validate(t, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: M.Provisional });
+      const i = this.validate(t, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: w.Provisional });
       return { valid: e.valid && i.valid, reason: i.reason };
     }
     return { valid: e.valid, reason: e.reason };
@@ -181,16 +181,16 @@ function Bt(s) {
   }
   function o(r, n, a, l) {
     const d = t[r][n], h = t[r][n + 1], c = t[a][l], u = t[a][l + 1], p = function(m, v, f, C) {
-      if (ct(m, f) || ct(m, C) || ct(v, f) || ct(C, f)) return null;
-      const P = m[0], S = m[1], b = v[0], w = v[1], D = f[0], G = f[1], _ = C[0], j = C[1], z = (P - b) * (G - j) - (S - w) * (D - _);
-      return z === 0 ? null : [((P * w - S * b) * (D - _) - (P - b) * (D * j - G * _)) / z, ((P * w - S * b) * (G - j) - (S - w) * (D * j - G * _)) / z];
+      if (ut(m, f) || ut(m, C) || ut(v, f) || ut(C, f)) return null;
+      const P = m[0], S = m[1], b = v[0], M = v[1], D = f[0], G = f[1], L = C[0], j = C[1], z = (P - b) * (G - j) - (S - M) * (D - L);
+      return z === 0 ? null : [((P * M - S * b) * (D - L) - (P - b) * (D * j - G * L)) / z, ((P * M - S * b) * (G - j) - (S - M) * (D * j - G * L)) / z];
     }(d, h, c, u);
     if (p === null) return;
     let g, y;
     g = h[0] !== d[0] ? (p[0] - d[0]) / (h[0] - d[0]) : (p[1] - d[1]) / (h[1] - d[1]), y = u[0] !== c[0] ? (p[0] - c[0]) / (u[0] - c[0]) : (p[1] - c[1]) / (u[1] - c[1]), i(g) || i(y) || (p.toString(), e.push(p));
   }
 }
-function ct(s, t) {
+function ut(s, t) {
   return s[0] === t[0] && s[1] === t[1];
 }
 function It(s, t) {
@@ -217,7 +217,7 @@ function bt(s, t) {
   return (e = s.geometry.coordinates[0][0])[0] !== (i = s.geometry.coordinates[0][s.geometry.coordinates[0].length - 1])[0] || e[1] !== i[1] ? { valid: !1, reason: Qe } : { valid: !0 };
   var e, i;
 }
-function dt(s, t) {
+function ht(s, t) {
   const e = bt(s, t);
   return e.valid ? Bt(s) ? { valid: !1, reason: "Feature intersects itself" } : { valid: !0 } : e;
 }
@@ -234,7 +234,7 @@ class Ce extends N {
     const t = this.currentCircleId;
     if (this.validate && t) {
       const e = this.store.getGeometryCopy(t);
-      if (!this.validate({ type: "Feature", id: t, geometry: e, properties: {} }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: M.Finish }).valid) return;
+      if (!this.validate({ type: "Feature", id: t, geometry: e, properties: {} }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: w.Finish }).valid) return;
     }
     this.cursorMovedAfterInitialCursorDown = !1, this.center = void 0, this.currentCircleId = void 0, this.clickCount = 0, this.state === "drawing" && this.setStarted(), this.onFinish(t, { mode: this.mode, action: "draw" });
   }
@@ -278,7 +278,7 @@ class Ce extends N {
     return t.type === "Feature" && t.geometry.type === "Polygon" && t.properties.mode === this.mode && (e.polygonFillColor = this.getHexColorStylingValue(this.styles.fillColor, e.polygonFillColor, t), e.polygonOutlineColor = this.getHexColorStylingValue(this.styles.outlineColor, e.polygonOutlineColor, t), e.polygonOutlineWidth = this.getNumericStylingValue(this.styles.outlineWidth, e.polygonOutlineWidth, t), e.polygonFillOpacity = this.getNumericStylingValue(this.styles.fillOpacity, e.polygonFillOpacity, t), e.zIndex = 10), e;
   }
   validateFeature(t) {
-    return this.validateModeFeature(t, (e) => dt(e, this.coordinatePrecision));
+    return this.validateModeFeature(t, (e) => ht(e, this.coordinatePrecision));
   }
   updateCircle(t) {
     if (this.clickCount === 1 && this.center && this.currentCircleId) {
@@ -294,8 +294,8 @@ class Ce extends N {
         i = function(r) {
           const { center: n, radiusKilometers: a, coordinatePrecision: l } = r, d = r.steps ? r.steps : 64, h = 1e3 * a, [c, u] = n, { x: p, y: g } = x(c, u), y = [];
           for (let m = 0; m < d; m++) {
-            const v = 360 * m / d * Math.PI / 180, f = h * Math.cos(v), C = h * Math.sin(v), [P, S] = [p + f, g + C], { lng: b, lat: w } = W(P, S);
-            y.push([F(b, l), F(w, l)]);
+            const v = 360 * m / d * Math.PI / 180, f = h * Math.cos(v), C = h * Math.sin(v), [P, S] = [p + f, g + C], { lng: b, lat: M } = W(P, S);
+            y.push([F(b, l), F(M, l)]);
           }
           return y.push(y[0]), { type: "Feature", geometry: { type: "Polygon", coordinates: [y] }, properties: {} };
         }({ center: this.center, radiusKilometers: e * o, coordinatePrecision: this.coordinatePrecision });
@@ -303,7 +303,7 @@ class Ce extends N {
         if (this.projection !== "globe") throw new Error("Invalid projection");
         i = Yt({ center: this.center, radiusKilometers: e, coordinatePrecision: this.coordinatePrecision });
       }
-      if (this.validate && !this.validate({ type: "Feature", id: this.currentCircleId, geometry: i.geometry, properties: { radiusKilometers: e } }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: M.Provisional }).valid) return;
+      if (this.validate && !this.validate({ type: "Feature", id: this.currentCircleId, geometry: i.geometry, properties: { radiusKilometers: e } }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: w.Provisional }).valid) return;
       this.store.updateGeometry([{ id: this.currentCircleId, geometry: i.geometry }]), this.store.updateProperty([{ id: this.currentCircleId, property: "radiusKilometers", value: e }]);
     }
   }
@@ -312,7 +312,7 @@ const E = (s, t) => {
   const { x: e, y: i } = s, { x: o, y: r } = t, n = o - e, a = r - i;
   return Math.sqrt(a * a + n * n);
 };
-function ht(s) {
+function ct(s) {
   if (!function(e) {
     const i = e.coordinates[0];
     let o = 0;
@@ -334,13 +334,13 @@ class Pe extends N {
   close() {
     if (this.currentId === void 0) return;
     if (this.currentId) {
-      const e = ht(this.store.getGeometryCopy(this.currentId));
+      const e = ct(this.store.getGeometryCopy(this.currentId));
       e && this.store.updateGeometry([{ id: this.currentId, geometry: e }]);
     }
     const t = this.currentId;
     if (this.validate && t) {
       const e = this.store.getGeometryCopy(t);
-      if (!this.validate({ type: "Feature", id: t, geometry: e, properties: {} }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: M.Finish }).valid) return;
+      if (!this.validate({ type: "Feature", id: t, geometry: e, properties: {} }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: w.Finish }).valid) return;
     }
     this.closingPointId && this.store.delete([this.closingPointId]), this.startingClick = !1, this.currentId = void 0, this.closingPointId = void 0, this.hasLeftStartingPoint = !1, this.state === "drawing" && this.setStarted(), this.onFinish(t, { mode: this.mode, action: "draw" });
   }
@@ -361,12 +361,12 @@ class Pe extends N {
     if (l < this.minDistance) return;
     e.coordinates[0].pop();
     const p = { type: "Polygon", coordinates: [[...e.coordinates[0], [t.lng, t.lat], e.coordinates[0][0]]] };
-    this.validate && !this.validate({ type: "Feature", id: this.currentId, geometry: p, properties: {} }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: M.Provisional }).valid || this.store.updateGeometry([{ id: this.currentId, geometry: p }]);
+    this.validate && !this.validate({ type: "Feature", id: this.currentId, geometry: p, properties: {} }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: w.Provisional }).valid || this.store.updateGeometry([{ id: this.currentId, geometry: p }]);
   }
   onClick(t) {
     if (!this.preventNewFeature) {
       if (this.startingClick === !1) {
-        const [e, i] = this.store.create([{ geometry: { type: "Polygon", coordinates: [[[t.lng, t.lat], [t.lng, t.lat], [t.lng, t.lat], [t.lng, t.lat]]] }, properties: { mode: this.mode } }, { geometry: { type: "Point", coordinates: [t.lng, t.lat] }, properties: { mode: this.mode, [st]: !0 } }]);
+        const [e, i] = this.store.create([{ geometry: { type: "Polygon", coordinates: [[[t.lng, t.lat], [t.lng, t.lat], [t.lng, t.lat], [t.lng, t.lat]]] }, properties: { mode: this.mode } }, { geometry: { type: "Point", coordinates: [t.lng, t.lat] }, properties: { mode: this.mode, [rt]: !0 } }]);
         return this.currentId = e, this.closingPointId = i, this.startingClick = !0, void this.setDrawing();
       }
       this.close();
@@ -408,7 +408,7 @@ function Se({ unproject: s, point: t, pointerDistance: e }) {
   const i = e / 2, { x: o, y: r } = t;
   return { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [[s(o - i, r - i), s(o + i, r - i), s(o + i, r + i), s(o - i, r + i), s(o - i, r - i)].map((n) => [n.lng, n.lat])] } };
 }
-class nt extends k {
+class at extends k {
   constructor(t) {
     super(t);
   }
@@ -417,7 +417,7 @@ class nt extends k {
     return Se({ unproject: this.unproject, point: { x: e, y: i }, pointerDistance: this.pointerDistance });
   }
 }
-class at extends k {
+class lt extends k {
   constructor(t) {
     super(t);
   }
@@ -450,7 +450,7 @@ function Jt(s, t, e) {
   const i = O(s[0]), o = O(s[1]), r = O(e), n = ve(t), a = Math.asin(Math.sin(o) * Math.cos(n) + Math.cos(o) * Math.sin(n) * Math.cos(r));
   return [R(i + Math.atan2(Math.sin(r) * Math.sin(n) * Math.cos(o), Math.cos(n) - Math.sin(o) * Math.sin(a))), R(a)];
 }
-function lt({ x: s, y: t }, e, i) {
+function dt({ x: s, y: t }, e, i) {
   const o = O(i);
   return { x: s + e * Math.cos(o), y: t + e * Math.sin(o) };
 }
@@ -481,7 +481,7 @@ function si(s, t, e) {
   const d = s[s.length - 1];
   return [d, d];
 }
-function ut(s) {
+function pt(s) {
   return s * (Math.PI / 180);
 }
 function Zt(s) {
@@ -509,15 +509,15 @@ class ri extends k {
   }
   generateInsertionGeodesicCoordinates(t, e, i) {
     const o = U(t, e), r = function(n, a, l) {
-      const d = [], h = ut(n[1]), c = ut(n[0]), u = ut(a[1]), p = ut(a[0]);
+      const d = [], h = pt(n[1]), c = pt(n[0]), u = pt(a[1]), p = pt(a[0]);
       l += 1;
       const g = 2 * Math.asin(Math.sqrt(Math.sin((u - h) / 2) ** 2 + Math.cos(h) * Math.cos(u) * Math.sin((p - c) / 2) ** 2));
       if (g === 0 || isNaN(g)) return d;
       for (let y = 0; y <= l; y++) {
         const m = y / l, v = Math.sin((1 - m) * g) / Math.sin(g), f = Math.sin(m * g) / Math.sin(g), C = v * Math.cos(h) * Math.cos(c) + f * Math.cos(u) * Math.cos(p), P = v * Math.cos(h) * Math.sin(c) + f * Math.cos(u) * Math.sin(p), S = v * Math.sin(h) + f * Math.sin(u);
         if (isNaN(C) || isNaN(P) || isNaN(S)) continue;
-        const b = Math.atan2(S, Math.sqrt(C ** 2 + P ** 2)), w = Math.atan2(P, C);
-        isNaN(b) || isNaN(w) || d.push([Zt(w), Zt(b)]);
+        const b = Math.atan2(S, Math.sqrt(C ** 2 + P ** 2)), M = Math.atan2(P, C);
+        isNaN(b) || isNaN(M) || d.push([Zt(M), Zt(b)]);
       }
       return d.slice(1, -1);
     }(t, e, Math.floor(o / i));
@@ -561,9 +561,9 @@ function ni(s, t, e) {
   const i = Ft(s), o = Ft(t), r = Ft(e), [n, a, l] = r, [d, h, c] = function(j, z) {
     const [Gt, At, Tt] = j, [Ut, Vt, Rt] = z;
     return [At * Rt - Tt * Vt, Tt * Ut - Gt * Rt, Gt * Vt - At * Ut];
-  }(i, o), u = h * l - c * a, p = c * n - d * l, g = d * a - h * n, y = g * h - p * c, m = u * c - g * d, v = p * d - u * h, f = 1 / Math.sqrt(Math.pow(y, 2) + Math.pow(m, 2) + Math.pow(v, 2)), C = [y * f, m * f, v * f], P = [-1 * y * f, -1 * m * f, -1 * v * f], S = X(i, o), b = X(i, C), w = X(o, C), D = X(i, P), G = X(o, P);
-  let _;
-  return _ = b < D && b < G || w < D && w < G ? C : P, X(i, _) > S || X(o, _) > S ? U(K(_), K(i)) <= U(K(_), K(o)) ? [K(i), !0, !1] : [K(o), !1, !0] : [K(_), !1, !1];
+  }(i, o), u = h * l - c * a, p = c * n - d * l, g = d * a - h * n, y = g * h - p * c, m = u * c - g * d, v = p * d - u * h, f = 1 / Math.sqrt(Math.pow(y, 2) + Math.pow(m, 2) + Math.pow(v, 2)), C = [y * f, m * f, v * f], P = [-1 * y * f, -1 * m * f, -1 * v * f], S = X(i, o), b = X(i, C), M = X(o, C), D = X(i, P), G = X(o, P);
+  let L;
+  return L = b < D && b < G || M < D && M < G ? C : P, X(i, L) > S || X(o, L) > S ? U(K(L), K(i)) <= U(K(L), K(o)) ? [K(i), !0, !1] : [K(o), !1, !0] : [K(L), !1, !1];
 }
 function ai(s, t, e) {
   const i = t.x - s.x, o = t.y - s.y, r = Math.max(0, Math.min(1, ((e.x - s.x) * i + (e.y - s.y) * o) / (i * i + o * o)));
@@ -591,11 +591,11 @@ class Ie extends k {
         for (let v of p) {
           const f = v[0], C = v[1];
           let P, S = 1 / 0;
-          const b = x(f[0], f[1]), w = x(C[0], C[1]), D = x(u[0], u[1]);
+          const b = x(f[0], f[1]), M = x(C[0], C[1]), D = x(u[0], u[1]);
           if (f[0] === u[0] && f[1] === u[1]) P = f;
           else if (C[0] === u[0] && C[1] === u[1]) P = C;
           else {
-            const { x: G, y: _ } = ai(b, w, D), { lng: j, lat: z } = W(G, _);
+            const { x: G, y: L } = ai(b, M, D), { lng: j, lat: z } = W(G, L);
             P = [j, z];
           }
           P && (S = E(D, x(P[0], P[1])), S < y && (g = P, y = S, m = p.indexOf(v)));
@@ -626,7 +626,7 @@ class be extends N {
   close() {
     if (this.currentId === void 0) return;
     const t = this.store.getGeometryCopy(this.currentId);
-    t.coordinates.pop(), this.updateGeometries([...t.coordinates], void 0, M.Commit);
+    t.coordinates.pop(), this.updateGeometries([...t.coordinates], void 0, w.Commit);
     const e = this.currentId;
     this.closingPointId && this.store.delete([this.closingPointId]), this.snappedPointId && this.store.delete([this.snappedPointId]), this.currentCoordinate = 0, this.currentId = void 0, this.closingPointId = void 0, this.snappedPointId = void 0, this.lastCommitedCoordinates = void 0, this.state === "drawing" && this.setStarted(), this.onFinish(e, { mode: this.mode, action: "draw" });
   }
@@ -653,7 +653,7 @@ class be extends N {
     const e = this.store.getGeometryCopy(this.currentId).coordinates, [i] = this.store.create([{ geometry: { type: "Point", coordinates: [...t] }, properties: { mode: this.mode } }]);
     this.closingPointId = i, this.setCursor(this.cursors.close);
     const o = [...e, t];
-    this.updateGeometries(o, void 0, M.Commit), this.currentCoordinate++;
+    this.updateGeometries(o, void 0, w.Commit), this.currentCoordinate++;
   }
   updateToLine(t, e) {
     if (!this.currentId) return;
@@ -661,10 +661,10 @@ class be extends N {
     if (E({ x: n, y: a }, { x: e.x, y: e.y }) < this.pointerDistance) return void this.close();
     this.setCursor(this.cursors.close);
     const l = [...i, t];
-    this.updateGeometries(l, i[i.length - 1], M.Commit), this.currentCoordinate++;
+    this.updateGeometries(l, i[i.length - 1], w.Commit), this.currentCoordinate++;
   }
   registerBehaviors(t) {
-    this.coordinateSnapping = new vt(t, new at(t), new nt(t)), this.insertPoint = new ri(t), this.clickBoundingBox = new nt(t), this.pixelDistance = new at(t), this.lineSnapping = new Ie(t, this.pixelDistance, this.clickBoundingBox), this.coordinateSnapping = new vt(t, this.pixelDistance, this.clickBoundingBox);
+    this.coordinateSnapping = new vt(t, new lt(t), new at(t)), this.insertPoint = new ri(t), this.clickBoundingBox = new at(t), this.pixelDistance = new lt(t), this.lineSnapping = new Ie(t, this.pixelDistance, this.clickBoundingBox), this.coordinateSnapping = new vt(t, this.pixelDistance, this.clickBoundingBox);
   }
   start() {
     this.setStarted(), this.setCursor(this.cursors.start);
@@ -678,7 +678,7 @@ class be extends N {
     if (e) {
       if (this.snappedPointId) this.store.updateGeometry([{ id: this.snappedPointId, geometry: { type: "Point", coordinates: e } }]);
       else {
-        const [n] = this.store.create([{ geometry: { type: "Point", coordinates: e }, properties: { mode: this.mode, [Lt]: !0 } }]);
+        const [n] = this.store.create([{ geometry: { type: "Point", coordinates: e }, properties: { mode: this.mode, [_t]: !0 } }]);
         this.snappedPointId = n;
       }
       t.lng = e[0], t.lat = e[1];
@@ -698,7 +698,7 @@ class be extends N {
         r = [...this.lastCommitedCoordinates.slice(0, -1), ...l, i];
       }
     }
-    this.updateGeometries(r, void 0, M.Provisional);
+    this.updateGeometries(r, void 0, w.Provisional);
   }
   onRightClick(t) {
     if (!this.editable || this.state !== "started") return;
@@ -707,7 +707,7 @@ class be extends N {
     const o = this.store.getGeometryCopy(e);
     let r;
     if (o.type === "LineString" && (r = o.coordinates, !(r.length <= 2))) {
-      if (r.splice(i, 1), this.validate && !this.validate({ id: e, type: "Feature", geometry: o, properties: {} }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: M.Commit }).valid) return;
+      if (r.splice(i, 1), this.validate && !this.validate({ id: e, type: "Feature", geometry: o, properties: {} }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: w.Commit }).valid) return;
       this.snappedPointId && (this.store.delete([this.snappedPointId]), this.snappedPointId = void 0), this.store.updateGeometry([{ id: e, geometry: o }]), this.onFinish(e, { mode: this.mode, action: "edit" });
     }
   }
@@ -746,7 +746,7 @@ class be extends N {
     const i = this.store.getGeometryCopy(this.editedFeatureId);
     this.editedSnapType === "coordinate" || this.editedSnapType === "line" && this.editedInsertIndex !== void 0 ? i.coordinates[this.editedFeatureCoordinateIndex] = [t.lng, t.lat] : this.editedSnapType === "line" && this.editedInsertIndex === void 0 && (this.editedInsertIndex = this.editedFeatureCoordinateIndex + 1, i.coordinates.splice(this.editedInsertIndex, 0, [t.lng, t.lat]), this.editedFeatureCoordinateIndex++);
     const o = { type: "LineString", coordinates: i.coordinates };
-    this.validate && !this.validate({ type: "Feature", geometry: o, properties: this.store.getPropertiesCopy(this.editedFeatureId) }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: M.Provisional }).valid || (this.snapping && this.snappedPointId && (this.store.delete([this.snappedPointId]), this.snappedPointId = void 0), this.store.updateGeometry([{ id: this.editedFeatureId, geometry: o }]), this.editedPointId && this.store.updateGeometry([{ id: this.editedPointId, geometry: { type: "Point", coordinates: [t.lng, t.lat] } }]), this.store.updateProperty([{ id: this.editedFeatureId, property: V, value: !0 }]), e(!0));
+    this.validate && !this.validate({ type: "Feature", geometry: o, properties: this.store.getPropertiesCopy(this.editedFeatureId) }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: w.Provisional }).valid || (this.snapping && this.snappedPointId && (this.store.delete([this.snappedPointId]), this.snappedPointId = void 0), this.store.updateGeometry([{ id: this.editedFeatureId, geometry: o }]), this.editedPointId && this.store.updateGeometry([{ id: this.editedPointId, geometry: { type: "Point", coordinates: [t.lng, t.lat] } }]), this.store.updateProperty([{ id: this.editedFeatureId, property: V, value: !0 }]), e(!0));
   }
   onDragEnd(t, e) {
     this.editedFeatureId !== void 0 && (this.setCursor(this.cursors.dragEnd), this.editedPointId && (this.store.delete([this.editedPointId]), this.editedPointId = void 0), this.store.updateProperty([{ id: this.editedFeatureId, property: V, value: !1 }]), this.onFinish(this.editedFeatureId, { mode: this.mode, action: "edit" }), this.editedFeatureId = void 0, this.editedFeatureCoordinateIndex = void 0, this.editedInsertIndex = void 0, this.editedSnapType = void 0, e(!0));
@@ -763,7 +763,7 @@ class be extends N {
     const e = I({}, { polygonFillColor: "#3f97e0", polygonOutlineColor: "#3f97e0", polygonOutlineWidth: 4, polygonFillOpacity: 0.3, pointColor: "#3f97e0", pointOutlineColor: "#ffffff", pointOutlineWidth: 0, pointWidth: 6, lineStringColor: "#3f97e0", lineStringWidth: 4, zIndex: 0 });
     if (t.type === "Feature" && t.geometry.type === "LineString" && t.properties.mode === this.mode) return e.lineStringColor = this.getHexColorStylingValue(this.styles.lineStringColor, e.lineStringColor, t), e.lineStringWidth = this.getNumericStylingValue(this.styles.lineStringWidth, e.lineStringWidth, t), e.zIndex = 10, e;
     if (t.type === "Feature" && t.geometry.type === "Point" && t.properties.mode === this.mode) {
-      const i = t.properties[st];
+      const i = t.properties[rt];
       return e.pointColor = this.getHexColorStylingValue(i ? this.styles.closingPointColor : this.styles.snappingPointColor, e.pointColor, t), e.pointWidth = this.getNumericStylingValue(i ? this.styles.closingPointWidth : this.styles.snappingPointWidth, e.pointWidth, t), e.pointOutlineColor = this.getHexColorStylingValue(i ? this.styles.closingPointOutlineColor : this.styles.snappingPointOutlineColor, "#ffffff", t), e.pointOutlineWidth = this.getNumericStylingValue(i ? this.styles.closingPointOutlineWidth : this.styles.snappingPointOutlineWidth, 2, t), e.zIndex = 40, e;
     }
     return e;
@@ -781,11 +781,11 @@ class be extends N {
   }
 }
 const hi = "Feature is not a Point", ci = "Feature has invalid coordinates", ui = "Feature has coordinates with excessive precision";
-function Me(s, t) {
+function we(s, t) {
   return s.geometry.type !== "Point" ? { valid: !1, reason: hi } : Wt(s.geometry.coordinates) ? It(s.geometry.coordinates, t) ? { valid: !0 } : { valid: !1, reason: ui } : { valid: !1, reason: ci };
 }
 const pi = { create: "crosshair", dragStart: "grabbing", dragEnd: "crosshair" };
-class we extends N {
+class Me extends N {
   constructor(t) {
     super(t, !0), this.mode = "point", this.cursors = pi, this.editable = !1, this.editedFeatureId = void 0, this.pixelDistance = void 0, this.clickBoundingBox = void 0, this.updateOptions(t);
   }
@@ -819,13 +819,13 @@ class we extends N {
     this.editedFeatureId && (this.setCursor(this.cursors.dragStart), e(!1));
   }
   onDrag(t, e) {
-    this.editedFeatureId !== void 0 && (this.validate && !this.validate({ type: "Feature", geometry: { type: "Point", coordinates: [t.lng, t.lat] }, properties: this.store.getPropertiesCopy(this.editedFeatureId) }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: M.Finish }).valid || (this.store.updateGeometry([{ id: this.editedFeatureId, geometry: { type: "Point", coordinates: [t.lng, t.lat] } }]), this.store.updateProperty([{ id: this.editedFeatureId, property: V, value: !0 }]), e(!0)));
+    this.editedFeatureId !== void 0 && (this.validate && !this.validate({ type: "Feature", geometry: { type: "Point", coordinates: [t.lng, t.lat] }, properties: this.store.getPropertiesCopy(this.editedFeatureId) }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: w.Finish }).valid || (this.store.updateGeometry([{ id: this.editedFeatureId, geometry: { type: "Point", coordinates: [t.lng, t.lat] } }]), this.store.updateProperty([{ id: this.editedFeatureId, property: V, value: !0 }]), e(!0)));
   }
   onDragEnd(t, e) {
     this.editedFeatureId !== void 0 && (this.onFinish(this.editedFeatureId, { mode: this.mode, action: "edit" }), this.setCursor(this.cursors.dragEnd), this.store.updateProperty([{ id: this.editedFeatureId, property: V, value: !1 }]), this.editedFeatureId = void 0, e(!0));
   }
   registerBehaviors(t) {
-    this.pixelDistance = new at(t), this.clickBoundingBox = new nt(t);
+    this.pixelDistance = new lt(t), this.clickBoundingBox = new at(t);
   }
   styleFeature(t) {
     const e = I({}, { polygonFillColor: "#3f97e0", polygonOutlineColor: "#3f97e0", polygonOutlineWidth: 4, polygonFillOpacity: 0.3, pointColor: "#3f97e0", pointOutlineColor: "#ffffff", pointOutlineWidth: 0, pointWidth: 6, lineStringColor: "#3f97e0", lineStringWidth: 4, zIndex: 0 });
@@ -836,11 +836,11 @@ class we extends N {
     return e;
   }
   validateFeature(t) {
-    return this.validateModeFeature(t, (e) => Me(e, this.coordinatePrecision));
+    return this.validateModeFeature(t, (e) => we(e, this.coordinatePrecision));
   }
   onLeftClick(t) {
     const e = { type: "Point", coordinates: [t.lng, t.lat] }, i = { mode: this.mode };
-    if (this.validate && !this.validate({ type: "Feature", geometry: e, properties: i }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: M.Finish }).valid) return;
+    if (this.validate && !this.validate({ type: "Feature", geometry: e, properties: i }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: w.Finish }).valid) return;
     const [o] = this.store.create([{ geometry: e, properties: i }]);
     this.onFinish(o, { mode: this.mode, action: "draw" });
   }
@@ -873,7 +873,7 @@ class gi extends k {
   create(t, e) {
     if (this.ids.length) throw new Error("Opening and closing points already created");
     if (t.length <= 3) throw new Error("Requires at least 4 coordinates");
-    this._startEndPoints = this.store.create([{ geometry: { type: "Point", coordinates: t[0] }, properties: { mode: e, [st]: !0 } }, { geometry: { type: "Point", coordinates: t[t.length - 2] }, properties: { mode: e, [st]: !0 } }]);
+    this._startEndPoints = this.store.create([{ geometry: { type: "Point", coordinates: t[0] }, properties: { mode: e, [rt]: !0 } }, { geometry: { type: "Point", coordinates: t[t.length - 2] }, properties: { mode: e, [rt]: !0 } }]);
   }
   delete() {
     this.ids.length && (this.store.delete(this.ids), this._startEndPoints = []);
@@ -931,7 +931,7 @@ class Fe extends k {
     return this.store.create(t.map((i) => ({ geometry: { type: "Point", coordinates: i }, properties: { mode: e, [kt]: !0 } })));
   }
   setFeatureCoordinatePoints(t, e) {
-    this.store.updateProperty([{ id: t, property: rt, value: e }]);
+    this.store.updateProperty([{ id: t, property: nt, value: e }]);
   }
   deleteCoordinatePoints(t) {
     const e = t.filter((i) => this.store.has(i));
@@ -953,7 +953,7 @@ class Ee extends N {
         this.coordinatePoints.createOrUpdate(e);
       });
       else if (this.coordinatePoints && this.showCoordinatePoints === !1) {
-        const e = this.store.copyAllWhere((i) => i.mode === this.mode && !!i[rt]);
+        const e = this.store.copyAllWhere((i) => i.mode === this.mode && !!i[nt]);
         this.coordinatePoints.deletePointsByFeatureIds(e.map((i) => i.id));
       }
     }
@@ -961,16 +961,16 @@ class Ee extends N {
   close() {
     if (this.currentId === void 0) return;
     const t = this.store.getGeometryCopy(this.currentId).coordinates[0];
-    if (t.length < 5 || !this.updatePolygonGeometry([...t.slice(0, -2), t[0]], M.Finish)) return;
+    if (t.length < 5 || !this.updatePolygonGeometry([...t.slice(0, -2), t[0]], w.Finish)) return;
     const e = this.currentId;
     if (this.currentId) {
-      const i = ht(this.store.getGeometryCopy(this.currentId));
+      const i = ct(this.store.getGeometryCopy(this.currentId));
       i && this.store.updateGeometry([{ id: this.currentId, geometry: i }]);
     }
     this.snappedPointId && this.store.delete([this.snappedPointId]), this.currentCoordinate = 0, this.currentId = void 0, this.snappedPointId = void 0, this.closingPoints.delete(), this.state === "drawing" && this.setStarted(), this.onFinish(e, { mode: this.mode, action: "draw" });
   }
   registerBehaviors(t) {
-    this.clickBoundingBox = new nt(t), this.pixelDistance = new at(t), this.lineSnapping = new Ie(t, this.pixelDistance, this.clickBoundingBox), this.coordinateSnapping = new vt(t, this.pixelDistance, this.clickBoundingBox), this.closingPoints = new gi(t, this.pixelDistance), this.coordinatePoints = new Fe(t);
+    this.clickBoundingBox = new at(t), this.pixelDistance = new lt(t), this.lineSnapping = new Ie(t, this.pixelDistance, this.clickBoundingBox), this.coordinateSnapping = new vt(t, this.pixelDistance, this.clickBoundingBox), this.closingPoints = new gi(t, this.pixelDistance), this.coordinatePoints = new Fe(t);
   }
   start() {
     this.setStarted(), this.setCursor(this.cursors.start);
@@ -984,7 +984,7 @@ class Ee extends N {
     if (e) {
       if (this.snappedPointId) this.store.updateGeometry([{ id: this.snappedPointId, geometry: { type: "Point", coordinates: e } }]);
       else {
-        const [r] = this.store.create([{ geometry: { type: "Point", coordinates: e }, properties: { mode: this.mode, [Lt]: !0 } }]);
+        const [r] = this.store.create([{ geometry: { type: "Point", coordinates: e }, properties: { mode: this.mode, [_t]: !0 } }]);
         this.snappedPointId = r;
       }
       t.lng = e[0], t.lat = e[1];
@@ -1000,7 +1000,7 @@ class Ee extends N {
       const { isClosing: r, isPreviousClosing: n } = this.closingPoints.isClosingPoint(t);
       n || r ? (this.snappedPointId && (this.store.delete([this.snappedPointId]), this.snappedPointId = void 0), this.setCursor(this.cursors.close), o = [...i.slice(0, -2), i[0], i[0]]) : o = [...i.slice(0, -2), [t.lng, t.lat], i[0]];
     }
-    this.updatePolygonGeometry(o, M.Provisional);
+    this.updatePolygonGeometry(o, w.Provisional);
   }
   updatePolygonGeometry(t, e) {
     if (!this.currentId) return !1;
@@ -1029,7 +1029,7 @@ class Ee extends N {
     if (!e || i === void 0) return;
     const o = this.store.getGeometryCopy(e);
     let r;
-    o.type === "Polygon" && (r = o.coordinates[0], r.length <= 4 || (o.type !== "Polygon" || i !== 0 && i !== r.length - 1 ? r.splice(i, 1) : (r.shift(), r.pop(), r.push([r[0][0], r[0][1]])), (!this.validate || this.validate({ id: e, type: "Feature", geometry: o, properties: {} }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: M.Commit }).valid) && (this.snappedPointId && (this.store.delete([this.snappedPointId]), this.snappedPointId = void 0), this.store.updateGeometry([{ id: e, geometry: o }]), this.showCoordinatePoints && this.coordinatePoints.createOrUpdate(e), this.onFinish(e, { mode: this.mode, action: "edit" }))));
+    o.type === "Polygon" && (r = o.coordinates[0], r.length <= 4 || (o.type !== "Polygon" || i !== 0 && i !== r.length - 1 ? r.splice(i, 1) : (r.shift(), r.pop(), r.push([r[0][0], r[0][1]])), (!this.validate || this.validate({ id: e, type: "Feature", geometry: o, properties: {} }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: w.Commit }).valid) && (this.snappedPointId && (this.store.delete([this.snappedPointId]), this.snappedPointId = void 0), this.store.updateGeometry([{ id: e, geometry: o }]), this.showCoordinatePoints && this.coordinatePoints.createOrUpdate(e), this.onFinish(e, { mode: this.mode, action: "edit" }))));
   }
   onLeftClick(t) {
     if (this.snappedPointId && (this.store.delete([this.snappedPointId]), this.snappedPointId = void 0), this.currentCoordinate === 0) {
@@ -1041,13 +1041,13 @@ class Ee extends N {
       const e = this.snapCoordinate(t);
       e && (t.lng = e[0], t.lat = e[1]);
       const i = this.store.getGeometryCopy(this.currentId);
-      if (Z([t.lng, t.lat], i.coordinates[0][0]) || !this.updatePolygonGeometry([i.coordinates[0][0], [t.lng, t.lat], [t.lng, t.lat], i.coordinates[0][0]], M.Commit)) return;
+      if (Z([t.lng, t.lat], i.coordinates[0][0]) || !this.updatePolygonGeometry([i.coordinates[0][0], [t.lng, t.lat], [t.lng, t.lat], i.coordinates[0][0]], w.Commit)) return;
       this.currentCoordinate++;
     } else if (this.currentCoordinate === 2 && this.currentId) {
       const e = this.snapCoordinate(t);
       e && (t.lng = e[0], t.lat = e[1]);
       const i = this.store.getGeometryCopy(this.currentId).coordinates[0];
-      if (Z([t.lng, t.lat], i[1]) || !this.updatePolygonGeometry([i[0], i[1], [t.lng, t.lat], [t.lng, t.lat], i[0]], M.Commit)) return;
+      if (Z([t.lng, t.lat], i[1]) || !this.updatePolygonGeometry([i[0], i[1], [t.lng, t.lat], [t.lng, t.lat], i[0]], w.Commit)) return;
       this.currentCoordinate === 2 && this.closingPoints.create(i, "polygon"), this.currentCoordinate++;
     } else if (this.currentId) {
       const e = this.store.getGeometryCopy(this.currentId).coordinates[0], { isClosing: i, isPreviousClosing: o } = this.closingPoints.isClosingPoint(t);
@@ -1058,7 +1058,7 @@ class Ee extends N {
         const n = /* @__PURE__ */ function(a = [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]]) {
           return { type: "Feature", geometry: { type: "Polygon", coordinates: a }, properties: {} };
         }([[...e.slice(0, -1), [t.lng, t.lat], e[0]]]);
-        if (!this.updatePolygonGeometry(n.geometry.coordinates[0], M.Commit)) return;
+        if (!this.updatePolygonGeometry(n.geometry.coordinates[0], w.Commit)) return;
         this.currentCoordinate++, this.closingPoints.ids.length && this.closingPoints.update(n.geometry.coordinates[0]);
       }
     }
@@ -1093,7 +1093,7 @@ class Ee extends N {
     const i = this.store.getGeometryCopy(this.editedFeatureId), o = i.coordinates[0];
     this.editedSnapType === "coordinate" || this.editedSnapType === "line" && this.editedInsertIndex !== void 0 ? this.editedFeatureCoordinateIndex === 0 || this.editedFeatureCoordinateIndex === i.coordinates[0].length - 1 ? (o[0] = [t.lng, t.lat], o[o.length - 1] = [t.lng, t.lat]) : o[this.editedFeatureCoordinateIndex] = [t.lng, t.lat] : this.editedSnapType === "line" && this.editedInsertIndex === void 0 && (this.editedInsertIndex = this.editedFeatureCoordinateIndex + 1, i.coordinates[0].splice(this.editedInsertIndex, 0, [t.lng, t.lat]), this.editedFeatureCoordinateIndex++);
     const r = { type: "Polygon", coordinates: i.coordinates };
-    this.validate && !this.validate({ type: "Feature", geometry: r, properties: this.store.getPropertiesCopy(this.editedFeatureId) }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: M.Provisional }).valid || (this.snapping && this.snappedPointId && (this.store.delete([this.snappedPointId]), this.snappedPointId = void 0), this.store.updateGeometry([{ id: this.editedFeatureId, geometry: r }]), this.showCoordinatePoints && this.coordinatePoints.createOrUpdate(this.editedFeatureId), this.editedPointId && this.store.updateGeometry([{ id: this.editedPointId, geometry: { type: "Point", coordinates: [t.lng, t.lat] } }]), this.store.updateProperty([{ id: this.editedFeatureId, property: V, value: !0 }]), e(!0));
+    this.validate && !this.validate({ type: "Feature", geometry: r, properties: this.store.getPropertiesCopy(this.editedFeatureId) }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: w.Provisional }).valid || (this.snapping && this.snappedPointId && (this.store.delete([this.snappedPointId]), this.snappedPointId = void 0), this.store.updateGeometry([{ id: this.editedFeatureId, geometry: r }]), this.showCoordinatePoints && this.coordinatePoints.createOrUpdate(this.editedFeatureId), this.editedPointId && this.store.updateGeometry([{ id: this.editedPointId, geometry: { type: "Point", coordinates: [t.lng, t.lat] } }]), this.store.updateProperty([{ id: this.editedFeatureId, property: V, value: !0 }]), e(!0));
   }
   onDragEnd(t, e) {
     this.editedFeatureId !== void 0 && (this.setCursor(this.cursors.dragEnd), this.editedPointId && (this.store.delete([this.editedPointId]), this.editedPointId = void 0), this.store.updateProperty([{ id: this.editedFeatureId, property: V, value: !1 }]), this.onFinish(this.editedFeatureId, { mode: this.mode, action: "edit" }), this.editedFeatureId = void 0, this.editedFeatureCoordinateIndex = void 0, this.editedInsertIndex = void 0, this.editedSnapType = void 0, e(!0));
@@ -1111,7 +1111,7 @@ class Ee extends N {
     if (t.properties.mode === this.mode) {
       if (t.geometry.type === "Polygon") return e.polygonFillColor = this.getHexColorStylingValue(this.styles.fillColor, e.polygonFillColor, t), e.polygonOutlineColor = this.getHexColorStylingValue(this.styles.outlineColor, e.polygonOutlineColor, t), e.polygonOutlineWidth = this.getNumericStylingValue(this.styles.outlineWidth, e.polygonOutlineWidth, t), e.polygonFillOpacity = this.getNumericStylingValue(this.styles.fillOpacity, e.polygonFillOpacity, t), e.zIndex = 10, e;
       if (t.geometry.type === "Point") {
-        const i = t.properties[V], o = t.properties[kt], r = i ? "editedPoint" : t.properties[st] ? "closingPoint" : t.properties[Lt] ? "snappingPoint" : o ? "coordinatePoint" : void 0;
+        const i = t.properties[V], o = t.properties[kt], r = i ? "editedPoint" : t.properties[rt] ? "closingPoint" : t.properties[_t] ? "snappingPoint" : o ? "coordinatePoint" : void 0;
         if (!r) return e;
         const n = { editedPoint: { width: this.styles.editedPointOutlineWidth, color: this.styles.editedPointColor, outlineColor: this.styles.editedPointOutlineColor, outlineWidth: this.styles.editedPointOutlineWidth }, closingPoint: { width: this.styles.closingPointWidth, color: this.styles.closingPointColor, outlineColor: this.styles.closingPointOutlineColor, outlineWidth: this.styles.closingPointOutlineWidth }, snappingPoint: { width: this.styles.snappingPointWidth, color: this.styles.snappingPointColor, outlineColor: this.styles.snappingPointOutlineColor, outlineWidth: this.styles.snappingPointOutlineWidth }, coordinatePoint: { width: this.styles.coordinatePointWidth, color: this.styles.coordinatePointColor, outlineColor: this.styles.coordinatePointOutlineColor, outlineWidth: this.styles.coordinatePointOutlineWidth } };
         return e.pointWidth = this.getNumericStylingValue(n[r].width, e.pointWidth, t), e.pointColor = this.getHexColorStylingValue(n[r].color, e.pointColor, t), e.pointOutlineColor = this.getHexColorStylingValue(n[r].outlineColor, e.pointOutlineColor, t), e.pointOutlineWidth = this.getNumericStylingValue(n[r].outlineWidth, 2, t), e.zIndex = i ? 35 : o ? 25 : 30, e;
@@ -1144,7 +1144,7 @@ class Oe extends N {
   close() {
     const t = this.currentRectangleId;
     if (t) {
-      const e = ht(this.store.getGeometryCopy(t));
+      const e = ct(this.store.getGeometryCopy(t));
       e && this.store.updateGeometry([{ id: t, geometry: e }]);
     }
     this.center = void 0, this.currentRectangleId = void 0, this.clickCount = 0, this.state === "drawing" && this.setStarted(), t !== void 0 && this.onFinish(t, { mode: this.mode, action: "draw" });
@@ -1160,10 +1160,10 @@ class Oe extends N {
       this.center = [t.lng, t.lat];
       const [e] = this.store.create([{ geometry: { type: "Polygon", coordinates: [[[t.lng, t.lat], [t.lng, t.lat], [t.lng, t.lat], [t.lng, t.lat]]] }, properties: { mode: this.mode } }]);
       this.currentRectangleId = e, this.clickCount++, this.setDrawing();
-    } else this.updateRectangle(t, M.Finish), this.close();
+    } else this.updateRectangle(t, w.Finish), this.close();
   }
   onMouseMove(t) {
-    this.updateRectangle(t, M.Provisional);
+    this.updateRectangle(t, w.Provisional);
   }
   onKeyDown() {
   }
@@ -1185,7 +1185,7 @@ class Oe extends N {
     return t.type === "Feature" && t.geometry.type === "Polygon" && t.properties.mode === this.mode && (e.polygonFillColor = this.getHexColorStylingValue(this.styles.fillColor, e.polygonFillColor, t), e.polygonOutlineColor = this.getHexColorStylingValue(this.styles.outlineColor, e.polygonOutlineColor, t), e.polygonOutlineWidth = this.getNumericStylingValue(this.styles.outlineWidth, e.polygonOutlineWidth, t), e.polygonFillOpacity = this.getNumericStylingValue(this.styles.fillOpacity, e.polygonFillOpacity, t), e.zIndex = 10), e;
   }
   validateFeature(t) {
-    return this.validateModeFeature(t, (e) => dt(e, this.coordinatePrecision));
+    return this.validateModeFeature(t, (e) => ht(e, this.coordinatePrecision));
   }
 }
 class et extends N {
@@ -1227,7 +1227,7 @@ class et extends N {
   validateFeature(t) {
     const e = super.validateFeature(t);
     if (e.valid) {
-      const i = t, o = Me(i, this.coordinatePrecision).valid || bt(i, this.coordinatePrecision).valid || xe(i, this.coordinatePrecision).valid;
+      const i = t, o = we(i, this.coordinatePrecision).valid || bt(i, this.coordinatePrecision).valid || xe(i, this.coordinatePrecision).valid;
       return o ? { valid: !0 } : { valid: o, reason: "Feature is not a valid Point, Polygon or LineString feature" };
     }
     return e;
@@ -1281,7 +1281,7 @@ class Pi extends k {
   }
   insert(t, e, i) {
     const o = this.store.getGeometryCopy(e), { midPointFeatureId: r, midPointSegment: n } = this.store.getPropertiesCopy(e), a = this.store.getGeometryCopy(r), l = a.type === "Polygon" ? a.coordinates[0] : a.coordinates;
-    l.splice(n + 1, 0, o.coordinates), a.coordinates = a.type === "Polygon" ? [l] : l, this.store.updateGeometry([{ id: r, geometry: a }]), this.store.getPropertiesCopy(t)[rt] && this.coordinatePointBehavior.createOrUpdate(t), this.store.delete([...this._midPoints, ...this.selectionPointBehavior.ids]), this.create(l, r, i), this.selectionPointBehavior.create(l, a.type, r);
+    l.splice(n + 1, 0, o.coordinates), a.coordinates = a.type === "Polygon" ? [l] : l, this.store.updateGeometry([{ id: r, geometry: a }]), this.store.getPropertiesCopy(t)[nt] && this.coordinatePointBehavior.createOrUpdate(t), this.store.delete([...this._midPoints, ...this.selectionPointBehavior.ids]), this.create(l, r, i), this.selectionPointBehavior.create(l, a.type, r);
   }
   create(t, e, i) {
     if (!this.store.has(e)) throw new Error("Store does not have feature with this id");
@@ -1322,7 +1322,7 @@ class Si extends k {
     if (this._selectionPoints[t] !== void 0) return { id: this._selectionPoints[t], geometry: { type: "Point", coordinates: e } };
   }
 }
-function _e(s, t) {
+function Le(s, t) {
   let e = !1;
   for (let n = 0, a = t.length; n < a; n++) {
     const l = t[n];
@@ -1331,7 +1331,7 @@ function _e(s, t) {
   var i, o, r;
   return e;
 }
-const Le = (s, t, e) => {
+const _e = (s, t, e) => {
   const i = (r) => r * r, o = (r, n) => i(r.x - n.x) + i(r.y - n.y);
   return Math.sqrt(((r, n, a) => {
     const l = o(n, a);
@@ -1356,12 +1356,12 @@ class xi extends k {
       } else if (g.type === "LineString") {
         if (i) continue;
         for (let y = 0; y < g.coordinates.length - 1; y++) {
-          const m = g.coordinates[y], v = g.coordinates[y + 1], f = Le({ x: t.containerX, y: t.containerY }, this.project(m[0], m[1]), this.project(v[0], v[1]));
+          const m = g.coordinates[y], v = g.coordinates[y + 1], f = _e({ x: t.containerX, y: t.containerY }, this.project(m[0], m[1]), this.project(v[0], v[1]));
           f < this.pointerDistance && f < l && (l = f, o = p);
         }
       } else if (g.type === "Polygon") {
         if (i || o) continue;
-        _e([t.lng, t.lat], g.coordinates) && (n = p);
+        Le([t.lng, t.lat], g.coordinates) && (n = p);
       }
     }
     return { clickedFeature: i || o || n, clickedMidPoint: r };
@@ -1405,7 +1405,7 @@ class Ii extends k {
       }
       i.type === "Polygon" && (r[r.length - 1] = [r[0][0], r[0][1]]);
       const a = this.selectionPoints.getUpdated(r) || [], l = this.midPoints.getUpdated(r) || [], d = this.coordinatePoints.getUpdated(this.draggedFeatureId, r) || [];
-      if (e && !e({ type: "Feature", id: this.draggedFeatureId, geometry: i, properties: {} }, { project: this.config.project, unproject: this.config.unproject, coordinatePrecision: this.config.coordinatePrecision, updateType: M.Provisional }).valid) return !1;
+      if (e && !e({ type: "Feature", id: this.draggedFeatureId, geometry: i, properties: {} }, { project: this.config.project, unproject: this.config.unproject, coordinatePrecision: this.config.coordinatePrecision, updateType: w.Provisional }).valid) return !1;
       this.store.updateGeometry([{ id: this.draggedFeatureId, geometry: i }, ...a, ...l, ...d]), this.dragPosition = [t.lng, t.lat];
     } else i.type === "Point" && (this.store.updateGeometry([{ id: this.draggedFeatureId, geometry: { type: "Point", coordinates: o } }]), this.dragPosition = [t.lng, t.lat]);
   }
@@ -1449,7 +1449,7 @@ class bi extends k {
       l[0] = h, l[y] = h;
     } else l[r] = h;
     const c = this.selectionPoints.getOneUpdated(r, h), u = c ? [c] : [], p = this.midPoints.getUpdated(l) || [], g = this.coordinatePoints.getUpdated(this.draggedCoordinate.id, l) || [];
-    return !(n.type !== "Point" && !e && Bt({ geometry: n }) || i && !i({ type: "Feature", id: this.draggedCoordinate.id, geometry: n, properties: {} }, { project: this.config.project, unproject: this.config.unproject, coordinatePrecision: this.config.coordinatePrecision, updateType: M.Provisional }).valid || (this.store.updateGeometry([{ id: this.draggedCoordinate.id, geometry: n }, ...u, ...p, ...g]), 0));
+    return !(n.type !== "Point" && !e && Bt({ geometry: n }) || i && !i({ type: "Feature", id: this.draggedCoordinate.id, geometry: n, properties: {} }, { project: this.config.project, unproject: this.config.unproject, coordinatePrecision: this.config.coordinatePrecision, updateType: w.Provisional }).valid || (this.store.updateGeometry([{ id: this.draggedCoordinate.id, geometry: n }, ...u, ...p, ...g]), 0));
   }
   isDragging() {
     return this.draggedCoordinate.id !== null;
@@ -1498,7 +1498,7 @@ function St(s) {
     return { x: o / i, y: r / i };
   }(t);
 }
-class Mi extends k {
+class wi extends k {
   constructor(t, e, i, o) {
     super(t), this.config = void 0, this.selectionPoints = void 0, this.midPoints = void 0, this.coordinatePoints = void 0, this.lastBearing = void 0, this.config = t, this.selectionPoints = e, this.midPoints = i, this.coordinatePoints = o;
   }
@@ -1537,11 +1537,11 @@ class Mi extends k {
       u[0] = F(u[0], this.coordinatePrecision), u[1] = F(u[1], this.coordinatePrecision);
     });
     const d = this.midPoints.getUpdated(l) || [], h = this.selectionPoints.getUpdated(l) || [], c = this.coordinatePoints.getUpdated(e, l) || [];
-    if (i && !i({ id: e, type: "Feature", geometry: o, properties: {} }, { project: this.config.project, unproject: this.config.unproject, coordinatePrecision: this.config.coordinatePrecision, updateType: M.Provisional })) return !1;
+    if (i && !i({ id: e, type: "Feature", geometry: o, properties: {} }, { project: this.config.project, unproject: this.config.unproject, coordinatePrecision: this.config.coordinatePrecision, updateType: w.Provisional })) return !1;
     this.store.updateGeometry([{ id: e, geometry: o }, ...h, ...d, ...c]), this.projection === "web-mercator" ? this.lastBearing = n : this.projection === "globe" && (this.lastBearing = n + 180);
   }
 }
-class wi extends k {
+class Mi extends k {
   constructor(t, e, i, o) {
     super(t), this.config = void 0, this.selectionPoints = void 0, this.midPoints = void 0, this.coordinatePoints = void 0, this.lastDistance = void 0, this.config = t, this.selectionPoints = e, this.midPoints = i, this.coordinatePoints = o;
   }
@@ -1567,7 +1567,7 @@ class wi extends k {
       const { lng: g, lat: y } = W(l.x, l.y);
       (function(m, v, f) {
         if (v === 1) return m;
-        const C = (m.geometry.type === "Polygon" ? m.geometry.coordinates[0] : m.geometry.coordinates).map(([b, w]) => x(b, w)), P = x(f[0], f[1]), S = C.map((b) => ({ x: P.x + (b.x - P.x) * v, y: P.y + (b.y - P.y) * v })).map(({ x: b, y: w }) => [W(b, w).lng, W(b, w).lat]);
+        const C = (m.geometry.type === "Polygon" ? m.geometry.coordinates[0] : m.geometry.coordinates).map(([b, M]) => x(b, M)), P = x(f[0], f[1]), S = C.map((b) => ({ x: P.x + (b.x - P.x) * v, y: P.y + (b.y - P.y) * v })).map(({ x: b, y: M }) => [W(b, M).lng, W(b, M).lat]);
         m.geometry.type === "Polygon" ? m.geometry.coordinates[0] = S : m.geometry.coordinates = S;
       })(n, d, [g, y]);
     } else this.config.projection === "globe" && function(g, y, m, v = "xy") {
@@ -1581,7 +1581,7 @@ class wi extends k {
       g[0] = F(g[0], this.coordinatePrecision), g[1] = F(g[1], this.coordinatePrecision);
     });
     const c = this.midPoints.getUpdated(h) || [], u = this.selectionPoints.getUpdated(h) || [], p = this.coordinatePoints.getUpdated(e, h) || [];
-    if (i && !i({ id: e, type: "Feature", geometry: o, properties: {} }, { project: this.config.project, unproject: this.config.unproject, coordinatePrecision: this.config.coordinatePrecision, updateType: M.Provisional })) return !1;
+    if (i && !i({ id: e, type: "Feature", geometry: o, properties: {} }, { project: this.config.project, unproject: this.config.unproject, coordinatePrecision: this.config.coordinatePrecision, updateType: w.Provisional })) return !1;
     this.store.updateGeometry([{ id: e, geometry: o }, ...u, ...c, ...p]), this.lastDistance = a;
   }
 }
@@ -1744,7 +1744,7 @@ class Fi extends k {
       if (c[0] = F(c[0], this.coordinatePrecision), c[1] = F(c[1], this.coordinatePrecision), !It(c, this.coordinatePrecision)) return !1;
     }
     const n = this.midPoints.getUpdated(r) || [], a = this.selectionPoints.getUpdated(r) || [], l = this.coordinatePoints.getUpdated(o.id, r) || [], d = { type: o.geometry.type, coordinates: o.geometry.type === "Polygon" ? [r] : r };
-    return !(i && !i({ id: this.draggedCoordinate.id, type: "Feature", geometry: d, properties: {} }, { project: this.config.project, unproject: this.config.unproject, coordinatePrecision: this.config.coordinatePrecision, updateType: M.Provisional }).valid || (this.store.updateGeometry([{ id: this.draggedCoordinate.id, geometry: d }, ...a, ...n, ...l]), 0));
+    return !(i && !i({ id: this.draggedCoordinate.id, type: "Feature", geometry: d, properties: {} }, { project: this.config.project, unproject: this.config.unproject, coordinatePrecision: this.config.coordinatePrecision, updateType: w.Provisional }).valid || (this.store.updateGeometry([{ id: this.draggedCoordinate.id, geometry: d }, ...a, ...n, ...l]), 0));
   }
 }
 const Ei = { deselect: "Escape", delete: "Delete", rotate: ["Control", "r"], scale: ["Control", "s"] }, ee = { pointerOver: "move", dragStart: "move", dragEnd: "move", insertMidpoint: "crosshair" };
@@ -1775,7 +1775,7 @@ class Be extends Ye {
     this._state = "selecting";
   }
   registerBehaviors(t) {
-    this.pixelDistance = new at(t), this.clickBoundingBox = new nt(t), this.featuresAtMouseEvent = new xi(t, this.clickBoundingBox, this.pixelDistance), this.selectionPoints = new Si(t), this.coordinatePoints = new Fe(t), this.midPoints = new Pi(t, this.selectionPoints, this.coordinatePoints), this.coordinateSnap = new vt(t, this.pixelDistance, this.clickBoundingBox), this.rotateFeature = new Mi(t, this.selectionPoints, this.midPoints, this.coordinatePoints), this.scaleFeature = new wi(t, this.selectionPoints, this.midPoints, this.coordinatePoints), this.dragFeature = new Ii(t, this.featuresAtMouseEvent, this.selectionPoints, this.midPoints, this.coordinatePoints), this.dragCoordinate = new bi(t, this.pixelDistance, this.selectionPoints, this.midPoints, this.coordinatePoints, this.coordinateSnap), this.dragCoordinateResizeFeature = new Fi(t, this.pixelDistance, this.selectionPoints, this.midPoints, this.coordinatePoints);
+    this.pixelDistance = new lt(t), this.clickBoundingBox = new at(t), this.featuresAtMouseEvent = new xi(t, this.clickBoundingBox, this.pixelDistance), this.selectionPoints = new Si(t), this.coordinatePoints = new Fe(t), this.midPoints = new Pi(t, this.selectionPoints, this.coordinatePoints), this.coordinateSnap = new vt(t, this.pixelDistance, this.clickBoundingBox), this.rotateFeature = new wi(t, this.selectionPoints, this.midPoints, this.coordinatePoints), this.scaleFeature = new Mi(t, this.selectionPoints, this.midPoints, this.coordinatePoints), this.dragFeature = new Ii(t, this.featuresAtMouseEvent, this.selectionPoints, this.midPoints, this.coordinatePoints), this.dragCoordinate = new bi(t, this.pixelDistance, this.selectionPoints, this.midPoints, this.coordinatePoints, this.coordinateSnap), this.dragCoordinateResizeFeature = new Fi(t, this.pixelDistance, this.selectionPoints, this.midPoints, this.coordinatePoints);
   }
   deselectFeature() {
     this.deselect();
@@ -1801,7 +1801,7 @@ class Be extends Ye {
     if (d.type === "Polygon") {
       if (h = d.coordinates[0], h.length <= 4) return;
     } else if (d.type === "LineString" && (h = d.coordinates, h.length <= 2)) return;
-    if (!h || (d.type !== "Polygon" || r !== 0 && r !== h.length - 1 ? h.splice(r, 1) : (h.shift(), h.pop(), h.push([h[0][0], h[0][1]])), l && !l({ id: o, type: "Feature", geometry: d, properties: n }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: M.Commit }).valid)) return;
+    if (!h || (d.type !== "Polygon" || r !== 0 && r !== h.length - 1 ? h.splice(r, 1) : (h.shift(), h.pop(), h.push([h[0][0], h[0][1]])), l && !l({ id: o, type: "Feature", geometry: d, properties: n }, { project: this.project, unproject: this.unproject, coordinatePrecision: this.coordinatePrecision, updateType: w.Commit }).valid)) return;
     const c = [...this.midPoints.ids, ...this.selectionPoints.ids];
     this.store.delete(c), this.store.updateGeometry([{ id: o, geometry: d }]), n.coordinatePointIds && this.coordinatePoints.createOrUpdate(o), this.selectionPoints.create(h, d.type, o), a && a.feature && a.feature.coordinates && a.feature.coordinates.midpoints && this.midPoints.create(h, o, this.coordinatePrecision);
   }
@@ -1989,23 +1989,23 @@ function ot(s, t) {
 function Di(s, t) {
   return s.minX - t.minX;
 }
-function _i(s, t) {
+function Li(s, t) {
   return s.minY - t.minY;
 }
 function Et(s) {
   return (s.maxX - s.minX) * (s.maxY - s.minY);
 }
-function pt(s) {
+function gt(s) {
   return s.maxX - s.minX + (s.maxY - s.minY);
 }
-function Li(s, t) {
+function _i(s, t) {
   const e = Math.max(s.minX, t.minX), i = Math.max(s.minY, t.minY), o = Math.min(s.maxX, t.maxX), r = Math.min(s.maxY, t.maxY);
   return Math.max(0, o - e) * Math.max(0, r - i);
 }
 function Ot(s, t) {
   return s.minX <= t.minX && s.minY <= t.minY && t.maxX <= s.maxX && t.maxY <= s.maxY;
 }
-function gt(s, t) {
+function yt(s, t) {
   return t.minX <= s.maxX && t.minY <= s.maxY && t.maxX >= s.minX && t.maxY >= s.minY;
 }
 function q(s) {
@@ -2026,12 +2026,12 @@ class ki {
   search(t) {
     let e = this.data;
     const i = [];
-    if (!gt(t, e)) return i;
+    if (!yt(t, e)) return i;
     const o = this.toBBox, r = [];
     for (; e; ) {
       for (let n = 0; n < e.children.length; n++) {
         const a = e.children[n], l = e.leaf ? o(a) : a;
-        gt(t, l) && (e.leaf ? i.push(a) : Ot(t, l) ? this._all(a, i) : r.push(a));
+        yt(t, l) && (e.leaf ? i.push(a) : Ot(t, l) ? this._all(a, i) : r.push(a));
       }
       e = r.pop();
     }
@@ -2039,12 +2039,12 @@ class ki {
   }
   collides(t) {
     let e = this.data;
-    if (gt(t, e)) {
+    if (yt(t, e)) {
       const i = [];
       for (; e; ) {
         for (let o = 0; o < e.children.length; o++) {
           const r = e.children[o], n = e.leaf ? this.toBBox(r) : r;
-          if (gt(t, n)) {
+          if (yt(t, n)) {
             if (e.leaf || Ot(t, n)) return !0;
             i.push(r);
           }
@@ -2148,26 +2148,26 @@ class ki {
   _chooseSplitIndex(t, e, i) {
     let o, r = 1 / 0, n = 1 / 0;
     for (let a = e; a <= i - e; a++) {
-      const l = it(t, 0, a, this.toBBox), d = it(t, a, i, this.toBBox), h = Li(l, d), c = Et(l) + Et(d);
+      const l = it(t, 0, a, this.toBBox), d = it(t, a, i, this.toBBox), h = _i(l, d), c = Et(l) + Et(d);
       h < r ? (r = h, o = a, n = c < n ? c : n) : h === r && c < n && (n = c, o = a);
     }
     return o || i - e;
   }
   _chooseSplitAxis(t, e, i) {
-    const o = t.leaf ? this.compareMinX : Di, r = t.leaf ? this.compareMinY : _i;
+    const o = t.leaf ? this.compareMinX : Di, r = t.leaf ? this.compareMinY : Li;
     this._allDistMargin(t, e, i, o) < this._allDistMargin(t, e, i, r) && t.children.sort(o);
   }
   _allDistMargin(t, e, i, o) {
     t.children.sort(o);
     const r = this.toBBox, n = it(t, 0, e, r), a = it(t, i - e, i, r);
-    let l = pt(n) + pt(a);
+    let l = gt(n) + gt(a);
     for (let d = e; d < i - e; d++) {
       const h = t.children[d];
-      ot(n, t.leaf ? r(h) : h), l += pt(n);
+      ot(n, t.leaf ? r(h) : h), l += gt(n);
     }
     for (let d = i - e - 1; d >= e; d--) {
       const h = t.children[d];
-      ot(a, t.leaf ? r(h) : h), l += pt(a);
+      ot(a, t.leaf ? r(h) : h), l += gt(a);
     }
     return l;
   }
@@ -2249,35 +2249,35 @@ class ji {
   has(t) {
     return !!this.store[t];
   }
-  load(t, e, i) {
+  load(t, e, i, o) {
     if (t.length === 0) return [];
-    let o = this.clone(t);
-    const r = [], n = [];
-    return o = o.filter((a) => {
-      a.id == null && (a.id = this.idStrategy.getId());
-      const l = a.id;
+    let r = this.clone(t);
+    const n = [], a = [];
+    return r = r.filter((l) => {
+      l.id == null && (l.id = this.idStrategy.getId());
+      const d = l.id;
       if (e) {
-        const d = e(a);
-        if (!d.valid) return n.push({ id: l, valid: !1, reason: d.reason }), !1;
+        const h = e(l);
+        if (!h.valid) return a.push({ id: d, valid: !1, reason: h.reason }), !1;
       }
       if (this.tracked) {
-        if (a.properties.createdAt) {
-          if (!Xt(a.properties.createdAt)) return n.push({ id: a.id, valid: !1, reason: "createdAt is not a valid numeric timestamp" }), !1;
-        } else a.properties.createdAt = +/* @__PURE__ */ new Date();
-        if (a.properties.updatedAt) {
-          if (!Xt(a.properties.updatedAt)) return n.push({ id: a.id, valid: !1, reason: "updatedAt is not a valid numeric timestamp" }), !1;
-        } else a.properties.updatedAt = +/* @__PURE__ */ new Date();
+        if (l.properties.createdAt) {
+          if (!Xt(l.properties.createdAt)) return a.push({ id: l.id, valid: !1, reason: "createdAt is not a valid numeric timestamp" }), !1;
+        } else l.properties.createdAt = +/* @__PURE__ */ new Date();
+        if (l.properties.updatedAt) {
+          if (!Xt(l.properties.updatedAt)) return a.push({ id: l.id, valid: !1, reason: "updatedAt is not a valid numeric timestamp" }), !1;
+        } else l.properties.updatedAt = +/* @__PURE__ */ new Date();
       }
-      return this.has(l) ? (n.push({ id: l, valid: !1, reason: `Feature already exists with this id: ${l}` }), !1) : (this.store[l] = a, r.push(l), i && i(a), n.push({ id: l, valid: !0 }), !0);
-    }), this.spatialIndex.load(o), this._onChange(r, "create"), n;
+      return this.has(d) ? (a.push({ id: d, valid: !1, reason: `Feature already exists with this id: ${d}` }), !1) : (this.store[d] = l, n.push(d), i && i(l), a.push({ id: d, valid: !0 }), !0);
+    }), this.spatialIndex.load(r), n.length > 0 && this._onChange(n, "create", o), a;
   }
   search(t, e) {
     const i = this.spatialIndex.search(t).map((o) => this.store[o]);
     return this.clone(e ? i.filter(e) : i);
   }
   registerOnChange(t) {
-    this._onChange = (e, i) => {
-      t(e, i);
+    this._onChange = (e, i, o) => {
+      t(e, i, o);
     };
   }
   getGeometryCopy(t) {
@@ -2290,37 +2290,37 @@ class ji {
     if (!e) throw new Error(`No feature with this id (${t}), can not get properties copy`);
     return this.clone(e.properties);
   }
-  updateProperty(t) {
-    const e = [];
-    t.forEach(({ id: i, property: o, value: r }) => {
-      const n = this.store[i];
-      if (!n) throw new Error(`No feature with this (${i}), can not update geometry`);
-      e.push(i), n.properties[o] = r, this.tracked && (n.properties.updatedAt = +/* @__PURE__ */ new Date());
-    }), this._onChange && this._onChange(e, "update");
+  updateProperty(t, e) {
+    const i = [];
+    t.forEach(({ id: o, property: r, value: n }) => {
+      const a = this.store[o];
+      if (!a) throw new Error(`No feature with this (${o}), can not update geometry`);
+      i.push(o), a.properties[r] = n, this.tracked && (a.properties.updatedAt = +/* @__PURE__ */ new Date());
+    }), this._onChange && this._onChange(i, "update", e);
   }
-  updateGeometry(t) {
-    const e = [];
-    t.forEach(({ id: i, geometry: o }) => {
-      e.push(i);
-      const r = this.store[i];
-      if (!r) throw new Error(`No feature with this (${i}), can not update geometry`);
-      r.geometry = this.clone(o), this.spatialIndex.update(r), this.tracked && (r.properties.updatedAt = +/* @__PURE__ */ new Date());
-    }), this._onChange && this._onChange(e, "update");
+  updateGeometry(t, e) {
+    const i = [];
+    t.forEach(({ id: o, geometry: r }) => {
+      i.push(o);
+      const n = this.store[o];
+      if (!n) throw new Error(`No feature with this (${o}), can not update geometry`);
+      n.geometry = this.clone(r), this.spatialIndex.update(n), this.tracked && (n.properties.updatedAt = +/* @__PURE__ */ new Date());
+    }), this._onChange && this._onChange(i, "update", e);
   }
-  create(t) {
-    const e = [];
-    return t.forEach(({ geometry: i, properties: o }) => {
-      let r, n = I({}, o);
-      this.tracked && (r = +/* @__PURE__ */ new Date(), o ? (n.createdAt = typeof o.createdAt == "number" ? o.createdAt : r, n.updatedAt = typeof o.updatedAt == "number" ? o.updatedAt : r) : n = { createdAt: r, updatedAt: r });
-      const a = this.getId(), l = { id: a, type: "Feature", geometry: i, properties: n };
-      this.store[a] = l, this.spatialIndex.insert(l), e.push(a);
-    }), this._onChange && this._onChange([...e], "create"), e;
+  create(t, e) {
+    const i = [];
+    return t.forEach(({ geometry: o, properties: r }) => {
+      let n, a = I({}, r);
+      this.tracked && (n = +/* @__PURE__ */ new Date(), r ? (a.createdAt = typeof r.createdAt == "number" ? r.createdAt : n, a.updatedAt = typeof r.updatedAt == "number" ? r.updatedAt : n) : a = { createdAt: n, updatedAt: n });
+      const l = this.getId(), d = { id: l, type: "Feature", geometry: o, properties: a };
+      this.store[l] = d, this.spatialIndex.insert(d), i.push(l);
+    }), this._onChange && this._onChange([...i], "create", e), i;
   }
-  delete(t) {
-    t.forEach((e) => {
-      if (!this.store[e]) throw new Error(`No feature with id ${e}, can not delete`);
-      delete this.store[e], this.spatialIndex.remove(e);
-    }), this._onChange && this._onChange([...t], "delete");
+  delete(t, e) {
+    t.forEach((i) => {
+      if (!this.store[i]) throw new Error(`No feature with id ${i}, can not delete`);
+      delete this.store[i], this.spatialIndex.remove(i);
+    }), this._onChange && this._onChange([...t], "delete", e);
   }
   copy(t) {
     return this.clone(this.store[t]);
@@ -2371,13 +2371,13 @@ class je extends N {
       const o = 1 / Math.pow(10, this.coordinatePrecision - 1), r = Math.max(1e-6, o);
       i = [e[0], [t.lng, t.lat], [t.lng, t.lat - r], e[0]];
     } else if (this.currentCoordinate === 2) {
-      const o = e[0], r = e[1], n = De(o, r, this.coordinatePrecision, this.project, this.unproject), a = x(o[0], o[1]), l = x(n[0], n[1]), d = x(r[0], r[1]), h = x(t.lng, t.lat), c = E(h, a) < E(h, d), u = oe(a, l, h), p = c ? 90 - u : oe(a, l, h) - 90, g = E(l, h), y = Math.cos(O(p)) * g, m = A(a, d) + (function(S, b, w) {
-        const D = (w.x - b.x) * (S.y - b.y) - (w.y - b.y) * (S.x - b.x);
+      const o = e[0], r = e[1], n = De(o, r, this.coordinatePrecision, this.project, this.unproject), a = x(o[0], o[1]), l = x(n[0], n[1]), d = x(r[0], r[1]), h = x(t.lng, t.lat), c = E(h, a) < E(h, d), u = oe(a, l, h), p = c ? 90 - u : oe(a, l, h) - 90, g = E(l, h), y = Math.cos(O(p)) * g, m = A(a, d) + (function(S, b, M) {
+        const D = (M.x - b.x) * (S.y - b.y) - (M.y - b.y) * (S.x - b.x);
         return D > 1e-10 ? "left" : D < -1e-10 ? "right" : "left";
-      }(a, d, h) === "right" ? -90 : 90), v = lt(a, y, m), f = lt(d, y, m), C = W(v.x, v.y), P = W(f.x, f.y);
+      }(a, d, h) === "right" ? -90 : 90), v = dt(a, y, m), f = dt(d, y, m), C = W(v.x, v.y), P = W(f.x, f.y);
       i = [e[0], e[1], [P.lng, P.lat], [C.lng, C.lat], e[0]];
     }
-    i && this.updatePolygonGeometry(this.currentId, i, M.Provisional);
+    i && this.updatePolygonGeometry(this.currentId, i, w.Provisional);
   }
   updatePolygonGeometry(t, e, i) {
     const o = { type: "Polygon", coordinates: [e] };
@@ -2389,7 +2389,7 @@ class je extends N {
       this.currentId = e, this.currentCoordinate++, this.setDrawing();
     } else if (this.currentCoordinate === 1 && this.currentId) {
       const e = this.store.getGeometryCopy(this.currentId);
-      if (Z([t.lng, t.lat], e.coordinates[0][0]) || !this.updatePolygonGeometry(this.currentId, [e.coordinates[0][0], [t.lng, t.lat], [t.lng, t.lat], e.coordinates[0][0]], M.Commit)) return;
+      if (Z([t.lng, t.lat], e.coordinates[0][0]) || !this.updatePolygonGeometry(this.currentId, [e.coordinates[0][0], [t.lng, t.lat], [t.lng, t.lat], e.coordinates[0][0]], w.Commit)) return;
       this.currentCoordinate++;
     } else this.currentCoordinate === 2 && this.currentId && this.close();
   }
@@ -2420,7 +2420,7 @@ class je extends N {
     return t.properties.mode === this.mode && t.geometry.type === "Polygon" && (e.polygonFillColor = this.getHexColorStylingValue(this.styles.fillColor, e.polygonFillColor, t), e.polygonOutlineColor = this.getHexColorStylingValue(this.styles.outlineColor, e.polygonOutlineColor, t), e.polygonOutlineWidth = this.getNumericStylingValue(this.styles.outlineWidth, e.polygonOutlineWidth, t), e.polygonFillOpacity = this.getNumericStylingValue(this.styles.fillOpacity, e.polygonFillOpacity, t), e.zIndex = 10), e;
   }
   validateFeature(t) {
-    return this.validateModeFeature(t, (e) => dt(e, this.coordinatePrecision));
+    return this.validateModeFeature(t, (e) => ht(e, this.coordinatePrecision));
   }
 }
 function Ne(s, t, e) {
@@ -2436,7 +2436,7 @@ class Ge extends N {
   }
   close() {
     if (this.currentId === void 0) return;
-    const t = ht(this.store.getGeometryCopy(this.currentId));
+    const t = ct(this.store.getGeometryCopy(this.currentId));
     t && this.store.updateGeometry([{ id: this.currentId, geometry: t }]);
     const e = this.currentId;
     this.currentCoordinate = 0, this.currentId = void 0, this.direction = void 0, this.state === "drawing" && this.setStarted(), this.onFinish(e, { mode: this.mode, action: "draw" });
@@ -2466,12 +2466,12 @@ class Ge extends N {
       const f = (this.direction === "anticlockwise" ? 1 : -1) * v / p;
       g.push(r);
       for (let C = 0; C <= p; C++) {
-        const P = lt(a, h, y + C * f), { lng: S, lat: b } = W(P.x, P.y), w = [F(S, this.coordinatePrecision), F(b, this.coordinatePrecision)];
-        w[0] !== g[g.length - 1][0] && w[1] !== g[g.length - 1][1] && g.push(w);
+        const P = dt(a, h, y + C * f), { lng: S, lat: b } = W(P.x, P.y), M = [F(S, this.coordinatePrecision), F(b, this.coordinatePrecision)];
+        M[0] !== g[g.length - 1][0] && M[1] !== g[g.length - 1][1] && g.push(M);
       }
       g.push(o), i = [...g];
     }
-    i && this.updatePolygonGeometry(this.currentId, i, M.Provisional);
+    i && this.updatePolygonGeometry(this.currentId, i, w.Provisional);
   }
   updatePolygonGeometry(t, e, i) {
     const o = { type: "Polygon", coordinates: [e] };
@@ -2483,7 +2483,7 @@ class Ge extends N {
       this.currentId = e, this.currentCoordinate++, this.setDrawing();
     } else if (this.currentCoordinate === 1 && this.currentId) {
       const e = this.store.getGeometryCopy(this.currentId);
-      if (Z([t.lng, t.lat], e.coordinates[0][0]) || !this.updatePolygonGeometry(this.currentId, [e.coordinates[0][0], [t.lng, t.lat], [t.lng, t.lat], e.coordinates[0][0]], M.Commit)) return;
+      if (Z([t.lng, t.lat], e.coordinates[0][0]) || !this.updatePolygonGeometry(this.currentId, [e.coordinates[0][0], [t.lng, t.lat], [t.lng, t.lat], e.coordinates[0][0]], w.Commit)) return;
       this.currentCoordinate++;
     } else this.currentCoordinate === 2 && this.currentId && this.close();
   }
@@ -2510,7 +2510,7 @@ class Ge extends N {
     return t.properties.mode === this.mode && t.geometry.type === "Polygon" && (e.polygonFillColor = this.getHexColorStylingValue(this.styles.fillColor, e.polygonFillColor, t), e.polygonOutlineColor = this.getHexColorStylingValue(this.styles.outlineColor, e.polygonOutlineColor, t), e.polygonOutlineWidth = this.getNumericStylingValue(this.styles.outlineWidth, e.polygonOutlineWidth, t), e.polygonFillOpacity = this.getNumericStylingValue(this.styles.fillOpacity, e.polygonFillOpacity, t), e.zIndex = 10), e;
   }
   validateFeature(t) {
-    return this.validateModeFeature(t, (e) => dt(e, this.coordinatePrecision));
+    return this.validateModeFeature(t, (e) => ht(e, this.coordinatePrecision));
   }
 }
 const zi = { cancel: "Escape", finish: "Enter" }, Xi = { start: "crosshair", close: "pointer" };
@@ -2525,7 +2525,7 @@ class Ae extends N {
     if (this.currentStartingPointId === void 0) return;
     const t = this.currentStartingPointId, e = this.currentInitialArcId, i = this.currentId;
     if (t && this.store.delete([t]), e && this.store.delete([e]), this.currentId) {
-      const o = ht(this.store.getGeometryCopy(this.currentId));
+      const o = ct(this.store.getGeometryCopy(this.currentId));
       o && this.store.updateGeometry([{ id: this.currentId, geometry: o }]);
     }
     this.currentCoordinate = 0, this.currentStartingPointId = void 0, this.currentInitialArcId = void 0, this.currentId = void 0, this.direction = void 0, this.state === "drawing" && this.setStarted(), i && this.onFinish(i, { mode: this.mode, action: "draw" });
@@ -2549,21 +2549,21 @@ class Ae extends N {
         this.direction === "anticlockwise" ? (m = y - g, m < 0 && (m += 360)) : (m = g - y, m < 0 && (m += 360));
         const v = (this.direction === "anticlockwise" ? 1 : -1) * m / u;
         for (let f = 0; f <= u; f++) {
-          const C = lt(l, d, g + f * v), { lng: P, lat: S } = W(C.x, C.y), b = [F(P, this.coordinatePrecision), F(S, this.coordinatePrecision)];
+          const C = dt(l, d, g + f * v), { lng: P, lat: S } = W(C.x, C.y), b = [F(P, this.coordinatePrecision), F(S, this.coordinatePrecision)];
           b[0] !== p[p.length - 1][0] && b[1] !== p[p.length - 1][1] && p.push(b);
         }
-        this.updateLineStringGeometry(this.currentInitialArcId, p, M.Provisional);
+        this.updateLineStringGeometry(this.currentInitialArcId, p, w.Provisional);
       } else if (this.currentCoordinate === 3) {
         const e = this.store.getGeometryCopy(this.currentInitialArcId).coordinates;
         if (e.length < 2 || !this.direction) return;
         const i = this.store.getGeometryCopy(this.currentStartingPointId).coordinates, o = e[0], r = e[e.length - 1], n = x(t.lng, t.lat), a = x(o[0], o[1]), l = x(r[0], r[1]), d = x(i[0], i[1]), h = E(d, a), c = E(d, n) < h ? a : n, u = A(d, n), p = A(d, a), g = A(d, l), y = $(p), m = $(g), v = $(u);
         if (this.notInSector({ normalizedCursor: v, normalizedStart: y, normalizedEnd: m, direction: this.direction })) return;
         const f = this.getDeltaBearing(this.direction, y, m), C = this.arcPoints, P = (this.direction === "anticlockwise" ? 1 : -1) * f / C, S = E(d, c), b = [];
-        for (let w = 0; w <= C; w++) {
-          const D = lt(d, S, y + w * P), { lng: G, lat: _ } = W(D.x, D.y), j = [F(G, this.coordinatePrecision), F(_, this.coordinatePrecision)];
+        for (let M = 0; M <= C; M++) {
+          const D = dt(d, S, y + M * P), { lng: G, lat: L } = W(D.x, D.y), j = [F(G, this.coordinatePrecision), F(L, this.coordinatePrecision)];
           j[0] !== e[e.length - 1][0] && j[1] !== e[e.length - 1][1] && b.unshift(j);
         }
-        e.push(...b), e.push(e[0]), this.currentId ? this.updatePolygonGeometry(this.currentId, e, M.Provisional) : [this.currentId] = this.store.create([{ geometry: { type: "Polygon", coordinates: [e] }, properties: { mode: this.mode } }]);
+        e.push(...b), e.push(e[0]), this.currentId ? this.updatePolygonGeometry(this.currentId, e, w.Provisional) : [this.currentId] = this.store.create([{ geometry: { type: "Polygon", coordinates: [e] }, properties: { mode: this.mode } }]);
       }
     }
   }
@@ -2607,7 +2607,7 @@ class Ae extends N {
     return t.properties.mode === this.mode && (t.geometry.type === "Polygon" ? (e.polygonFillColor = this.getHexColorStylingValue(this.styles.fillColor, e.polygonFillColor, t), e.polygonOutlineColor = this.getHexColorStylingValue(this.styles.outlineColor, e.polygonOutlineColor, t), e.polygonOutlineWidth = this.getNumericStylingValue(this.styles.outlineWidth, e.polygonOutlineWidth, t), e.polygonFillOpacity = this.getNumericStylingValue(this.styles.fillOpacity, e.polygonFillOpacity, t), e.zIndex = 10) : t.geometry.type === "LineString" ? (e.lineStringColor = this.getHexColorStylingValue(this.styles.outlineColor, e.polygonOutlineColor, t), e.lineStringWidth = this.getNumericStylingValue(this.styles.outlineWidth, e.polygonOutlineWidth, t), e.zIndex = 10) : t.geometry.type === "Point" && (e.pointColor = this.getHexColorStylingValue(this.styles.centerPointColor, e.pointColor, t), e.pointWidth = this.getNumericStylingValue(this.styles.centerPointWidth, e.pointWidth, t), e.pointOutlineColor = this.getHexColorStylingValue(this.styles.centerPointOutlineColor, e.pointOutlineColor, t), e.pointOutlineWidth = this.getNumericStylingValue(this.styles.centerPointOutlineWidth, e.pointOutlineWidth, t), e.zIndex = 20)), e;
   }
   validateFeature(t) {
-    return this.validateModeFeature(t, (e) => dt(e, this.coordinatePrecision));
+    return this.validateModeFeature(t, (e) => ht(e, this.coordinatePrecision));
   }
   getDeltaBearing(t, e, i) {
     let o;
@@ -2737,13 +2737,13 @@ class $i {
       this._enabled && this._eventListeners.finish.forEach((u) => {
         u(h, c);
       });
-    }, a = (h, c) => {
+    }, a = (h, c, u) => {
       if (!this._enabled) return;
-      this._eventListeners.change.forEach((g) => {
-        g(h, c);
+      this._eventListeners.change.forEach((y) => {
+        y(h, c, u);
       });
-      const { changed: u, unchanged: p } = r(h);
-      c === "create" ? this._adapter.render({ created: u, deletedIds: [], unchanged: p, updated: [] }, this.getModeStyles()) : c === "update" ? this._adapter.render({ created: [], deletedIds: [], unchanged: p, updated: u }, this.getModeStyles()) : c === "delete" ? this._adapter.render({ created: [], deletedIds: h, unchanged: p, updated: [] }, this.getModeStyles()) : c === "styling" && this._adapter.render({ created: [], deletedIds: [], unchanged: p, updated: [] }, this.getModeStyles());
+      const { changed: p, unchanged: g } = r(h);
+      c === "create" ? this._adapter.render({ created: p, deletedIds: [], unchanged: g, updated: [] }, this.getModeStyles()) : c === "update" ? this._adapter.render({ created: [], deletedIds: [], unchanged: g, updated: p }, this.getModeStyles()) : c === "delete" ? this._adapter.render({ created: [], deletedIds: h, unchanged: g, updated: [] }, this.getModeStyles()) : c === "styling" && this._adapter.render({ created: [], deletedIds: [], unchanged: g, updated: [] }, this.getModeStyles());
     }, l = (h) => {
       if (!this._enabled) return;
       this._eventListeners.select.forEach((p) => {
@@ -2784,11 +2784,11 @@ class $i {
         const c = h.geometry.coordinates;
         for (let u = 0; u < c.length - 1; u++) {
           const p = c[u], g = c[u + 1];
-          if (Le(l, a(p[0], p[1]), a(g[0], g[1])) < o) return !0;
+          if (_e(l, a(p[0], p[1]), a(g[0], g[1])) < o) return !0;
         }
         return !1;
       }
-      return !!_e([t, e], h.geometry.coordinates) || void 0;
+      return !!Le([t, e], h.geometry.coordinates) || void 0;
     });
   }
   getSelectMode() {
@@ -2831,8 +2831,8 @@ class $i {
     t.forEach((i) => {
       if (!this._store.has(i)) throw new Error(`No feature with id ${i}, can not delete`);
       const o = this._store.copy(i);
-      o.properties[T.SELECTED] && this.deselectFeature(i), o.properties[rt] && e.push(...o.properties[rt]);
-    }), this._store.delete([...t, ...e]);
+      o.properties[T.SELECTED] && this.deselectFeature(i), o.properties[nt] && e.push(...o.properties[nt]);
+    }), this._store.delete([...t, ...e], { origin: "api" });
   }
   selectFeature(t) {
     this.getSelectMode().selectFeature(t);
@@ -2860,7 +2860,7 @@ class $i {
         const i = this._modes[e.properties.mode];
         i && i.afterFeatureAdded && i.afterFeatureAdded(e);
       }
-    });
+    }, { origin: "api" });
   }
   start() {
     this._enabled = !0, this._adapter.register({ onReady: () => {
@@ -3035,7 +3035,7 @@ const ko = [
     "download"
   ],
   open: !1
-}, ft = {
+}, st = {
   modes: [
     "render",
     "point",
@@ -3055,7 +3055,7 @@ const ko = [
   open: !1,
   // see styling parameters of Terra Draw at https://github.com/JamesLMilner/terra-draw/blob/main/guides/5.STYLING.md
   modeOptions: {
-    point: new we({
+    point: new Me({
       editable: !0,
       styles: {
         pointColor: "#FFFFFF",
@@ -3403,7 +3403,7 @@ Alt. `, ["to-string", ["floor", ["get", "elevation"]]], " m"],
     modeName: "render",
     styles: {}
   }),
-  point: new we({
+  point: new Me({
     editable: !0
   }),
   linestring: new be({
@@ -3538,22 +3538,22 @@ Alt. `, ["to-string", ["floor", ["get", "elevation"]]], " m"],
     styles: {}
   })
 });
-var L = 63710088e-1, qi = {
-  centimeters: L * 100,
-  centimetres: L * 100,
+var _ = 63710088e-1, qi = {
+  centimeters: _ * 100,
+  centimetres: _ * 100,
   degrees: 360 / (2 * Math.PI),
-  feet: L * 3.28084,
-  inches: L * 39.37,
-  kilometers: L / 1e3,
-  kilometres: L / 1e3,
-  meters: L,
-  metres: L,
-  miles: L / 1609.344,
-  millimeters: L * 1e3,
-  millimetres: L * 1e3,
-  nauticalmiles: L / 1852,
+  feet: _ * 3.28084,
+  inches: _ * 39.37,
+  kilometers: _ / 1e3,
+  kilometres: _ / 1e3,
+  meters: _,
+  metres: _,
+  miles: _ / 1609.344,
+  millimeters: _ * 1e3,
+  millimetres: _ * 1e3,
+  nauticalmiles: _ / 1852,
   radians: 1,
-  yards: L * 1.0936
+  yards: _ * 1.0936
 };
 function Zi(s, t, e = {}) {
   const i = { type: "Feature" };
@@ -3579,7 +3579,7 @@ function to(s, t = "kilometers") {
     throw new Error(t + " units is invalid");
   return s * e;
 }
-function yt(s) {
+function ft(s) {
   return s % 360 * Math.PI / 180;
 }
 function se(s) {
@@ -3772,7 +3772,7 @@ function re(s) {
   }
   return t;
 }
-var ro = L * L / 2, Dt = Math.PI / 180;
+var ro = _ * _ / 2, Dt = Math.PI / 180;
 function ne(s) {
   const t = s.length - 1;
   if (t <= 2) return 0;
@@ -3806,14 +3806,14 @@ function le(s) {
   throw new Error("coord must be GeoJSON Point or an Array of numbers");
 }
 function lo(s, t, e = {}) {
-  var i = le(s), o = le(t), r = yt(o[1] - i[1]), n = yt(o[0] - i[0]), a = yt(i[1]), l = yt(o[1]), d = Math.pow(Math.sin(r / 2), 2) + Math.pow(Math.sin(n / 2), 2) * Math.cos(a) * Math.cos(l);
+  var i = le(s), o = le(t), r = ft(o[1] - i[1]), n = ft(o[0] - i[0]), a = ft(i[1]), l = ft(o[1]), d = Math.pow(Math.sin(r / 2), 2) + Math.pow(Math.sin(n / 2), 2) * Math.cos(a) * Math.cos(l);
   return to(
     2 * Math.atan2(Math.sqrt(d), Math.sqrt(1 - d)),
     e.units
   );
 }
 var ho = lo;
-const de = (s) => s === "degrees" ? "°" : s === "miles" ? "mi" : s === "radians" ? "rad" : "km", _t = (s) => {
+const de = (s) => s === "degrees" ? "°" : s === "miles" ? "mi" : s === "radians" ? "rad" : "km", Lt = (s) => {
   if (s >= 1)
     return {
       distance: s,
@@ -3845,12 +3845,12 @@ const de = (s) => s === "degrees" ? "°" : s === "miles" ? "mi" : s === "radians
     l.push(p);
   }
   if (s.properties.distance = l[l.length - 1].properties.total, s.properties.unit = l[l.length - 1].properties.unit, s.properties.segments = JSON.parse(JSON.stringify(l)), t === "kilometers") {
-    const d = _t(s.properties.distance);
+    const d = Lt(s.properties.distance);
     s.properties.distance = d.distance, s.properties.unit = d.unit, s.properties.segments.forEach(
       (h) => {
-        const c = _t(h.properties.distance);
+        const c = Lt(h.properties.distance);
         h.properties.distance = c.distance, h.properties.unit = c.unit;
-        const u = _t(h.properties.total);
+        const u = Lt(h.properties.total);
         h.properties.total = u.distance, h.properties.totalUnit = u.unit;
       }
     );
@@ -3866,14 +3866,20 @@ const de = (s) => s === "degrees" ? "°" : s === "miles" ? "mi" : s === "radians
       );
     }
   ), s;
-}, ce = (s) => s.charAt(0).toUpperCase() + s.slice(1), Mt = ["td-point", "td-linestring", "td-polygon"];
+}, ce = (s) => s.charAt(0).toUpperCase() + s.slice(1), wt = [
+  "td-point",
+  "td-point-lower",
+  "td-linestring",
+  "td-polygon",
+  "td-polygon-outline"
+];
 var ge, ye, fe;
 const Bo = [
-  ...Mt,
-  (ge = ft.polygonLayerSpec) == null ? void 0 : ge.source,
-  (ye = ft.lineLayerLabelSpec) == null ? void 0 : ye.source,
-  (fe = ft.pointLayerLabelSpec) == null ? void 0 : fe.source
-], Ue = (s, t, e = Mt) => {
+  ...wt,
+  (ge = st.polygonLayerSpec) == null ? void 0 : ge.source,
+  (ye = st.lineLayerLabelSpec) == null ? void 0 : ye.source,
+  (fe = st.pointLayerLabelSpec) == null ? void 0 : fe.source
+], Ue = (s, t, e = wt) => {
   const i = JSON.parse(JSON.stringify(s));
   return t && (t.onlyTerraDrawLayers === !0 ? (i.layers = i.layers.filter((o) => "source" in o && e.includes(o.source)), Object.keys(i.sources).forEach((o) => {
     e.includes(o) || delete i.sources[o];
@@ -4097,7 +4103,7 @@ class ze {
     return i * Math.atan(0.5 * (Math.exp(o) - Math.exp(-o)));
   }
 }
-class Mo extends ze {
+class wo extends ze {
   /**
    * Constructor
    * @param url URL for terrain RGB raster tilesets
@@ -4129,7 +4135,7 @@ class Mo extends ze {
     return -1e4 + (t * 256 * 256 + e * 256 + i) * 0.1;
   }
 }
-class wo extends ze {
+class Mo extends ze {
   /**
    * Constructor
    * @param url URL for terrarium raster tilesets
@@ -4170,7 +4176,7 @@ const pe = async (s, t) => {
       new Promise((o) => {
         if (i.geometry.type !== "Point" && o(i), t) {
           const r = t.url, n = t.encoding ?? "mapbox", a = t.tileSize ?? 512, l = t.minzoom ?? 5, d = t.maxzoom ?? 15, h = t.tms ?? !1;
-          (n === "mapbox" ? new Mo(r, a, l, d, h) : new wo(r, a, l, d, h)).getElevation(i.geometry.coordinates, d).then((c) => {
+          (n === "mapbox" ? new wo(r, a, l, d, h) : new Mo(r, a, l, d, h)).getElevation(i.geometry.coordinates, d).then((c) => {
             c && (i.properties.elevation = c), o(i);
           }).catch(() => o(i));
         } else
@@ -4264,27 +4270,27 @@ class Fo {
    * @returns HTML Element
    */
   onAdd(t) {
-    var o, r, n, a, l;
+    var o, r, n, a, l, d, h;
     if (this.options && this.options.modes && this.options.modes.length === 0)
       throw new Error("At least a mode must be enabled.");
     this.map = t;
     const e = Ji(), i = [];
-    return (r = (o = this.options) == null ? void 0 : o.modes) == null || r.forEach((d) => {
-      if (this.options.modeOptions && this.options.modeOptions[d]) {
-        const h = this.options.modeOptions[d];
-        if (d === "select") {
-          const c = e[d];
-          if (c) {
-            const u = c.flags;
-            Object.keys(u).forEach((p) => {
-              h.flags[p] || (h.flags[p] = u[p]);
+    return (r = (o = this.options) == null ? void 0 : o.modes) == null || r.forEach((c) => {
+      if (this.options.modeOptions && this.options.modeOptions[c]) {
+        const u = this.options.modeOptions[c];
+        if (c === "select") {
+          const p = e[c];
+          if (p) {
+            const g = p.flags;
+            Object.keys(g).forEach((y) => {
+              u.flags[y] || (u.flags[y] = g[y]);
             });
           }
         }
-        i.push(h);
-      } else e[d] && i.push(e[d]);
-    }), i.forEach((d) => {
-      d.state !== "unregistered" && (d._state = "unregistered");
+        i.push(u);
+      } else e[c] && i.push(e[c]);
+    }), i.forEach((c) => {
+      c.state !== "unregistered" && (c._state = "unregistered");
     }), (a = (n = this.options) == null ? void 0 : n.modes) != null && a.includes("render") || (i.push(
       new et({
         modeName: "default",
@@ -4293,12 +4299,15 @@ class Fo {
     ), this.defaultMode = "default"), this.isExpanded = this.options.open === !0, this.terradraw = new $i({
       adapter: new Yi({ map: t, ...this.options.adapterOptions }),
       modes: i
-    }), this.terradraw.start(), this.controlContainer = document.createElement("div"), this.controlContainer.classList.add("maplibregl-ctrl"), this.controlContainer.classList.add("maplibregl-ctrl-group"), i.forEach((d) => {
-      d.mode !== "default" && this.addTerradrawButton(d.mode);
-    }), Object.values(this.modeButtons).forEach((d) => {
-      var h;
-      (h = this.controlContainer) == null || h.appendChild(d);
-    }), (l = this.terradraw) == null || l.on("change", this.toggleButtonsWhenNoFeature.bind(this)), this.toggleButtonsWhenNoFeature(), this.controlContainer;
+    }), (l = this.map) != null && l.loaded() ? this.terradraw.start() : (d = this.map) == null || d.once("load", () => {
+      var c;
+      (c = this.terradraw) == null || c.start();
+    }), this.controlContainer = document.createElement("div"), this.controlContainer.classList.add("maplibregl-ctrl"), this.controlContainer.classList.add("maplibregl-ctrl-group"), i.forEach((c) => {
+      c.mode !== "default" && this.addTerradrawButton(c.mode);
+    }), Object.values(this.modeButtons).forEach((c) => {
+      var u;
+      (u = this.controlContainer) == null || u.appendChild(c);
+    }), (h = this.terradraw) == null || h.on("change", this.toggleButtonsWhenNoFeature.bind(this)), this.toggleButtonsWhenNoFeature(), this.controlContainer;
   }
   /**
    * Remove the plugin control from maplibre
@@ -4346,7 +4355,7 @@ class Fo {
    * Activate Terra Draw to start drawing
    */
   activate() {
-    this.terradraw && (this.terradraw.enabled || (this.terradraw.start(), this.dispatchEvent("mode-changed")));
+    this.terradraw && (this.terradraw.enabled || this.terradraw.start());
   }
   /**
    * Deactivate Terra Draw to stop drawing
@@ -4405,7 +4414,7 @@ class Fo {
     })) : t === "download" ? (e.classList.add(`maplibregl-terradraw-${t}-button`), e.addEventListener("click", this.handleDownload.bind(this))) : (e.classList.add(`maplibregl-terradraw-add-${t}-button`), e.addEventListener("click", () => {
       if (!this.terradraw) return;
       const i = e.classList.contains("active");
-      this.activate(), this.resetActiveMode(), i || (this.terradraw.setMode(t), e.classList.add("active")), this.toggleDeleteSelectionButton(), this.toggleButtonsWhenNoFeature();
+      this.activate(), this.resetActiveMode(), i || (this.terradraw.setMode(t), e.classList.add("active")), this.dispatchEvent("mode-changed"), this.toggleDeleteSelectionButton(), this.toggleButtonsWhenNoFeature();
     })));
   }
   /**
@@ -4438,7 +4447,7 @@ class Fo {
    * @returns
    */
   cleanStyle(t, e) {
-    return Ue(t, e, Mt);
+    return Ue(t, e, wt);
   }
   /**
    * Download button click event handler
@@ -4499,7 +4508,10 @@ class jo extends Fo {
    * @param options Plugin control options
    */
   constructor(e) {
-    let i = ft;
+    let i = {
+      ...JSON.parse(JSON.stringify(st)),
+      modeOptions: { ...st.modeOptions }
+    };
     e && (i = Object.assign(i, e));
     super({
       modes: i.modes,
@@ -4647,6 +4659,41 @@ class jo extends Fo {
     this.measureOptions.computeElevation = e, i || this.recalc();
   }
   /**
+   * Get/Set font glyph for measure control layers
+   *
+   * As default, this maesure control uses maplibre's default font glyphs(`Open Sans Regular,Arial Unicode MS Regular`) described at https://maplibre.org/maplibre-style-spec/layers/#text-font
+   *
+   * If you are using your own maplibre style or different map privider, you probably need to set the font glyphs to match your maplibre style.
+   *
+   * Font glyph availability depends on what types of glyphs are supported by your maplibre style (e.g., Carto, Openmap tiles, Protomap, Maptiler, etc.)
+   * Please make sure the font glyphs are available in your maplibre style.
+   *
+   * Usage:
+   *
+   * ```js
+   * const drawControl = new MaplibreMeasureControl()
+   * drawControl.fontGlyphs = ['Open Sans Italic']
+   * map.addControl(drawControl)
+   * ```
+   */
+  get fontGlyphs() {
+    const i = [
+      this.measureOptions.pointLayerLabelSpec,
+      this.measureOptions.lineLayerLabelSpec,
+      this.measureOptions.polygonLayerSpec
+    ][0];
+    return i && i.layout && i.layout["text-font"];
+  }
+  set fontGlyphs(e) {
+    const i = [
+      this.measureOptions.pointLayerLabelSpec,
+      this.measureOptions.lineLayerLabelSpec,
+      this.measureOptions.polygonLayerSpec
+    ];
+    for (const o of i)
+      o && o.layout && (o.layout["text-font"] = e), this.map && o && this.map.getLayer(o.id) && this.map.setLayoutProperty(o.id, "text-font", e);
+  }
+  /**
    * add the plugin control to maplibre
    * @param map Maplibre Map object
    * @returns HTML Element
@@ -4708,7 +4755,7 @@ class jo extends Fo {
    */
   cleanStyle(e, i) {
     var l, d, h;
-    const o = Mt, r = (l = this.measureOptions.polygonLayerSpec) == null ? void 0 : l.source;
+    const o = wt, r = (l = this.measureOptions.polygonLayerSpec) == null ? void 0 : l.source;
     r && o.push(r);
     const n = (d = this.measureOptions.lineLayerLabelSpec) == null ? void 0 : d.source;
     n && o.push(n);
@@ -5035,16 +5082,16 @@ export {
   jo as MaplibreMeasureControl,
   Fo as MaplibreTerradrawControl,
   Bo as TERRADRAW_MEASURE_SOURCE_IDS,
-  Mt as TERRADRAW_SOURCE_IDS,
+  wt as TERRADRAW_SOURCE_IDS,
   ae as calcArea,
   he as calcDistance,
   ce as capitalize,
   Ue as cleanMaplibreStyle,
   ao as convertAreaUnit,
-  _t as convertMetricDistance,
+  Lt as convertMetricDistance,
   co as debounce,
   Hi as defaultControlOptions,
-  ft as defaultMeasureControlOptions,
+  st as defaultMeasureControlOptions,
   Ji as getDefaultModeOptions,
   de as getDistanceUnitName,
   ue as queryElevationByPoint,

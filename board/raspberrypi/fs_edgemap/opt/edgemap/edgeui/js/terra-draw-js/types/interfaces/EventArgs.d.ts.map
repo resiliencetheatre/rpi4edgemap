@@ -1,0 +1,1 @@
+{"version":3,"file":"EventArgs.d.ts","sourceRoot":"","sources":["../../../src/lib/interfaces/EventArgs.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,oBAAoB,EAAE,eAAe,EAAE,MAAM,YAAY,CAAC;AACxE,OAAO,KAAK,EAAE,aAAa,EAAE,MAAM,iBAAiB,CAAC;AAKrD,MAAM,WAAW,SAAS;IAIzB,OAAO,CAAC,EAAE,oBAAoB,EAAE,CAAC;IAIjC,IAAI,EAAE,aAAa,CAAC;IAIpB,UAAU,CAAC,EAAE,eAAe,CAAC,SAAS,EAAE,CAAC;CACzC"}

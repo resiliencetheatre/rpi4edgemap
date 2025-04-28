@@ -14,6 +14,8 @@ export declare class MaplibreMeasureControl extends MaplibreTerradrawControl {
     set areaPrecision(value: number);
     get computeElevation(): boolean;
     set computeElevation(value: boolean);
+    get fontGlyphs(): string[];
+    set fontGlyphs(fontNames: string[]);
     constructor(options?: MeasureControlOptions);
     onAdd(map: Map): HTMLElement;
     onRemove(): void;

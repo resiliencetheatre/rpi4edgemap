@@ -1,6 +1,6 @@
 import type { ControlPosition, IControl, Map, StyleSpecification } from 'maplibre-gl';
-import { type GeoJSONStoreFeatures, TerraDraw } from 'terra-draw';
-import type { TerradrawControlOptions, EventType, TerradrawMode } from '../interfaces';
+import { TerraDraw } from 'terra-draw';
+import type { TerradrawControlOptions, EventType, TerradrawMode, EventArgs } from '../interfaces';
 export declare class MaplibreTerradrawControl implements IControl {
     protected controlContainer?: HTMLElement;
     protected map?: Map;
@@ -13,22 +13,15 @@ export declare class MaplibreTerradrawControl implements IControl {
     protected terradraw?: TerraDraw;
     protected options: TerradrawControlOptions;
     protected events: {
-        [key: string]: [(event?: {
-            feature?: GeoJSONStoreFeatures[];
-            mode?: TerradrawMode;
-        }) => void];
+        [key: string]: [(event: EventArgs) => void];
     };
     protected defaultMode: string;
     constructor(options?: TerradrawControlOptions);
     getDefaultPosition(): ControlPosition;
     onAdd(map: Map): HTMLElement;
     onRemove(): void;
-    on(event: EventType, callback: (event?: {
-        feature?: GeoJSONStoreFeatures[];
-    }) => void): void;
-    off(event: EventType, callback: (event?: {
-        feature?: GeoJSONStoreFeatures[];
-    }) => void): void;
+    on(event: EventType, callback: (event: EventArgs) => void): void;
+    off(event: EventType, callback: (event: EventArgs) => void): void;
     protected dispatchEvent(event: EventType, args?: {
         [key: string]: unknown;
     }): void;
@@ -40,7 +33,7 @@ export declare class MaplibreTerradrawControl implements IControl {
     protected addTerradrawButton(mode: TerradrawMode): void;
     getFeatures(onlySelected?: boolean): {
         type: string;
-        features: GeoJSONStoreFeatures[];
+        features: import("terra-draw").GeoJSONStoreFeatures[];
     };
     cleanStyle(style: StyleSpecification, options?: {
         excludeTerraDrawLayers?: boolean;
