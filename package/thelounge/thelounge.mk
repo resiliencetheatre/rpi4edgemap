@@ -38,17 +38,16 @@ endef
 define THELOUNGE_INSTALL_TARGET_CMDS
     mkdir -p $(TARGET_DIR)/opt/thelounge
     mkdir -p $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
-    cp -r $(@D)/client/* $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
-    cp -r $(@D)/dist/* $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
+    cp -r $(@D)/client $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
+    cp -r $(@D)/dist $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
     cp -r $(@D)/index.js $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
     cp -r $(@D)/LICENSE $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
-    cp -r $(@D)/node_modules/ $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
+    cp -r $(@D)/node_modules $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
     cp -r $(@D)/package.json $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
-    cp -r $(@D)/public/* $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
+    cp -r $(@D)/public $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
+    cp -r $(@D)/defaults $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
     cp -r $(@D)/README.md $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
     cp -r $(@D)/.thelounge_home $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
-    cp -r $(@D)/test/fixtures/.thelounge $(TARGET_DIR)/opt/thelounge/
-    
 endef
 
 
