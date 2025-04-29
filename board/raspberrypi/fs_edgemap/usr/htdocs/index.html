@@ -1,177 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edgemap</title>
-    <link rel="apple-touch-icon" sizes="180x180" href="edgeui/favicon/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="edgeui/favicon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="edgeui/favicon/favicon-16x16.png">
-    <link rel="manifest" href="edgeui/favicon/site.webmanifest">
-    
-    <style>
-        body {
-            background-color: #333;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start; /* Align elements to the top */
-            align-items: center;
-            color: white;
-            font-family: Arial, sans-serif;
-            padding-top: 50px; /* Add padding to move content down */
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edgemap</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="edgeui/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="edgeui/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="edgeui/favicon/favicon-16x16.png">
+  <link rel="manifest" href="edgeui/favicon/site.webmanifest">
+  
+  <style>
+    body {
+      background-color: #333;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding-top: 50px;
+    }
 
-        h1 {
-            margin-bottom: 30px;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    h1 {
+      margin-bottom: 30px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-        h1 img {
-            width: 250px; /* Size of title logo */
-            
-            margin-right: 15px; /* Space between logo and title */
-        }
+    h1 img {
+      width: 250px;
+      margin-right: 15px;
+    }
 
-        .button-container {
-            display: flex;
-            justify-content: center;
-            gap: 20px; /* Space between buttons */
-            margin-bottom: 50px; /* Space between buttons and free text */
-        }
+    .button-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr); /* 3 columns */
+      gap: 20px;
+      margin-bottom: 50px;
+      width: 90%;
+      max-width: 1000px;
+    }
 
-        a {
-            text-decoration: none; /* Remove underline from links */
-        }
+    a {
+      text-decoration: none;
+    }
 
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 18px;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            gap: 10px; /* Space between logo and text */
-        }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 18px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      height: 100%;
+    }
 
-        button img {
-            width: 90px; /* Size of button logo */
-            height: 90px;
-        }
+    button img {
+      width: 90px;
+      height: 90px;
+    }
 
-        button:hover {
-            background-color: #45a049;
-        }
+    button:hover {
+      background-color: #45a049;
+    }
 
-        .free-text {
-            text-align: justify; /* Justify text */
-            max-width: 800px;
-            padding: 15px;
-            margin: 0 auto;
-            font-size: 18px;
-            color: white;
-        }
+    .free-text {
+      text-align: justify;
+      max-width: 800px;
+      padding: 15px;
+      margin: 0 auto;
+      font-size: 18px;
+      color: white;
+    }
 
-        /* Media query for mobile devices */
-        @media (max-width: 768px) {
-            .button-container {
-                flex-direction: column; /* Stack buttons vertically on smaller screens */
-            }
+    /* Media query for smaller screens */
+    @media (max-width: 768px) {
+      .button-container {
+        grid-template-columns: 1fr; /* 1 column on small screens */
+      }
 
-            button {
-                width: 100%; /* Make buttons fill the width of the container */
-                justify-content: center; /* Center the text inside the button */
-            }
+      button img {
+        width: 50px;
+        height: 50px;
+      }
+    }
 
-            button img {
-                width: 50px; /* Reduce size of logos on mobile */
-                height: 50px;
-            }
-        }
-        /* Normal link color */
-        a {
-            color: green; /* Change to your desired color */
-            text-decoration: none; /* Optional: removes the underline */
-        }
+    a {
+      color: green;
+      text-decoration: none;
+    }
 
-        /* Hover link color */
-        a:hover {
-            color: white; /* Change to your desired hover color */
-        }
+    a:hover {
+      color: white;
+    }
 
-        /* Visited link color */
-        a:visited {
-            color: grey; /* Change to your desired visited color */
-        }
-        
-    </style>
+    a:visited {
+      color: grey;
+    }
+  </style>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Get current location (protocol + hostname)
-            var baseUrl = window.location.protocol + "//" + window.location.hostname;
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      var baseUrl = window.location.protocol + "//" + window.location.hostname;
 
-            // Set URLs dynamically
-            document.getElementById("button1").href = baseUrl + "/myCA.crt";
-            document.getElementById("button2").href = "https://" + window.location.hostname + "/edgeui"; // Force HTTPS
-            document.getElementById("button3").href = "http://" + window.location.hostname + "/excalidraw"; // Force HTTP
-            document.getElementById("button4").href = "http://" + window.location.hostname + ":3000"; // Force HTTP
-        });
-    </script>
+      document.getElementById("button1").href = baseUrl + "/myCA.crt";
+      document.getElementById("button2").href = "https://" + window.location.hostname + "/edgeui";
+      document.getElementById("button3").href = "http://" + window.location.hostname + "/excalidraw";
+      document.getElementById("button4").href = "http://" + window.location.hostname + ":3000";
+      document.getElementById("button5").href = "http://" + window.location.hostname + ":9001";
+    });
+  </script>
 </head>
 <body>
-    <h1>
-        <img src="img/edgemap-title-logo.png" alt="Logo"> <!-- Placeholder for the logo in the title bar -->
-        RPi4
-    </h1>
-    <div class="button-container">
-        <a id="button1" target="_blank">
-            <button>
-                <img src="img/edgemap-certificate.png" alt="Button Logo"> <!-- Placeholder for logo on Button 1 -->
-                Download CA certificate <br> [HTTP]
-            </button>
-        </a>
-        <a id="button2" target="_blank">
-            <button>
-                <img src="img/edgemap-globe.png" alt="Button Logo"> <!-- Placeholder for logo on Button 2 -->
-                Edgemap Web UI <br> [HTTPS]
-            </button>
-        </a>
-        <a id="button3" target="_blank">
-            <button>
-                <img src="img/logo.png" alt="Button Logo"> <!-- Placeholder for logo on Button 3 -->
-                Excalidraw <br> [HTTP]
-            </button>
-        </a>
-        <a id="button4" target="_blank">
-            <button>
-                <img src="img/cryptpad.png" alt="Button Logo"> <!-- Placeholder for logo on Button 4 -->
-                Cryptpad <br> [HTTP]
-            </button>
-        </a>
-        
-    </div>
+  <h1>
+    <img src="img/edgemap-title-logo.png" alt="Logo">
+    RPi4
+  </h1>
 
-    <div class="free-text">
-        <!-- Add your free text here -->
-        Welcome to Edgemap!
-        <p>
-        This Edgemap hosts full world OSM map, various communication methods and is usable with most 
-        web browsers without any additional application installs. This entity contains also Meshchat 
-        which is Reticulum based chat program. 
-        </p>
-        To access Edgemap Web UI - download CA certificate and install it to your system.
-        <p>
-        For more information, checkout <a href="https://resilience-theatre.com/wiki/">Resilience Theatre Wiki page</a> and 
-        <a href="https://github.com/resiliencetheatre/rpi4edgemap">project Github.</a>
-    </div>
+  <div class="button-container">
+    <a id="button1" target="_blank">
+      <button>
+        <img src="img/edgemap-certificate.png" alt="Button Logo">
+        Download CA certificate <br> [HTTP]
+      </button>
+    </a>
+    <a id="button2" target="_blank">
+      <button>
+        <img src="img/edgemap-globe.png" alt="Button Logo">
+        Edgemap Web UI <br> [HTTPS]
+      </button>
+    </a>
+    <a id="button3" target="_blank">
+      <button>
+        <img src="img/logo.png" alt="Button Logo">
+        Excalidraw <br> [HTTP]
+      </button>
+    </a>
+    <a id="button4" target="_blank">
+      <button>
+        <img src="img/cryptpad.png" alt="Button Logo">
+        Cryptpad <br> [HTTP]
+      </button>
+    </a>
+    <a id="button5" target="_blank">
+      <button>
+        <img src="img/thelounge.png" alt="Button Logo">
+        The Lounge <br> [HTTP]
+      </button>
+    </a>
+  </div>
+
+  <div class="free-text">
+    Welcome to Edgemap!
+    <p>
+      This Edgemap hosts full world OSM map. It works with Meshtastic LoRA radios and can be configured to various
+      other communication methods like CoT sources etc. Edgemap is usable with most web browsers without any additional application installs. 
+    </p>
+    
+    <p>• To access Edgemap Web UI - download CA certificate and install it to your system.</p>
+    <p>• Excalidraw is locally hosted whiteboard</p>
+    <p>• Cryptpad is locally hosted collaboration suite </p>
+    <p>• The Lounge is browser based IRC client</p>
+    <p>
+      For more information, checkout <a href="https://resilience-theatre.com/wiki/">Resilience Theatre Wiki page</a> and
+      <a href="https://github.com/resiliencetheatre/rpi4edgemap">project Github.</a>
+    </p>
+  </div>
 </body>
 </html>

@@ -1,6 +1,17 @@
 #!/bin/sh
 #
-# This script will create CA and sign a certificate with it.
+# This script will initialize freshly flashed edgemap microsd for you.
+#
+# It's evolved from tls-setup.sh
+#
+# Functions
+#
+# * CA and certificate creation
+# * Sets callsign to various places (hostapd, dnsmasq, cryptpad)
+# * Sets services to initial state
+# * Creates cryptpad and thelounge users
+# * Creates third partition to microsd for maps
+#
 #
 # * CA certificate (myCA.crt) is copied to web server document root
 #   so user can download and install it to web browser.
@@ -12,23 +23,34 @@
 #
 # Example run:
 #
-# ./tls-setup.sh myEdgeCA edgemap8
+# ./init-edgemap.sh myedgeCA edgemapx
 #
+#
+# NOTE: This whole CA and certificate world is screwed and it does 
+#       create security only against lowest level of adversary.
+# 
+#       Will most probably drop TLS on wire at some point. Currently
+#       it's needed because browser geolocate and webRTC. If you don't
+#       use those (and you should not) - go to http alone. You should
+#       be in your local segment anyhow in real use. And if you require
+#       security to your local segment, use macsec or something better
+#       than TLS.
+#
+#
+#
+#
+
 
 #
 # Create CA and sign certificate
 #
-
-echo "This is obsolete, run init-edgemap.sh (it should be in path) instead."
-
-exit
 
 CA_NAME=$1
 DNS_NAME=$2
 
 if [ -z "$CA_NAME" ]
 then
-echo "Usage: tls-setup.sh [CA-NAME] [DNS-NAME]"
+echo "Usage: init-edgemap.sh [CA-NAME] [DNS-NAME]"
 exit
 else
 echo "CA name: $CA_NAME"
@@ -36,7 +58,7 @@ fi
 
 if [ -z "$DNS_NAME" ]
 then
-echo "Usage: tls-setup.sh [CA-NAME] [DNS-NAME]"
+echo "Usage: init-edgemap.sh [CA-NAME] [DNS-NAME]"
 exit
 else
 echo "DNS: $DNS_NAME"
@@ -128,32 +150,73 @@ rm /etc/systemd/system/multi-user.target.wants/janus.service
 ln -s /etc/systemd/system/mirror.service /etc/systemd/system/multi-user.target.wants/mirror.service
 ln -s /etc/systemd/system/wss-mirror.service /etc/systemd/system/multi-user.target.wants/wss-mirror.service
 
-echo "Service configured"
+echo "Services configured!"
 
+echo "Adding cryptpad and thelounge users"
+
+#
 # Cryptpad user
+#
 adduser -H -h /opt/cryptpad/ -D cryptpad cryptpad
 chown -R cryptpad:cryptpad /opt/cryptpad
 
+#
 # The lounge user
+#
 adduser -H -h /opt/thelounge/ -D thelounge thelounge
+chown -R thelounge:thelounge /opt/thelounge
 
-# ln -s /etc/systemd/system/cryptpad.service /etc/systemd/system/multi-user.target.wants/cryptpad.service
+#
+# Create third partition (taken from create-partition-noenc.sh)
+# 
+
+if [ -b /dev/mmcblk0p3 ]; then
+    echo "It seems that your card has already third partition (/dev/mmcblk0p3)!"
+    echo "-> Skipping partition create."
+else
+    echo "Creating third partition (without encryption) to MicroSD"
+    TARGET_DEV=/dev/mmcblk0
+    parted --script $TARGET_DEV 'mkpart primary ext4 3500 -1'
+    # Creating filesystems
+    echo "Creating filesystem to $TARGET_DEVp3"
+    mkfs.ext4 -F -L maps ${TARGET_DEV}p3
+fi
+
+
+
+
+
+#
+# Instruct cryptpad first run to finalize setup
+#
+echo " "
+echo "== CRYPTPAD =="
 echo " "
 echo "To finalize cryptpad setup, you need manually do following:"
 echo "(or you can ignore this, if you plan not to use cryptpad)"
 echo " "
+echo "systemctl stop cryptpad "
 echo "su cryptpad"
 echo "cd"
 echo "node server.js"
 echo " "
 echo " -> Visit indicated setup URL and create admin user & password"
-echo " -> After you are good, link cryptpad service as:"
+echo " -> After you are good, you can enable service:"
 echo " "
-echo "ln -s /etc/systemd/system/cryptpad.service /etc/systemd/system/multi-user.target.wants/cryptpad.service"
+echo "systemctl enable cryptpad.service"
 echo " "
 echo "You can do this now or after reboot"
 echo " "
-
+echo "== The Lounge (browser based IRC client) =="
+echo " "
+echo "Before using Thelounge, configure it via  /opt/thelounge/config.js"
+echo "Remember you need to be 'thelounge' user to use 'thelounge' command:"
+echo " "
+echo "su thelounge"
+echo "cd"
+echo "thelounge help"
+echo " "
+echo " "
 echo " "
 echo "All set, reboot unit."
 echo " "

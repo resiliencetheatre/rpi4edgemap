@@ -5,8 +5,6 @@
 # NOTE: This needs yarn to be present at build host. Install it first.
 #
 ################################################################################
-# #f97c4df2a28abf06a77e98b1ab16345300b212e7 
-# ERROR: architecture for "/usr/lib/thelounge/node_modules/sqlite3/build/Release/node_sqlite3.node" is "Advanced Micro Devices X86-64", should be "AArch64"
 
 THELOUNGE_VERSION = v4.4.3 
 THELOUNGE_SITE =  $(call github,thelounge,thelounge,$(THELOUNGE_VERSION))
@@ -27,7 +25,6 @@ THELOUNGE_MAKE_ENV = \
     LD="$(TARGET_LD)" \
     STRIP="$(TARGET_STRIP)"
     
-    
 define THELOUNGE_CONFIGURE_CMDS
     # No configure step needed
 endef
@@ -37,10 +34,21 @@ define THELOUNGE_BUILD_CMDS
     cd $(@D) && NODE_ENV=production $(THELOUNGE_MAKE_ENV) yarn build
 endef
 
+
 define THELOUNGE_INSTALL_TARGET_CMDS
     mkdir -p $(TARGET_DIR)/opt/thelounge
-    mkdir -p $(TARGET_DIR)/usr/lib/thelounge/node_modules/
-    cp -r $(@D)/node_modules/* $(TARGET_DIR)/usr/lib/thelounge/node_modules/
+    mkdir -p $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
+    cp -r $(@D)/client/* $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
+    cp -r $(@D)/dist/* $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
+    cp -r $(@D)/index.js $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
+    cp -r $(@D)/LICENSE $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
+    cp -r $(@D)/node_modules/ $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
+    cp -r $(@D)/package.json $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
+    cp -r $(@D)/public/* $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
+    cp -r $(@D)/README.md $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
+    cp -r $(@D)/.thelounge_home $(TARGET_DIR)/usr/lib/thelounge/node_modules/thelounge/
+    cp -r $(@D)/test/fixtures/.thelounge $(TARGET_DIR)/opt/thelounge/
+    
 endef
 
 
