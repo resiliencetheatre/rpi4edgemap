@@ -167,6 +167,12 @@ adduser -H -h /opt/thelounge/ -D thelounge thelounge
 chown -R thelounge:thelounge /opt/thelounge
 
 #
+# Link 'thelounge' command
+#
+ln -s /usr/lib/thelounge/node_modules/thelounge/index.js /usr/bin/thelounge
+
+
+#
 # Create third partition (taken from create-partition-noenc.sh)
 # 
 
@@ -181,9 +187,6 @@ else
     echo "Creating filesystem to $TARGET_DEVp3"
     mkfs.ext4 -F -L maps ${TARGET_DEV}p3
 fi
-
-
-
 
 
 #
@@ -210,6 +213,15 @@ echo " "
 echo "== The Lounge (browser based IRC client) =="
 echo " "
 echo "Before using Thelounge, configure it via  /opt/thelounge/config.js"
+echo " "
+echo " IMPORTANT: You need to change port to 'port: 9001,' at line 32"
+echo " "
+echo " NOTE: You need to start thelounge once for config.js to be created"
+echo "       run it with 'thelounge start' (as root) or start service:"
+echo "       systemctl start thelounge"
+echo " "
+echo " After initial run, you can edit config.js and add users (as 'thelounge' user) "
+echo " "
 echo "Remember you need to be 'thelounge' user to use 'thelounge' command:"
 echo " "
 echo "su thelounge"
