@@ -1915,6 +1915,7 @@ body {
 	width: 90%;
 	border-collapse: collapse;
 	margin-bottom: 20px;
+    vertical-align: top;
 }
 
 .settings-table td {
@@ -1944,6 +1945,7 @@ body {
 	color: #6f6;
 	border-bottom: 2px solid #4CAF50;
 }
+
 
 .settings-buttons {
 	width: 90%;

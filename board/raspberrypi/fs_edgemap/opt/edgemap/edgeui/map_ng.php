@@ -225,7 +225,7 @@
     <div class="settings-scroll-container">
         <table class="settings-table">
             <tr class="table-header"><td colspan="2">General</td></tr>
-            <tr><td>Callsign</td><td><input type="text" id="callsign" name="callsign" /></td></tr>
+            <tr><td>Callsign</td><td><input type="text" id="callsign" name="callsign" maxlength="5" /></td></tr>
             
             <!--
             <tr>
@@ -255,8 +255,11 @@
             </tr>
             -->
             
-            <tr><td>IRC server</td><td><input type="text" id="ircTransportServerAddress" name="ircTransportServer" />
-            <span>[SERVER]:[PORT] or empty (off)</span>
+            <tr valign="top"><td>IRC server</td><td><input type="text" id="ircTransportServerAddress" name="ircTransportServer" />
+            <span>[SERVER]:[PORT]</span>
+            <p><b>Instructions:</b></p>
+            <p> To enable IRC server communication, select "No meshtastic radio" as Meshtastic device bellow and fill in
+            IRC server name and port. On save IRC communication is activated and meshtastic communication is stopped.</p>
             </td></tr>
             
             <!--
@@ -274,7 +277,15 @@
                     <select name="localMeshtasticDevice" id="meshtastic-device-select" class="settings-select">
                       <!-- Options will be dynamically inserted via JavaScript -->
                     </select>
+                    <p><b>Instructions:</b></p>
+                    <p>To enable meshtastic communication, select serial port for radio and make sure that IRC
+                    server field above is empty. On save Meshtastic communication is actived and IRC communication
+                    is stopped. <b>NOTE:</b> You cannot keep IRC and Meshtastic activated at the same time!</p>
             </td></tr>
+            
+     
+            
+            
                 
         </table>
 

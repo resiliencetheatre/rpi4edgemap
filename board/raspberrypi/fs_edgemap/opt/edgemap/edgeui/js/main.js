@@ -239,6 +239,7 @@ window.onload = function ()
                 engine('read_settings',1);
                 const targetDiv = document.getElementById("settings-box");
                 document.getElementById("settings-box").style.display = "flex";
+                keyEventListener = 0;
             }
             if ( item.id == "terrain" ) {
                  toggleHillShadow();

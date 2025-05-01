@@ -51,13 +51,13 @@ while true; do
             # Assign following items to variables using cut
             CALLSIGN=$(echo "$line" | cut -d',' -f2)
             GPS_PORT=$(echo "$line" | cut -d',' -f3)
-            IRC_SERVER=$(echo "$line" | cut -d',' -f4)
+            IRC_SERVER_STRING=$(echo "$line" | cut -d',' -f4)
             MESHTASTIC_PORT=$(echo "$line" | cut -d',' -f5)
 
             # echo "Message:         $first_item"
             # echo "callsign:        $CALLSIGN"
             # echo "GPS port:        $GPS_PORT"
-            # echo "IRC server:      $var3"
+            # echo "IRC server:      $IRC_SERVER_STRING"
             # echo "Meshtastic port: $MESHTASTIC_PORT"
 
             
@@ -85,6 +85,45 @@ while true; do
                 fi                
             fi
 
+            # irc server
+            if [ -n "$CALLSIGN" ] && [ -n "$IRC_SERVER_STRING" ] && [ "$MESHTASTIC_PORT" = "No meshtastic radio" ]; then
+                IRC_SERVER="${IRC_SERVER_STRING%%:*}"
+                IRC_SERVER_PORT="${IRC_SERVER_STRING##*:}"
+                echo "[irc]" > /opt/ircpipe/ircpipe.ini
+                echo "server = $IRC_SERVER" >> /opt/ircpipe/ircpipe.ini
+                echo "port = $IRC_SERVER_PORT" >> /opt/ircpipe/ircpipe.ini
+                echo "nick = $CALLSIGN" >> /opt/ircpipe/ircpipe.ini
+                echo "user = $CALLSIGN" >> /opt/ircpipe/ircpipe.ini
+                echo "channel = #edgemap" >> /opt/ircpipe/ircpipe.ini
+                echo " " >> /opt/ircpipe/ircpipe.ini
+                echo "[fifo]" >> /opt/ircpipe/ircpipe.ini
+                echo "in = /tmp/outmessages" >> /opt/ircpipe/ircpipe.ini
+                echo "out = /tmp/channelmessages" >> /opt/ircpipe/ircpipe.ini
+                
+                # Switch messaging to IRC:
+                systemctl stop meshpipe.service wss-messaging.service
+                systemctl disable meshpipe.service wss-messaging.service
+                systemctl enable ircpipe.service wss-messaging-irc.service
+                systemctl restart ircpipe.service wss-messaging-irc.service
+            fi
+            
+            # Empty IRC server
+            if [ -z "$IRC_SERVER_STRING" ]; then
+                IRC_SERVER=""
+                IRC_SERVER_PORT=""
+                echo "[irc]" > /opt/ircpipe/ircpipe.ini
+                echo "server = $IRC_SERVER" >> /opt/ircpipe/ircpipe.ini
+                echo "port = $IRC_SERVER_PORT" >> /opt/ircpipe/ircpipe.ini
+                echo "nick = $CALLSIGN" >> /opt/ircpipe/ircpipe.ini
+                echo "user = $CALLSIGN" >> /opt/ircpipe/ircpipe.ini
+                echo "channel = #edgemap" >> /opt/ircpipe/ircpipe.ini
+                echo " " >> /opt/ircpipe/ircpipe.ini
+                echo "[fifo]" >> /opt/ircpipe/ircpipe.ini
+                echo "in = /tmp/outmessages" >> /opt/ircpipe/ircpipe.ini
+                echo "out = /tmp/channelmessages" >> /opt/ircpipe/ircpipe.ini
+            fi
+            
+
             # Meshtastic
             if [ "$MESHTASTIC_PORT" = "-- Select Meshtastic device --" ]; then
                 echo "Skipping meshtastic port setting"
@@ -97,6 +136,9 @@ while true; do
                 else
                     echo "MESHTASTIC_PORT=\"$MESHTASTIC_PORT\""> /opt/edgemap/meshpipe/meshtastic.env
                     echo "Starting & enabling (meshpipe.service and wss-messaging.service)"
+                    # Switch messaging to Meshtastic:
+                    systemctl stop ircpipe.service wss-messaging-irc.service
+                    systemctl disable ircpipe.service wss-messaging-irc.service
                     systemctl start meshpipe.service wss-messaging.service 
                     systemctl enable meshpipe.service wss-messaging.service
                 fi
@@ -122,13 +164,49 @@ while true; do
             MESHTASTIC_PORT=$(grep '^MESHTASTIC_PORT=' /opt/edgemap/meshpipe/meshtastic.env | cut -d= -f2 | tr -d '"')
             GPS_PORT=$(grep '^DEVICES=' /etc/default/gpsd | cut -d= -f2- | tr -d '"')
             
-            # read GPS service state
-            # read meshtastic service state
-            # read ircpipe ini and service state (not done yet)
-            # restart services
+            # read ircpipe ini start
+            INI_FILE="/opt/ircpipe/ircpipe.ini"
+            SECTION="irc"
+            server=""
+            port=""
+            in_section=0
+
+            while IFS= read -r line; do
+                # Remove leading/trailing spaces
+                line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+                # Skip empty lines or comments
+                [ -z "$line" ] && continue
+                echo "$line" | grep -qE '^\s*#' && continue
+
+                # Check for section headers
+                case "$line" in
+                    \[*\])
+                        current_section=$(echo "$line" | sed 's/^\[\(.*\)\]$/\1/')
+                        if [ "$current_section" = "$SECTION" ]; then
+                            in_section=1
+                        else
+                            in_section=0
+                        fi
+                        ;;
+                    *)
+                        if [ "$in_section" -eq 1 ]; then
+                            key=$(echo "$line" | cut -d '=' -f 1 | sed 's/[[:space:]]//g')
+                            value=$(echo "$line" | cut -d '=' -f 2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                            case "$key" in
+                                server) IRC_SERVER="$value" ;;
+                                port) IRC_PORT="$value" ;;
+                            esac
+                        fi
+                        ;;
+                esac
+            done < "$INI_FILE"
+            # read ircpipe.ini end
+            
+            IRCSERVER="$IRC_SERVER:$IRC_PORT"
             
             # form json
-            message="{ \"callsign\": [\"$CALLSIGN\"], \"serials\":[$list], \"meshtastic_port\": [\"$MESHTASTIC_PORT\"], \"gps_port\": [\"$GPS_PORT\"] }"
+            message="{ \"callsign\": [\"$CALLSIGN\"], \"serials\":[$list], \"meshtastic_port\": [\"$MESHTASTIC_PORT\"], \"gps_port\": [\"$GPS_PORT\"], \"irc_server\": [\"$IRCSERVER\"] }"
             # deliver json via FIFO pipe
             echo $message > /tmp/fromengine
         fi

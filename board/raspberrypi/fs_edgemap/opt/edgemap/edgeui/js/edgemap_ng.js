@@ -2198,6 +2198,11 @@ function engine(code,read=0) {
              if (Array.isArray(data.callsign)) {
                  document.getElementById("callsign").value = data.callsign;
              }
+             if (Array.isArray(data.irc_server)) {
+                 document.getElementById("ircTransportServerAddress").value = data.irc_server;
+             }
+             
+             
              if (Array.isArray(data.gps_port)) {
                  document.getElementById("current_gps_port").innerHTML = data.gps_port;
              }
