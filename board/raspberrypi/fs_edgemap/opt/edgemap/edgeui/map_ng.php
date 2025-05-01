@@ -263,6 +263,12 @@
             </tr>
             -->
             
+            <tr valign="top"><td>Status</td>
+            <td>
+                <div id="communication_channel"></div>
+            </td>
+            </tr>
+            
             <tr valign="top"><td>IRC server</td><td><input type="text" id="ircTransportServerAddress" name="ircTransportServer" />
             <span>[SERVER]:[PORT]</span>
             <p><b>Instructions:</b></p>

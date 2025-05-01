@@ -2202,6 +2202,18 @@ function engine(code,read=0) {
                  document.getElementById("ircTransportServerAddress").value = data.irc_server;
              }
              
+             if (Array.isArray(data.ircpipe_pid)) {
+                console.log("ircpipe_pid: ", data.ircpipe_pid);
+                if ( data.ircpipe_pid != 0 ) {
+                    document.getElementById("communication_channel").innerHTML="IRC communication daemon running  [" + data.ircpipe_pid +"]";
+                }
+             }
+             if (Array.isArray(data.meshpipe_pid)) {
+                console.log("meshpipe_pid: ", data.meshpipe_pid);
+                if ( data.meshpipe_pid != 0 ) {
+                    document.getElementById("communication_channel").innerHTML="Meshtastic communication daemon running [" + data.meshpipe_pid +"]";
+                }
+             }
              
              if (Array.isArray(data.gps_port)) {
                  document.getElementById("current_gps_port").innerHTML = data.gps_port;

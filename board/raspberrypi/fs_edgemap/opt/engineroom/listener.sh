@@ -164,6 +164,14 @@ while true; do
             MESHTASTIC_PORT=$(grep '^MESHTASTIC_PORT=' /opt/edgemap/meshpipe/meshtastic.env | cut -d= -f2 | tr -d '"')
             GPS_PORT=$(grep '^DEVICES=' /etc/default/gpsd | cut -d= -f2- | tr -d '"')
             
+            # read meshpipe and ircpipe pid's
+            IRCPIPE_PID=$(ps | grep '[i]rcpipe' | awk '{print $1}')
+            [ -z "$IRCPIPE_PID" ] && IRCPIPE_PID=0
+
+            MESHPIPE_PID=$(ps | grep '[m]eshpipe.py' | awk '{print $1}')
+            [ -z "$MESHPIPE_PID" ] && MESHPIPE_PID=0
+
+            
             # read ircpipe ini start
             INI_FILE="/opt/ircpipe/ircpipe.ini"
             SECTION="irc"
@@ -206,7 +214,7 @@ while true; do
             IRCSERVER="$IRC_SERVER:$IRC_PORT"
             
             # form json
-            message="{ \"callsign\": [\"$CALLSIGN\"], \"serials\":[$list], \"meshtastic_port\": [\"$MESHTASTIC_PORT\"], \"gps_port\": [\"$GPS_PORT\"], \"irc_server\": [\"$IRCSERVER\"] }"
+            message="{ \"callsign\": [\"$CALLSIGN\"], \"serials\":[$list], \"meshtastic_port\": [\"$MESHTASTIC_PORT\"], \"gps_port\": [\"$GPS_PORT\"], \"irc_server\": [\"$IRCSERVER\"], \"ircpipe_pid\": [\"$IRCPIPE_PID\"], \"meshpipe_pid\": [\"$MESHPIPE_PID\"] }"
             # deliver json via FIFO pipe
             echo $message > /tmp/fromengine
         fi
