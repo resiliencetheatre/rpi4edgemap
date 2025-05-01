@@ -2801,4 +2801,18 @@ function getElementItem(selector) {
 }
 
 
+function openBanner(text) {
+    const banner = document.getElementById('myMessageBanner');
+    const content = document.getElementById('messageBannerContent');
+    content.textContent = text;
+    banner.style.display = 'flex';
+}
 
+function closeBanner() {
+    document.getElementById('myMessageBanner').style.display = 'none';
+}
+
+function pageReload() {
+    // We could also try reconnecting socket, example just reloads page
+    location.reload(); 
+}

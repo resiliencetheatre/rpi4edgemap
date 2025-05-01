@@ -68,6 +68,14 @@
         </table>
     </div>
 
+    <div id="myMessageBanner" class="messageBanner">
+    <div id="messageBannerContent">This is your message</div>
+    <div class="messageBannerButtons">
+        <button onclick="closeBanner()">Close</button>
+        <button onclick="pageReload()">Reload</button>
+    </div>
+    </div>
+
     <div id="myModal" class="modal">
         <span class="close">&times;</span>
         <img class="modal-content" id="img01">
@@ -894,6 +902,7 @@
             notifyMessage("Message channel disconnected! Try reloading page.", 5000);
             messagingSocketConnected=false;
             appendSpaceLog("Messaging socket disconnected");
+            openBanner("Messaging disconnected. Try reloading page.");
         };
         
         //
