@@ -53,14 +53,16 @@ while true; do
             GPS_PORT=$(echo "$line" | cut -d',' -f3)
             IRC_SERVER_STRING=$(echo "$line" | cut -d',' -f4)
             MESHTASTIC_PORT=$(echo "$line" | cut -d',' -f5)
-
+            MESSAGING_MEDIUM=$(echo "$line" | cut -d',' -f6)
+            
             # echo "Message:         $first_item"
             # echo "callsign:        $CALLSIGN"
             # echo "GPS port:        $GPS_PORT"
             # echo "IRC server:      $IRC_SERVER_STRING"
             # echo "Meshtastic port: $MESHTASTIC_PORT"
+            # echo "Messaging medium: $MESSAGING_MEDIUM"
 
-            
+
             # Update only non empty and less than 5 char callsign
             if [ -n "$CALLSIGN" ] && [ "${#CALLSIGN}" -le 5 ]; then
                 echo $CALLSIGN > /opt/edgemap-persist/callsign.txt
@@ -86,7 +88,7 @@ while true; do
             fi
 
             # irc server
-            if [ -n "$CALLSIGN" ] && [ -n "$IRC_SERVER_STRING" ] && [ "$MESHTASTIC_PORT" = "No meshtastic radio" ]; then
+            if [ -n "$CALLSIGN" ] && [ -n "$IRC_SERVER_STRING" ]; then
                 IRC_SERVER="${IRC_SERVER_STRING%%:*}"
                 IRC_SERVER_PORT="${IRC_SERVER_STRING##*:}"
                 echo "[irc]" > /opt/ircpipe/ircpipe.ini
@@ -99,12 +101,6 @@ while true; do
                 echo "[fifo]" >> /opt/ircpipe/ircpipe.ini
                 echo "in = /tmp/outmessages" >> /opt/ircpipe/ircpipe.ini
                 echo "out = /tmp/channelmessages" >> /opt/ircpipe/ircpipe.ini
-                
-                # Switch messaging to IRC:
-                systemctl stop meshpipe.service wss-messaging.service
-                systemctl disable meshpipe.service wss-messaging.service
-                systemctl enable ircpipe.service wss-messaging-irc.service
-                systemctl restart ircpipe.service wss-messaging-irc.service
             fi
             
             # Empty IRC server
@@ -136,14 +132,25 @@ while true; do
                 else
                     echo "MESHTASTIC_PORT=\"$MESHTASTIC_PORT\""> /opt/edgemap/meshpipe/meshtastic.env
                     echo "Starting & enabling (meshpipe.service and wss-messaging.service)"
-                    # Switch messaging to Meshtastic:
-                    systemctl stop ircpipe.service wss-messaging-irc.service
-                    systemctl disable ircpipe.service wss-messaging-irc.service
-                    systemctl start meshpipe.service wss-messaging.service 
-                    systemctl enable meshpipe.service wss-messaging.service
+                    
                 fi
             fi
 
+            # Set messaging medium
+            if [ "$MESSAGING_MEDIUM" = "irc" ]; then
+                # Switch messaging to IRC:
+                systemctl stop meshpipe.service wss-messaging.service
+                systemctl disable meshpipe.service wss-messaging.service
+                systemctl enable ircpipe.service wss-messaging-irc.service
+                systemctl restart ircpipe.service wss-messaging-irc.service
+            fi
+            if [ "$MESSAGING_MEDIUM" = "meshtastic" ]; then
+                # Switch messaging to Meshtastic:
+                systemctl stop ircpipe.service wss-messaging-irc.service
+                systemctl disable ircpipe.service wss-messaging-irc.service
+                systemctl start meshpipe.service wss-messaging.service 
+                systemctl enable meshpipe.service wss-messaging.service
+            fi
         
         fi
 

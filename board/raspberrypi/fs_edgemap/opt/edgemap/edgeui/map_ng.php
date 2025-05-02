@@ -252,7 +252,7 @@
                 </select>
             </td></tr>
             
-            <tr class="table-header"><td colspan="2">Communication</td></tr>
+            <tr class="table-header"><td colspan="2">Messaging</td></tr>
             <!--
             <tr>
               <td>IRC transport</td>
@@ -263,41 +263,31 @@
             </tr>
             -->
             
-            <tr valign="top"><td>Status</td>
-            <td>
-                <div id="communication_channel"></div>
-            </td>
+            <tr>
+              <td>Messaging</td>
+              <td class="radio-inline">
+                <label><input type="radio" name="meshtasticRadio" value="meshtastic" /> Meshtastic radios</label>
+                <label><input type="radio" name="meshtasticRadio" value="irc" /> IRC server</label>
+              </td>
             </tr>
             
             <tr valign="top"><td>IRC server</td><td><input type="text" id="ircTransportServerAddress" name="ircTransportServer" />
-            <span>[SERVER]:[PORT]</span>
-            <p><b>Instructions:</b></p>
-            <p> To enable IRC server communication, select "No meshtastic radio" as Meshtastic device bellow and fill in
-            IRC server name and port. On save IRC communication is activated and meshtastic communication is stopped.</p>
+            <span>[SERVER]:[PORT] (no TLS)</span>
             </td></tr>
             
-            <!--
-            <tr>
-              <td>Meshtastic</td>
-              <td class="radio-inline">
-                <label><input type="radio" name="meshtasticRadio" value="on" /> On</label>
-                <label><input type="radio" name="meshtasticRadio" value="off" /> Off</label>
-              </td>
-            </tr>
-            -->
             
             <tr><td>Meshtastic device</td><td>
                     <span>Currently set port: </span> <span id="current_meshtastic_port"></span>
                     <select name="localMeshtasticDevice" id="meshtastic-device-select" class="settings-select">
                       <!-- Options will be dynamically inserted via JavaScript -->
                     </select>
-                    <p><b>Instructions:</b></p>
-                    <p>To enable meshtastic communication, select serial port for radio and make sure that IRC
-                    server field above is empty. On save Meshtastic communication is actived and IRC communication
-                    is stopped. <b>NOTE:</b> You cannot keep IRC and Meshtastic activated at the same time!</p>
             </td></tr>
             
-     
+            <tr valign="top"><td>Status</td>
+            <td>
+                <div id="communication_channel"></div>
+            </td>
+            </tr>
             
             
                 

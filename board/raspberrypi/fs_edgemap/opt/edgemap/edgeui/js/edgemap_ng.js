@@ -2206,12 +2206,14 @@ function engine(code,read=0) {
                 console.log("ircpipe_pid: ", data.ircpipe_pid);
                 if ( data.ircpipe_pid != 0 ) {
                     document.getElementById("communication_channel").innerHTML="IRC communication daemon running  [" + data.ircpipe_pid +"]";
+                    document.querySelector('input[name="meshtasticRadio"][value="irc"]').checked = true;
                 }
              }
              if (Array.isArray(data.meshpipe_pid)) {
                 console.log("meshpipe_pid: ", data.meshpipe_pid);
                 if ( data.meshpipe_pid != 0 ) {
                     document.getElementById("communication_channel").innerHTML="Meshtastic communication daemon running [" + data.meshpipe_pid +"]";
+                    document.querySelector('input[name="meshtasticRadio"][value="meshtastic"]').checked = true;
                 }
              }
              
@@ -2232,17 +2234,26 @@ function engine(code,read=0) {
 function saveSettingsForm() {
     
     callsign = document.getElementById("callsign").value;
-    
     selectElement = document.getElementById("gps-device-select");
     const gpsDevicePort = selectElement.options[selectElement.selectedIndex].text;
-    
     ircServerAddress = document.getElementById("ircTransportServerAddress").value;
-
     selectElement = document.getElementById("meshtastic-device-select");
     const meshtasticDevicePort = selectElement.options[selectElement.selectedIndex].text;
 
+    var messagingMedium;
+    const selected = document.querySelector('input[name="meshtasticRadio"]:checked');
+    if (selected) {
+      console.log(selected.value); // "meshtastic" or "irc"
+      messagingMedium=selected.value;
+    } else {
+      console.log("No option selected.");
+    }
+
+
+
+
     // Communicate new settings to listener.sh (engine.service)
-    engine_data = "settings_save," + callsign + "," + gpsDevicePort + "," + ircServerAddress + "," + meshtasticDevicePort;
+    engine_data = "settings_save," + callsign + "," + gpsDevicePort + "," + ircServerAddress + "," + meshtasticDevicePort + "," + messagingMedium;
     engine(engine_data);
     settingsClose();
     
