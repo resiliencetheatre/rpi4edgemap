@@ -2232,7 +2232,6 @@
                 if ( !isHidden(logDiv) ) closeMessageEntryBox();
                 if ( !isHidden(radiolistblockDiv) ) closeRadioList();
                 if ( !isHidden(reticulumListblockDiv) ) closeReticulumList();
-                settingsClose();
             }
             if (key === "h") {
                 if ( isHidden(logDiv) ) {
@@ -2280,6 +2279,11 @@
                     if ( !viewSyncMaster)
                         document.getElementById("euFlag").style.opacity = "0.5";
                 }
+            }
+        } else {
+            // Close settings with ESC even keyEventListener is masked
+            if (key === "Escape") {
+                settingsClose();
             }
             
         }
