@@ -253,15 +253,6 @@
             </td></tr>
             
             <tr class="table-header"><td colspan="2">Messaging</td></tr>
-            <!--
-            <tr>
-              <td>IRC transport</td>
-              <td class="radio-inline">
-                <label><input type="radio" name="ircTransport" value="on" /> On</label>
-                <label><input type="radio" name="ircTransport" value="off" /> Off</label>
-              </td>
-            </tr>
-            -->
             
             <tr>
               <td>Messaging</td>
@@ -272,25 +263,21 @@
             </tr>
             
             <tr valign="top"><td>IRC server</td><td><input type="text" id="ircTransportServerAddress" name="ircTransportServer" />
-            <span>[SERVER]:[PORT] (no TLS)</span>
+                <span>[SERVER]:[PORT] (no TLS)</span>
             </td></tr>
             
-            
             <tr><td>Meshtastic device</td><td>
-                    <span>Currently set port: </span> <span id="current_meshtastic_port"></span>
-                    <select name="localMeshtasticDevice" id="meshtastic-device-select" class="settings-select">
-                      <!-- Options will be dynamically inserted via JavaScript -->
-                    </select>
+                <span>Currently set port: </span> <span id="current_meshtastic_port"></span>
+                <select name="localMeshtasticDevice" id="meshtastic-device-select" class="settings-select">
+                  <!-- Options will be dynamically inserted via JavaScript -->
+                </select>
             </td></tr>
             
             <tr valign="top"><td>Status</td>
             <td>
-                <div id="communication_channel"></div>
+                <div id="communication_channel">[WAIT]</div>
             </td>
-            </tr>
-            
-            
-                
+            </tr>  
         </table>
 
         <div class="settings-buttons">
