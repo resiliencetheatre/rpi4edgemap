@@ -12,6 +12,32 @@ FIFO_PATH_FROM="/tmp/fromengine"
 mkfifo $FIFO_PATH_FROM
 chmod 777 $FIFO_PATH_FROM
 
+# macpipe.ini
+MACPIPE_INI_FILE="/opt/macsec/macpipe.ini"
+
+# Function to update or add a key in the [settings] section to macpipe.ini
+update_macpipe_ini() {
+  key="$1"
+  value="$2"
+  if grep -q "^$key=" "$MACPIPE_INI_FILE"; then
+    sed -i "s|^$key=.*|$key=$value|" "$MACPIPE_INI_FILE"
+  else
+    # Add after [settings] section
+    awk -v key="$key" -v value="$value" '
+      /^\[settings\]/ && !found {
+        print
+        print key "=" value
+        found = 1
+        next
+      }
+      { print }
+    ' "$MACPIPE_INI_FILE" > "$MACPIPE_INI_FILE.tmp" && mv "$MACPIPE_INI_FILE.tmp" "$MACPIPE_INI_FILE"
+  fi
+}
+
+
+
+
 echo "Listening for messages ( $FIFO_PATH )"
 while true; do
     if IFS= read -r line < "$FIFO_PATH"; then
@@ -54,6 +80,11 @@ while true; do
             IRC_SERVER_STRING=$(echo "$line" | cut -d',' -f4)
             MESHTASTIC_PORT=$(echo "$line" | cut -d',' -f5)
             MESSAGING_MEDIUM=$(echo "$line" | cut -d',' -f6)
+            MACSEC_ADDRESS=$(echo "$line" | cut -d',' -f7)
+            MACSEC_INTERFACE=$(echo "$line" | cut -d',' -f8)
+            MACSEC_SECRET=$(echo "$line" | cut -d',' -f9)
+            
+
             
             # echo "Message:         $first_item"
             # echo "callsign:        $CALLSIGN"
@@ -151,6 +182,12 @@ while true; do
                 systemctl start meshpipe.service wss-messaging.service 
                 systemctl enable meshpipe.service wss-messaging.service
             fi
+            
+            # set macpipe.ini
+            update_macpipe_ini "my_address" "$MACSEC_ADDRESS"
+            update_macpipe_ini "my_interface" "$MACSEC_INTERFACE"
+            update_macpipe_ini "shared_secret" "$MACSEC_SECRET"
+            systemctl restart macsec.service
         
         fi
 
@@ -216,13 +253,21 @@ while true; do
                         ;;
                 esac
             done < "$INI_FILE"
-            # read ircpipe.ini end
             
             IRCSERVER="$IRC_SERVER:$IRC_PORT"
+            # read ircpipe.ini end
             
-            # form json
-            message="{ \"callsign\": [\"$CALLSIGN\"], \"serials\":[$list], \"meshtastic_port\": [\"$MESHTASTIC_PORT\"], \"gps_port\": [\"$GPS_PORT\"], \"irc_server\": [\"$IRCSERVER\"], \"ircpipe_pid\": [\"$IRCPIPE_PID\"], \"meshpipe_pid\": [\"$MESHPIPE_PID\"] }"
-            # deliver json via FIFO pipe
+            
+            # Read /opt/macsec/macpipe.ini to settings UI             
+            MACSEC_ADDRESS=$(grep '^my_address=' "$MACPIPE_INI_FILE" | cut -d'=' -f2-)
+            MACSEC_INTERFACE=$(grep '^my_interface=' "$MACPIPE_INI_FILE" | cut -d'=' -f2-)
+            MACSEC_SECRET=$(grep '^shared_secret=' "$MACPIPE_INI_FILE" | cut -d'=' -f2-)
+            
+            
+            
+            # Form json
+            message="{ \"callsign\": [\"$CALLSIGN\"], \"serials\":[$list], \"meshtastic_port\": [\"$MESHTASTIC_PORT\"], \"gps_port\": [\"$GPS_PORT\"], \"irc_server\": [\"$IRCSERVER\"], \"ircpipe_pid\": [\"$IRCPIPE_PID\"], \"meshpipe_pid\": [\"$MESHPIPE_PID\"], \"macsec_address\": [\"$MACSEC_ADDRESS\"], \"macsec_interface\": [\"$MACSEC_INTERFACE\"], \"macsec_secret\": [\"$MACSEC_SECRET\"] }"
+            # Deliver json via FIFO pipe
             echo $message > /tmp/fromengine
         fi
         

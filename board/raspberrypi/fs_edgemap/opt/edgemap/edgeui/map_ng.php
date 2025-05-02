@@ -278,6 +278,14 @@
                 <div id="communication_channel">[WAIT]</div>
             </td>
             </tr>  
+            
+            <tr class="table-header"><td colspan="2">MACSEC (layer2 encryption)</td></tr>
+            <tr valign="top"><td>IP address</td><td><input type="text" id="macsecAddress" name="macsecAddressName" /></td></tr>
+            <tr valign="top"><td>Interface</td><td><input type="text" id="macsecInterface" name="macsecInterfaceName" /></td></tr>
+            <tr valign="top"><td>Shared secret</td><td><input type="text" id="macsecSecret" name="macsecSecretName" /></td></tr>
+            
+            
+            
         </table>
 
         <div class="settings-buttons">

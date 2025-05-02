@@ -2223,6 +2223,22 @@ function engine(code,read=0) {
              if (Array.isArray(data.meshtastic_port)) {
                  document.getElementById("current_meshtastic_port").innerHTML = data.meshtastic_port;
              }
+             
+             // macsec
+             if (Array.isArray(data.macsec_address)) {
+                 console.log("data.macsec_address ", data.macsec_address);
+                 document.getElementById("macsecAddress").value = data.macsec_address;
+             }
+             if (Array.isArray(data.macsec_interface)) {
+                 document.getElementById("macsecInterface").value = data.macsec_interface;
+             }
+             if (Array.isArray(data.macsec_secret)) {
+                 document.getElementById("macsecSecret").value = data.macsec_secret;
+             }
+             
+            
+             
+             
         } // if (read == 1) 
         
     })
@@ -2239,7 +2255,11 @@ function saveSettingsForm() {
     ircServerAddress = document.getElementById("ircTransportServerAddress").value;
     selectElement = document.getElementById("meshtastic-device-select");
     const meshtasticDevicePort = selectElement.options[selectElement.selectedIndex].text;
-
+    macsecAddress = document.getElementById("macsecAddress").value;
+    macsecInterface = document.getElementById("macsecInterface").value;
+    macsecSecret = document.getElementById("macsecSecret").value;
+    
+    
     var messagingMedium;
     const selected = document.querySelector('input[name="meshtasticRadio"]:checked');
     if (selected) {
@@ -2250,7 +2270,7 @@ function saveSettingsForm() {
     }
 
     // Communicate new settings to listener.sh (engine.service)
-    engine_data = "settings_save," + callsign + "," + gpsDevicePort + "," + ircServerAddress + "," + meshtasticDevicePort + "," + messagingMedium;
+    engine_data = "settings_save," + callsign + "," + gpsDevicePort + "," + ircServerAddress + "," + meshtasticDevicePort + "," + messagingMedium + "," + macsecAddress + "," + macsecInterface + "," + macsecSecret;
     engine(engine_data);
     settingsClose();
     
@@ -2632,6 +2652,9 @@ function settingsClose() {
     document.getElementById("current_meshtastic_port").innerHTML = "[WAIT]";
     document.getElementById("current_gps_port").innerHTML = "[WAIT]";
     document.getElementById("callsign").value = "[WAIT]";
+    document.getElementById("macsecAddress").value = "[WAIT]"; 
+    document.getElementById("macsecInterface").value = "[WAIT]"; 
+    document.getElementById("macsecSecret").value = "[WAIT]"; 
     keyEventListener=1;
 }
 
