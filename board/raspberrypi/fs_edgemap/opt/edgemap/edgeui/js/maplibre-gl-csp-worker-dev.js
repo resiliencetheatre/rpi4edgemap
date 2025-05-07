@@ -1,6 +1,6 @@
 /**
  * MapLibre GL JS
- * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.4.0/LICENSE.txt
+ * @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v5.5.0/LICENSE.txt
  */
 var maplibregl = (function () {
 'use strict';
@@ -9690,6 +9690,11 @@ var $root = {
 		"default": 0,
 		units: "degrees"
 	},
+	state: {
+		type: "state",
+		"default": {
+		}
+	},
 	light: {
 		type: "light"
 	},
@@ -12432,10 +12437,24 @@ var paint_raster = {
 };
 var paint_hillshade = {
 	"hillshade-illumination-direction": {
-		type: "number",
+		type: "numberArray",
 		"default": 335,
 		minimum: 0,
 		maximum: 359,
+		transition: false,
+		expression: {
+			interpolated: true,
+			parameters: [
+				"zoom"
+			]
+		},
+		"property-type": "data-constant"
+	},
+	"hillshade-illumination-altitude": {
+		type: "numberArray",
+		"default": 45,
+		minimum: 0,
+		maximum: 90,
 		transition: false,
 		expression: {
 			interpolated: true,
@@ -12477,7 +12496,7 @@ var paint_hillshade = {
 		"property-type": "data-constant"
 	},
 	"hillshade-shadow-color": {
-		type: "color",
+		type: "colorArray",
 		"default": "#000000",
 		transition: true,
 		expression: {
@@ -12489,7 +12508,7 @@ var paint_hillshade = {
 		"property-type": "data-constant"
 	},
 	"hillshade-highlight-color": {
-		type: "color",
+		type: "colorArray",
 		"default": "#FFFFFF",
 		transition: true,
 		expression: {
@@ -12506,6 +12525,29 @@ var paint_hillshade = {
 		transition: true,
 		expression: {
 			interpolated: true,
+			parameters: [
+				"zoom"
+			]
+		},
+		"property-type": "data-constant"
+	},
+	"hillshade-method": {
+		type: "enum",
+		values: {
+			standard: {
+			},
+			basic: {
+			},
+			combined: {
+			},
+			igor: {
+			},
+			multidirectional: {
+			}
+		},
+		"default": "standard",
+		expression: {
+			interpolated: false,
 			parameters: [
 				"zoom"
 			]
@@ -13134,6 +13176,9 @@ function diff(before, after) {
         if (!deepEqual(before.center, after.center)) {
             commands.push({ command: 'setCenter', args: [after.center] });
         }
+        if (!deepEqual(before.state, after.state)) {
+            commands.push({ command: 'setGlobalState', args: [after.state] });
+        }
         if (!deepEqual(before.centerAltitude, after.centerAltitude)) {
             commands.push({ command: 'setCenterAltitude', args: [after.centerAltitude] });
         }
@@ -13287,6 +13332,8 @@ const ErrorType = { kind: 'error' };
 const CollatorType = { kind: 'collator' };
 const FormattedType = { kind: 'formatted' };
 const PaddingType = { kind: 'padding' };
+const ColorArrayType = { kind: 'colorArray' };
+const NumberArrayType = { kind: 'numberArray' };
 const ResolvedImageType = { kind: 'resolvedImage' };
 const VariableAnchorOffsetCollectionType = { kind: 'variableAnchorOffsetCollection' };
 function array(itemType, N) {
@@ -13318,6 +13365,8 @@ const valueMemberTypes = [
     ObjectType,
     array(ValueType),
     PaddingType,
+    NumberArrayType,
+    ColorArrayType,
     ResolvedImageType,
     VariableAnchorOffsetCollectionType
 ];
@@ -13468,6 +13517,15 @@ function hslToRgb([h, s, l, alpha]) {
     return [f(0), f(8), f(4), alpha];
 }
 
+// polyfill for Object.hasOwn
+const hasOwnProperty = Object.hasOwn ||
+    function hasOwnProperty(object, key) {
+        return Object.prototype.hasOwnProperty.call(object, key);
+    };
+function getOwn(object, key) {
+    return hasOwnProperty(object, key) ? object[key] : undefined;
+}
+
 /**
  * CSS color parser compliant with CSS Color 4 Specification.
  * Supports: named colors, `transparent` keyword, all rgb hex notations,
@@ -13503,7 +13561,7 @@ function parseCssColor(input) {
         return [0, 0, 0, 0];
     }
     // 'white', 'black', 'blue'
-    const namedColorsMatch = namedColors[input];
+    const namedColorsMatch = getOwn(namedColors, input);
     if (namedColorsMatch) {
         const [r, g, b] = namedColorsMatch;
         return [r / 255, g / 255, b / 255, 1];
@@ -13952,7 +14010,7 @@ class Color {
                 }
                 const [r, g, b, alpha] = hclToRgb([
                     hue,
-                    chroma !== null && chroma !== undefined ? chroma : interpolateNumber(chroma0, chroma1, t),
+                    chroma !== null && chroma !== void 0 ? chroma : interpolateNumber(chroma0, chroma1, t),
                     interpolateNumber(light0, light1, t),
                     interpolateNumber(alphaF, alphaT, t),
                 ]);
@@ -14087,10 +14145,107 @@ class Padding {
     }
 }
 
-class RuntimeError {
+/**
+ * An array of numbers. Create instances from
+ * bare arrays or numeric values using the static method `NumberArray.parse`.
+ * @private
+ */
+class NumberArray {
+    constructor(values) {
+        this.values = values.slice();
+    }
+    /**
+     * Numeric NumberArray values
+     * @param input A NumberArray value
+     * @returns A `NumberArray` instance, or `undefined` if the input is not a valid NumberArray value.
+     */
+    static parse(input) {
+        if (input instanceof NumberArray) {
+            return input;
+        }
+        // Backwards compatibility (e.g. hillshade-illumination-direction): bare number is treated the same as array with single value.
+        if (typeof input === 'number') {
+            return new NumberArray([input]);
+        }
+        if (!Array.isArray(input)) {
+            return undefined;
+        }
+        for (const val of input) {
+            if (typeof val !== 'number') {
+                return undefined;
+            }
+        }
+        return new NumberArray(input);
+    }
+    toString() {
+        return JSON.stringify(this.values);
+    }
+    static interpolate(from, to, t) {
+        return new NumberArray(interpolateArray(from.values, to.values, t));
+    }
+}
+
+/**
+ * An array of colors. Create instances from
+ * bare arrays or strings using the static method `ColorArray.parse`.
+ * @private
+ */
+class ColorArray {
+    constructor(values) {
+        this.values = values.slice();
+    }
+    /**
+     * ColorArray values
+     * @param input A ColorArray value
+     * @returns A `ColorArray` instance, or `undefined` if the input is not a valid ColorArray value.
+     */
+    static parse(input) {
+        if (input instanceof ColorArray) {
+            return input;
+        }
+        // Backwards compatibility (e.g. hillshade-shadow-color): bare Color is treated the same as array with single value.
+        if (typeof input === 'string') {
+            const parsed_val = Color.parse(input);
+            if (!parsed_val) {
+                return undefined;
+            }
+            return new ColorArray([parsed_val]);
+        }
+        if (!Array.isArray(input)) {
+            return undefined;
+        }
+        const colors = [];
+        for (const val of input) {
+            if (typeof val !== 'string') {
+                return undefined;
+            }
+            const parsed_val = Color.parse(val);
+            if (!parsed_val) {
+                return undefined;
+            }
+            colors.push(parsed_val);
+        }
+        return new ColorArray(colors);
+    }
+    toString() {
+        return JSON.stringify(this.values);
+    }
+    static interpolate(from, to, t, spaceKey = 'rgb') {
+        const colors = [];
+        if (from.values.length != to.values.length) {
+            throw new Error(`colorArray: Arrays have mismatched length (${from.values.length} vs. ${to.values.length}), cannot interpolate.`);
+        }
+        for (let i = 0; i < from.values.length; i++) {
+            colors.push(Color.interpolate(from.values[i], to.values[i], t, spaceKey));
+        }
+        return new ColorArray(colors);
+    }
+}
+
+class RuntimeError extends Error {
     constructor(message) {
-        this.name = 'ExpressionEvaluationError';
-        this.message = message;
+        super(message);
+        this.name = 'RuntimeError';
     }
     toJSON() {
         return this.message;
@@ -14218,6 +14373,8 @@ function isValue(mixed) {
         mixed instanceof Collator ||
         mixed instanceof Formatted ||
         mixed instanceof Padding ||
+        mixed instanceof NumberArray ||
+        mixed instanceof ColorArray ||
         mixed instanceof VariableAnchorOffsetCollection ||
         mixed instanceof ResolvedImage) {
         return true;
@@ -14270,6 +14427,12 @@ function typeOf(value) {
     else if (value instanceof Padding) {
         return PaddingType;
     }
+    else if (value instanceof NumberArray) {
+        return NumberArrayType;
+    }
+    else if (value instanceof ColorArray) {
+        return ColorArrayType;
+    }
     else if (value instanceof VariableAnchorOffsetCollection) {
         return VariableAnchorOffsetCollectionType;
     }
@@ -14306,7 +14469,7 @@ function valueToString(value) {
     else if (type === 'string' || type === 'number' || type === 'boolean') {
         return String(value);
     }
-    else if (value instanceof Color || value instanceof ProjectionDefinition || value instanceof Formatted || value instanceof Padding || value instanceof VariableAnchorOffsetCollection || value instanceof ResolvedImage) {
+    else if (value instanceof Color || value instanceof ProjectionDefinition || value instanceof Formatted || value instanceof Padding || value instanceof NumberArray || value instanceof ColorArray || value instanceof VariableAnchorOffsetCollection || value instanceof ResolvedImage) {
         return value.toString();
     }
     else {
@@ -14502,6 +14665,28 @@ class Coercion {
                 }
                 throw new RuntimeError(`Could not parse padding from value '${typeof input === 'string' ? input : JSON.stringify(input)}'`);
             }
+            case 'numberArray': {
+                let input;
+                for (const arg of this.args) {
+                    input = arg.evaluate(ctx);
+                    const val = NumberArray.parse(input);
+                    if (val) {
+                        return val;
+                    }
+                }
+                throw new RuntimeError(`Could not parse numberArray from value '${typeof input === 'string' ? input : JSON.stringify(input)}'`);
+            }
+            case 'colorArray': {
+                let input;
+                for (const arg of this.args) {
+                    input = arg.evaluate(ctx);
+                    const val = ColorArray.parse(input);
+                    if (val) {
+                        return val;
+                    }
+                }
+                throw new RuntimeError(`Could not parse colorArray from value '${typeof input === 'string' ? input : JSON.stringify(input)}'`);
+            }
             case 'variableAnchorOffsetCollection': {
                 let input;
                 for (const arg of this.args) {
@@ -14553,7 +14738,7 @@ class EvaluationContext {
         this.feature = null;
         this.featureState = null;
         this.formattedSection = null;
-        this._parseColorCache = {};
+        this._parseColorCache = new Map();
         this.availableImages = null;
         this.canonical = null;
     }
@@ -14573,9 +14758,10 @@ class EvaluationContext {
         return this.feature && this.feature.properties || {};
     }
     parseColor(input) {
-        let cached = this._parseColorCache[input];
+        let cached = this._parseColorCache.get(input);
         if (!cached) {
-            cached = this._parseColorCache[input] = Color.parse(input);
+            cached = Color.parse(input);
+            this._parseColorCache.set(input, cached);
         }
         return cached;
     }
@@ -14651,16 +14837,11 @@ class ParsingContext {
                     if ((expected.kind === 'string' || expected.kind === 'number' || expected.kind === 'boolean' || expected.kind === 'object' || expected.kind === 'array') && actual.kind === 'value') {
                         parsed = annotate(parsed, expected, options.typeAnnotation || 'assert');
                     }
-                    else if ((expected.kind === 'projectionDefinition') && (actual.kind === 'string' || actual.kind === 'array')) {
-                        parsed = annotate(parsed, expected, options.typeAnnotation || 'coerce');
-                    }
-                    else if ((expected.kind === 'color' || expected.kind === 'formatted' || expected.kind === 'resolvedImage') && (actual.kind === 'value' || actual.kind === 'string')) {
-                        parsed = annotate(parsed, expected, options.typeAnnotation || 'coerce');
-                    }
-                    else if (expected.kind === 'padding' && (actual.kind === 'value' || actual.kind === 'number' || actual.kind === 'array')) {
-                        parsed = annotate(parsed, expected, options.typeAnnotation || 'coerce');
-                    }
-                    else if (expected.kind === 'variableAnchorOffsetCollection' && (actual.kind === 'value' || actual.kind === 'array')) {
+                    else if (('projectionDefinition' === expected.kind && ['string', 'array'].includes(actual.kind)) ||
+                        ((['color', 'formatted', 'resolvedImage'].includes(expected.kind)) && ['value', 'string'].includes(actual.kind)) ||
+                        ((['padding', 'numberArray'].includes(expected.kind)) && ['value', 'number', 'array'].includes(actual.kind)) ||
+                        ('colorArray' === expected.kind && ['value', 'string', 'array'].includes(actual.kind)) ||
+                        ('variableAnchorOffsetCollection' === expected.kind && ['value', 'array'].includes(actual.kind))) {
                         parsed = annotate(parsed, expected, options.typeAnnotation || 'coerce');
                     }
                     else if (this.checkSubtype(expected, actual)) {
@@ -15408,7 +15589,7 @@ class Interpolate {
             return null;
         const stops = [];
         let outputType = null;
-        if (operator === 'interpolate-hcl' || operator === 'interpolate-lab') {
+        if ((operator === 'interpolate-hcl' || operator === 'interpolate-lab') && context.expectedType != ColorArrayType) {
             outputType = ColorType;
         }
         else if (context.expectedType && context.expectedType.kind !== 'value') {
@@ -15435,6 +15616,8 @@ class Interpolate {
             !verifyType(outputType, ProjectionDefinitionType) &&
             !verifyType(outputType, ColorType) &&
             !verifyType(outputType, PaddingType) &&
+            !verifyType(outputType, NumberArrayType) &&
+            !verifyType(outputType, ColorArrayType) &&
             !verifyType(outputType, VariableAnchorOffsetCollectionType) &&
             !verifyType(outputType, array(NumberType))) {
             return context.error(`Type ${typeToString(outputType)} is not interpolatable.`);
@@ -15470,6 +15653,10 @@ class Interpolate {
                         return Color.interpolate(outputLower, outputUpper, t);
                     case 'padding':
                         return Padding.interpolate(outputLower, outputUpper, t);
+                    case 'colorArray':
+                        return ColorArray.interpolate(outputLower, outputUpper, t);
+                    case 'numberArray':
+                        return NumberArray.interpolate(outputLower, outputUpper, t);
                     case 'variableAnchorOffsetCollection':
                         return VariableAnchorOffsetCollection.interpolate(outputLower, outputUpper, t);
                     case 'array':
@@ -15478,9 +15665,19 @@ class Interpolate {
                         return ProjectionDefinition.interpolate(outputLower, outputUpper, t);
                 }
             case 'interpolate-hcl':
-                return Color.interpolate(outputLower, outputUpper, t, 'hcl');
+                switch (this.type.kind) {
+                    case 'color':
+                        return Color.interpolate(outputLower, outputUpper, t, 'hcl');
+                    case 'colorArray':
+                        return ColorArray.interpolate(outputLower, outputUpper, t, 'hcl');
+                }
             case 'interpolate-lab':
-                return Color.interpolate(outputLower, outputUpper, t, 'lab');
+                switch (this.type.kind) {
+                    case 'color':
+                        return Color.interpolate(outputLower, outputUpper, t, 'lab');
+                    case 'colorArray':
+                        return ColorArray.interpolate(outputLower, outputUpper, t, 'lab');
+                }
         }
     }
     eachChild(fn) {
@@ -15545,6 +15742,8 @@ const interpolateFactory = {
     color: Color.interpolate,
     number: interpolateNumber,
     padding: Padding.interpolate,
+    numberArray: NumberArray.interpolate,
+    colorArray: ColorArray.interpolate,
     variableAnchorOffsetCollection: VariableAnchorOffsetCollection.interpolate,
     array: interpolateArray
 };
@@ -17161,6 +17360,37 @@ class Distance {
     }
 }
 
+class GlobalState {
+    constructor(key) {
+        this.type = ValueType;
+        this.key = key;
+    }
+    static parse(args, context) {
+        if (args.length !== 2) {
+            return context.error(`Expected 1 argument, but found ${args.length - 1} instead.`);
+        }
+        const key = args[1];
+        if (key === undefined || key === null) {
+            return context.error('Global state property must be defined.');
+        }
+        if (typeof key !== 'string') {
+            return context.error(`Global state property must be string, but found ${typeof args[1]} instead.`);
+        }
+        return new GlobalState(key);
+    }
+    evaluate(ctx) {
+        var _a;
+        const globalState = (_a = ctx.globals) === null || _a === void 0 ? void 0 : _a.globalState;
+        if (!globalState || Object.keys(globalState).length === 0)
+            return null;
+        return getOwn(globalState, this.key);
+    }
+    eachChild() { }
+    outputDefined() {
+        return false;
+    }
+}
+
 const expressions$1 = {
     // special forms
     '==': Equals,
@@ -17198,7 +17428,8 @@ const expressions$1 = {
     'to-string': Coercion,
     'var': Var,
     'within': Within,
-    'distance': Distance
+    'distance': Distance,
+    'global-state': GlobalState
 };
 
 class CompoundExpression {
@@ -17798,6 +18029,9 @@ function isExpressionConstant(expression) {
     else if (expression instanceof Distance) {
         return false;
     }
+    else if (expression instanceof GlobalState) {
+        return false;
+    }
     const isTypeAnnotation = expression instanceof Coercion ||
         expression instanceof Assertion;
     let childrenConstant = true;
@@ -17921,19 +18155,46 @@ function getType(val) {
 }
 
 function isFunction$1(value) {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
+    return typeof value === 'object' && value !== null && !Array.isArray(value) && typeOf(value) === ObjectType;
 }
 function identityFunction(x) {
     return x;
 }
+function getParseFunction(propertySpec) {
+    switch (propertySpec.type) {
+        case 'color':
+            return Color.parse;
+        case 'padding':
+            return Padding.parse;
+        case 'numberArray':
+            return NumberArray.parse;
+        case 'colorArray':
+            return ColorArray.parse;
+        default:
+            return null;
+    }
+}
+function getInnerFunction(type) {
+    switch (type) {
+        case 'exponential':
+            return evaluateExponentialFunction;
+        case 'interval':
+            return evaluateIntervalFunction;
+        case 'categorical':
+            return evaluateCategoricalFunction;
+        case 'identity':
+            return evaluateIdentityFunction;
+        default:
+            throw new Error(`Unknown function type "${type}"`);
+    }
+}
 function createFunction(parameters, propertySpec) {
-    const isColor = propertySpec.type === 'color';
     const zoomAndFeatureDependent = parameters.stops && typeof parameters.stops[0][0] === 'object';
     const featureDependent = zoomAndFeatureDependent || parameters.property !== undefined;
     const zoomDependent = zoomAndFeatureDependent || !featureDependent;
     const type = parameters.type || (supportsInterpolation(propertySpec) ? 'exponential' : 'interval');
-    if (isColor || propertySpec.type === 'padding') {
-        const parseFn = isColor ? Color.parse : Padding.parse;
+    const parseFn = getParseFunction(propertySpec);
+    if (parseFn) {
         parameters = extendBy({}, parameters);
         if (parameters.stops) {
             parameters.stops = parameters.stops.map((stop) => {
@@ -17950,17 +18211,10 @@ function createFunction(parameters, propertySpec) {
     if (parameters.colorSpace && !isSupportedInterpolationColorSpace(parameters.colorSpace)) {
         throw new Error(`Unknown color space: "${parameters.colorSpace}"`);
     }
-    let innerFun;
+    const innerFun = getInnerFunction(type);
     let hashedStops;
     let categoricalKeyType;
-    if (type === 'exponential') {
-        innerFun = evaluateExponentialFunction;
-    }
-    else if (type === 'interval') {
-        innerFun = evaluateIntervalFunction;
-    }
-    else if (type === 'categorical') {
-        innerFun = evaluateCategoricalFunction;
+    if (type === 'categorical') {
         // For categorical functions, generate an Object as a hashmap of the stops for fast searching
         hashedStops = Object.create(null);
         for (const stop of parameters.stops) {
@@ -17968,12 +18222,6 @@ function createFunction(parameters, propertySpec) {
         }
         // Infer key type based on first stop key-- used to encforce strict type checking later
         categoricalKeyType = typeof parameters.stops[0][0];
-    }
-    else if (type === 'identity') {
-        innerFun = evaluateIdentityFunction;
-    }
-    else {
-        throw new Error(`Unknown function type "${type}"`);
     }
     if (zoomAndFeatureDependent) {
         const featureFunctions = {};
@@ -18106,6 +18354,12 @@ function evaluateIdentityFunction(parameters, propertySpec, input) {
             break;
         case 'padding':
             input = Padding.parse(input);
+            break;
+        case 'colorArray':
+            input = ColorArray.parse(input);
+            break;
+        case 'numberArray':
+            input = NumberArray.parse(input);
             break;
         default:
             if (getType(input) !== propertySpec.type && (propertySpec.type !== 'enum' || !propertySpec.values[input])) {
@@ -18344,6 +18598,12 @@ function normalizePropertyExpression(value, specification) {
         else if (specification.type === 'padding' && (typeof value === 'number' || Array.isArray(value))) {
             constant = Padding.parse(value);
         }
+        else if (specification.type === 'numberArray' && (typeof value === 'number' || Array.isArray(value))) {
+            constant = NumberArray.parse(value);
+        }
+        else if (specification.type === 'colorArray' && (typeof value === 'string' || Array.isArray(value))) {
+            constant = ColorArray.parse(value);
+        }
         else if (specification.type === 'variableAnchorOffsetCollection' && Array.isArray(value)) {
             constant = VariableAnchorOffsetCollection.parse(value);
         }
@@ -18403,6 +18663,8 @@ function getExpectedType(spec) {
         boolean: BooleanType,
         formatted: FormattedType,
         padding: PaddingType,
+        numberArray: NumberArrayType,
+        colorArray: ColorArrayType,
         projectionDefinition: ProjectionDefinitionType,
         resolvedImage: ResolvedImageType,
         variableAnchorOffsetCollection: VariableAnchorOffsetCollectionType
@@ -18419,23 +18681,21 @@ function getDefaultValue(spec) {
         // back to in case of runtime errors
         return new Color(0, 0, 0, 0);
     }
-    else if (spec.type === 'color') {
-        return Color.parse(spec.default) || null;
-    }
-    else if (spec.type === 'padding') {
-        return Padding.parse(spec.default) || null;
-    }
-    else if (spec.type === 'variableAnchorOffsetCollection') {
-        return VariableAnchorOffsetCollection.parse(spec.default) || null;
-    }
-    else if (spec.type === 'projectionDefinition') {
-        return ProjectionDefinition.parse(spec.default) || null;
-    }
-    else if (spec.default === undefined) {
-        return null;
-    }
-    else {
-        return spec.default;
+    switch (spec.type) {
+        case 'color':
+            return Color.parse(spec.default) || null;
+        case 'padding':
+            return Padding.parse(spec.default) || null;
+        case 'numberArray':
+            return NumberArray.parse(spec.default) || null;
+        case 'colorArray':
+            return ColorArray.parse(spec.default) || null;
+        case 'variableAnchorOffsetCollection':
+            return VariableAnchorOffsetCollection.parse(spec.default) || null;
+        case 'projectionDefinition':
+            return ProjectionDefinition.parse(spec.default) || null;
+        default:
+            return (spec.default === undefined ? null : spec.default);
     }
 }
 
@@ -19226,12 +19486,13 @@ function validateObject(options) {
     }
     for (const objectKey in object) {
         const elementSpecKey = objectKey.split('.')[0]; // treat 'paint.*' as 'paint'
-        const elementSpec = elementSpecs[elementSpecKey] || elementSpecs['*'];
+        // objectKey comes from the user controlled style input, so elementSpecKey may be e.g. "__proto__"
+        const elementSpec = getOwn(elementSpecs, elementSpecKey) || elementSpecs['*'];
         let validateElement;
-        if (elementValidators[elementSpecKey]) {
+        if (getOwn(elementValidators, elementSpecKey)) {
             validateElement = elementValidators[elementSpecKey];
         }
-        else if (elementSpecs[elementSpecKey]) {
+        else if (getOwn(elementSpecs, elementSpecKey)) {
             validateElement = validateSpec;
         }
         else if (elementValidators['*']) {
@@ -19437,7 +19698,6 @@ function validateFunction(options) {
             errors = errors.concat(validateStopDomainValue({
                 key: `${key}[0]`,
                 value: value[0],
-                valueSpec: {},
                 validateSpec: options.validateSpec,
                 style: options.style,
                 styleSpec: options.styleSpec
@@ -19734,6 +19994,9 @@ function validateLayer(options) {
     const key = options.key;
     const style = options.style;
     const styleSpec = options.styleSpec;
+    if (getType(layer) !== 'object') {
+        return [new ValidationError(key, layer, `object expected, ${getType(layer)} found`)];
+    }
     if (!layer.type && !layer.ref) {
         errors.push(new ValidationError(key, layer, 'either "type" or "ref" is required'));
     }
@@ -19873,7 +20136,7 @@ function validateString(options) {
 
 function validateRasterDEMSource(options) {
     var _a;
-    const sourceName = (_a = options.sourceName) !== null && _a !== undefined ? _a : '';
+    const sourceName = (_a = options.sourceName) !== null && _a !== void 0 ? _a : '';
     const rasterDEM = options.value;
     const styleSpec = options.styleSpec;
     const rasterDEMSpec = styleSpec.source_raster_dem;
@@ -19965,13 +20228,11 @@ function validateSource$1(options) {
                     errors.push(...validateExpression({
                         key: `${key}.${prop}.map`,
                         value: mapExpr,
-                        validateSpec,
                         expressionContext: 'cluster-map'
                     }));
                     errors.push(...validateExpression({
                         key: `${key}.${prop}.reduce`,
                         value: reduceExpr,
-                        validateSpec,
                         expressionContext: 'cluster-reduce'
                     }));
                 }
@@ -20001,11 +20262,7 @@ function validateSource$1(options) {
             return validateEnum({
                 key: `${key}.type`,
                 value: value.type,
-                valueSpec: { values: ['vector', 'raster', 'raster-dem', 'geojson', 'video', 'image'] },
-                style,
-                validateSpec,
-                styleSpec
-            });
+                valueSpec: { values: ['vector', 'raster', 'raster-dem', 'geojson', 'video', 'image'] }});
     }
 }
 function validatePromoteId({ key, value }) {
@@ -20171,6 +20428,60 @@ function validatePadding(options) {
     }
 }
 
+function validateNumberArray(options) {
+    const key = options.key;
+    const value = options.value;
+    const type = getType(value);
+    if (type === 'array') {
+        const arrayElementSpec = {
+            type: 'number'
+        };
+        if (value.length < 1) {
+            return [new ValidationError(key, value, 'array length at least 1 expected, length 0 found')];
+        }
+        let errors = [];
+        for (let i = 0; i < value.length; i++) {
+            errors = errors.concat(options.validateSpec({
+                key: `${key}[${i}]`,
+                value: value[i],
+                validateSpec: options.validateSpec,
+                valueSpec: arrayElementSpec
+            }));
+        }
+        return errors;
+    }
+    else {
+        return validateNumber({
+            key,
+            value,
+            valueSpec: {}
+        });
+    }
+}
+
+function validateColorArray(options) {
+    const key = options.key;
+    const value = options.value;
+    const type = getType(value);
+    if (type === 'array') {
+        if (value.length < 1) {
+            return [new ValidationError(key, value, 'array length at least 1 expected, length 0 found')];
+        }
+        let errors = [];
+        for (let i = 0; i < value.length; i++) {
+            errors = errors.concat(validateColor({
+                key: `${key}[${i}]`,
+                value: value[i]}));
+        }
+        return errors;
+    }
+    else {
+        return validateColor({
+            key,
+            value});
+    }
+}
+
 function validateVariableAnchorOffsetCollection(options) {
     const key = options.key;
     const value = options.value;
@@ -20301,6 +20612,19 @@ function isProjectionDefinitionValue(value) {
         typeof value[2] === 'number';
 }
 
+function isObjectLiteral(anything) {
+    return Boolean(anything) && anything.constructor === Object;
+}
+
+function validateState(options) {
+    if (!isObjectLiteral(options.value)) {
+        return [
+            new ValidationError(options.key, options.value, `object expected, ${getType(options.value)} found`),
+        ];
+    }
+    return [];
+}
+
 const VALIDATORS = {
     '*'() {
         return [];
@@ -20325,8 +20649,11 @@ const VALIDATORS = {
     'formatted': validateFormatted,
     'resolvedImage': validateImage,
     'padding': validatePadding,
+    'numberArray': validateNumberArray,
+    'colorArray': validateColorArray,
     'variableAnchorOffsetCollection': validateVariableAnchorOffsetCollection,
     'sprite': validateSprite,
+    'state': validateState
 };
 /**
  * Main recursive validation function used internally.
@@ -20412,11 +20739,7 @@ function validateStyleMin(style, styleSpec = v8Spec) {
     if (style['constants']) {
         errors = errors.concat(validateConstants({
             key: 'constants',
-            value: style['constants'],
-            style,
-            styleSpec,
-            validateSpec: validate,
-        }));
+            value: style['constants']}));
     }
     return sortErrors(errors);
 }
@@ -20426,6 +20749,7 @@ validateStyleMin.glyphs = wrapCleanErrors(injectValidateSpec(validateGlyphsUrl))
 validateStyleMin.light = wrapCleanErrors(injectValidateSpec(validateLight$1));
 validateStyleMin.sky = wrapCleanErrors(injectValidateSpec(validateSky$1));
 validateStyleMin.terrain = wrapCleanErrors(injectValidateSpec(validateTerrain$1));
+validateStyleMin.state = wrapCleanErrors(injectValidateSpec(validateState));
 validateStyleMin.layer = wrapCleanErrors(injectValidateSpec(validateLayer));
 validateStyleMin.filter = wrapCleanErrors(injectValidateSpec(validateFilter$1));
 validateStyleMin.paintProperty = wrapCleanErrors(injectValidateSpec(validatePaintProperty$1));
@@ -24772,6 +25096,38 @@ class UniformColor extends Uniform {
         }
     }
 }
+class UniformColorArray extends Uniform {
+    constructor(context, location) {
+        super(context, location);
+        this.current = new Array();
+    }
+    set(v) {
+        if (v != this.current) {
+            this.current = v;
+            const values = new Float32Array(v.length * 4);
+            for (let i = 0; i < v.length; i++) {
+                values[4 * i] = v[i].r;
+                values[4 * i + 1] = v[i].g;
+                values[4 * i + 2] = v[i].b;
+                values[4 * i + 3] = v[i].a;
+            }
+            this.gl.uniform4fv(this.location, values);
+        }
+    }
+}
+class UniformFloatArray extends Uniform {
+    constructor(context, location) {
+        super(context, location);
+        this.current = new Array();
+    }
+    set(v) {
+        if (v != this.current) {
+            this.current = v;
+            const values = new Float32Array(v);
+            this.gl.uniform1fv(this.location, values);
+        }
+    }
+}
 const emptyMat4 = new Float32Array(16);
 class UniformMatrix4f extends Uniform {
     constructor(context, location) {
@@ -26043,11 +26399,13 @@ class HeatmapStyleLayer extends StyleLayer {
 let paint$6;
 const getPaint$6 = () => paint$6 = paint$6 || new Properties({
     "hillshade-illumination-direction": new DataConstantProperty(v8Spec["paint_hillshade"]["hillshade-illumination-direction"]),
+    "hillshade-illumination-altitude": new DataConstantProperty(v8Spec["paint_hillshade"]["hillshade-illumination-altitude"]),
     "hillshade-illumination-anchor": new DataConstantProperty(v8Spec["paint_hillshade"]["hillshade-illumination-anchor"]),
     "hillshade-exaggeration": new DataConstantProperty(v8Spec["paint_hillshade"]["hillshade-exaggeration"]),
     "hillshade-shadow-color": new DataConstantProperty(v8Spec["paint_hillshade"]["hillshade-shadow-color"]),
     "hillshade-highlight-color": new DataConstantProperty(v8Spec["paint_hillshade"]["hillshade-highlight-color"]),
     "hillshade-accent-color": new DataConstantProperty(v8Spec["paint_hillshade"]["hillshade-accent-color"]),
+    "hillshade-method": new DataConstantProperty(v8Spec["paint_hillshade"]["hillshade-method"]),
 });
 var properties$6 = ({ get paint() { return getPaint$6(); } });
 
@@ -26055,6 +26413,22 @@ const isHillshadeStyleLayer = (layer) => layer.type === 'hillshade';
 class HillshadeStyleLayer extends StyleLayer {
     constructor(layer) {
         super(layer, properties$6);
+        this.recalculate({ zoom: 0, zoomHistory: {} }, undefined);
+    }
+    getIlluminationProperties() {
+        let direction = this.paint.get('hillshade-illumination-direction').values;
+        let altitude = this.paint.get('hillshade-illumination-altitude').values;
+        let highlightColor = this.paint.get('hillshade-highlight-color').values;
+        let shadowColor = this.paint.get('hillshade-shadow-color').values;
+        // ensure all illumination properties have the same length
+        const numIlluminationSources = Math.max(direction.length, altitude.length, highlightColor.length, shadowColor.length);
+        direction = direction.concat(Array(numIlluminationSources - direction.length).fill(direction.at(-1)));
+        altitude = altitude.concat(Array(numIlluminationSources - altitude.length).fill(altitude.at(-1)));
+        highlightColor = highlightColor.concat(Array(numIlluminationSources - highlightColor.length).fill(highlightColor.at(-1)));
+        shadowColor = shadowColor.concat(Array(numIlluminationSources - shadowColor.length).fill(shadowColor.at(-1)));
+        const altitudeRadians = altitude.map(degreesToRadians);
+        const directionRadians = direction.map(degreesToRadians);
+        return { directionRadians, altitudeRadians, shadowColor, highlightColor };
     }
     hasOffscreenPass() {
         return this.paint.get('hillshade-exaggeration') !== 0 && this.visibility !== 'none';

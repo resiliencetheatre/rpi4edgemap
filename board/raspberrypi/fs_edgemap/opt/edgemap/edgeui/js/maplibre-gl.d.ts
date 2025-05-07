@@ -3,7 +3,7 @@
 import Point from '@mapbox/point-geometry';
 import TinySDF from '@mapbox/tiny-sdf';
 import { VectorTileFeature, VectorTileLayer } from '@mapbox/vector-tile';
-import { Color, CompositeExpression, DiffCommand, DiffOperations, Feature, FeatureFilter, FeatureState, FilterSpecification, Formatted, FormattedSection, GeoJSONSourceSpecification, GlobalProperties, ICanonicalTileID, IMercatorCoordinate, ImageSourceSpecification, InterpolationType, LayerSpecification, LightSpecification, Padding, ProjectionSpecification, PromoteIdSpecification, PropertyValueSpecification, RasterDEMSourceSpecification, RasterSourceSpecification, ResolvedImage, SkySpecification, SourceExpression, SourceSpecification, SpriteSpecification, StylePropertyExpression, StylePropertySpecification, StyleSpecification, TerrainSpecification, TransitionSpecification, VariableAnchorOffsetCollection, VectorSourceSpecification, VideoSourceSpecification } from '@maplibre/maplibre-gl-style-spec';
+import { Color, ColorArray, CompositeExpression, DiffCommand, DiffOperations, Feature, FeatureFilter, FeatureState, FilterSpecification, Formatted, FormattedSection, GeoJSONSourceSpecification, GlobalProperties, ICanonicalTileID, IMercatorCoordinate, ImageSourceSpecification, InterpolationType, LayerSpecification, LightSpecification, NumberArray, Padding, ProjectionSpecification, PromoteIdSpecification, PropertyValueSpecification, RasterDEMSourceSpecification, RasterSourceSpecification, ResolvedImage, SkySpecification, SourceExpression, SourceSpecification, SpriteSpecification, StylePropertyExpression, StylePropertySpecification, StyleSpecification, TerrainSpecification, TransitionSpecification, VariableAnchorOffsetCollection, VectorSourceSpecification, VideoSourceSpecification } from '@maplibre/maplibre-gl-style-spec';
 import { Options as GeoJSONVTOptions } from 'geojson-vt';
 import { mat2, mat4, vec3, vec4 } from 'gl-matrix';
 import KDBush from 'kdbush';
@@ -2758,6 +2758,10 @@ declare class SourceCache extends Evented {
 	_addTile(tileID: OverscaledTileID): Tile;
 	_setTileReloadTimer(id: string, tile: Tile): void;
 	/**
+	 * Reload any currently renderable tiles that are match one of the incoming `tileId` x/y/z
+	 */
+	refreshTiles(tileIds: Array<ICanonicalTileID>): void;
+	/**
 	 * Remove a tile, given its id, from the pyramid
 	 */
 	_removeTile(id: string): void;
@@ -3646,12 +3650,12 @@ declare class Painter {
 	 * Finds the required shader and its variant (base/terrain/globe, etc.) and binds it, compiling a new shader if required.
 	 * @param name - Name of the desired shader.
 	 * @param programConfiguration - Configuration of shader's inputs.
-	 * @param defines - Additional macros to be injected at the beginning of the shader. Expected format is `['#define XYZ']`, etc.
 	 * @param forceSimpleProjection - Whether to force the use of a shader variant with simple mercator projection vertex shader.
+	 * @param defines - Additional macros to be injected at the beginning of the shader. Expected format is `['#define XYZ']`, etc.
 	 * False by default. Use true when drawing with a simple projection matrix is desired, eg. when drawing a fullscreen quad.
 	 * @returns
 	 */
-	useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection?: boolean): Program<any>;
+	useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection?: boolean, defines?: Array<string>): Program<any>;
 	setCustomLayerDefaults(): void;
 	setBaseState(): void;
 	initDebugOverlayCanvas(): void;
@@ -5516,26 +5520,36 @@ declare class FillExtrusionStyleLayer extends StyleLayer {
 	queryIntersectsFeature({ queryGeometry, feature, featureState, geometry, transform, pixelsToTileUnits, pixelPosMatrix }: QueryIntersectsFeatureParams): boolean | number;
 }
 export type HillshadePaintProps = {
-	"hillshade-illumination-direction": DataConstantProperty<number>;
+	"hillshade-illumination-direction": DataConstantProperty<NumberArray>;
+	"hillshade-illumination-altitude": DataConstantProperty<NumberArray>;
 	"hillshade-illumination-anchor": DataConstantProperty<"map" | "viewport">;
 	"hillshade-exaggeration": DataConstantProperty<number>;
-	"hillshade-shadow-color": DataConstantProperty<Color>;
-	"hillshade-highlight-color": DataConstantProperty<Color>;
+	"hillshade-shadow-color": DataConstantProperty<ColorArray>;
+	"hillshade-highlight-color": DataConstantProperty<ColorArray>;
 	"hillshade-accent-color": DataConstantProperty<Color>;
+	"hillshade-method": DataConstantProperty<"standard" | "basic" | "combined" | "igor" | "multidirectional">;
 };
 export type HillshadePaintPropsPossiblyEvaluated = {
-	"hillshade-illumination-direction": number;
+	"hillshade-illumination-direction": NumberArray;
+	"hillshade-illumination-altitude": NumberArray;
 	"hillshade-illumination-anchor": "map" | "viewport";
 	"hillshade-exaggeration": number;
-	"hillshade-shadow-color": Color;
-	"hillshade-highlight-color": Color;
+	"hillshade-shadow-color": ColorArray;
+	"hillshade-highlight-color": ColorArray;
 	"hillshade-accent-color": Color;
+	"hillshade-method": "standard" | "basic" | "combined" | "igor" | "multidirectional";
 };
 declare class HillshadeStyleLayer extends StyleLayer {
 	_transitionablePaint: Transitionable<HillshadePaintProps>;
 	_transitioningPaint: Transitioning<HillshadePaintProps>;
 	paint: PossiblyEvaluated<HillshadePaintProps, HillshadePaintPropsPossiblyEvaluated>;
 	constructor(layer: LayerSpecification);
+	getIlluminationProperties(): {
+		directionRadians: number[];
+		altitudeRadians: number[];
+		shadowColor: Color[];
+		highlightColor: Color[];
+	};
 	hasOffscreenPass(): boolean;
 }
 export type LineClips = {
@@ -5850,7 +5864,7 @@ declare class Program<Us extends UniformBindings> {
 	projectionUniforms: ProjectionPreludeUniformsType;
 	binderUniforms: Array<BinderUniform>;
 	failedToCreate: boolean;
-	constructor(context: Context, source: PreparedShader, configuration: ProgramConfiguration, fixedUniforms: (b: Context, a: UniformLocations) => Us, showOverdrawInspector: boolean, hasTerrain: boolean, projectionPrelude: PreparedShader, projectionDefine: string);
+	constructor(context: Context, source: PreparedShader, configuration: ProgramConfiguration, fixedUniforms: (b: Context, a: UniformLocations) => Us, showOverdrawInspector: boolean, hasTerrain: boolean, projectionPrelude: PreparedShader, projectionDefine: string, extraDefines?: Array<string>);
 	draw(context: Context, drawMode: DrawMode, depthMode: Readonly<DepthMode>, stencilMode: Readonly<StencilMode>, colorMode: Readonly<ColorMode>, cullFaceMode: Readonly<CullFaceMode>, uniformValues: UniformValues<Us>, terrain: TerrainData, projectionData: ProjectionData, layerID: string, layoutVertexBuffer: VertexBuffer, indexBuffer: IndexBuffer, segments: SegmentVector, currentProperties?: any, zoom?: number | null, configuration?: ProgramConfiguration | null, dynamicLayoutBuffer?: VertexBuffer | null, dynamicLayoutBuffer2?: VertexBuffer | null, dynamicLayoutBuffer3?: VertexBuffer | null): void;
 }
 declare class VertexBuffer {
@@ -11631,6 +11645,21 @@ declare class Map$1 extends Camera {
 	 */
 	setSourceTileLodParams(maxZoomLevelsOnScreen: number, tileCountMaxMinRatio: number, sourceId?: string): this;
 	/**
+	 * Triggers a reload of the selected tiles
+	 *
+	 * @param sourceId - The ID of the source
+	 * @param tileIds - An array of tile IDs to be reloaded. If not defined, all tiles will be reloaded.
+	 * @example
+	 * ```ts
+	 * map.refreshTiles('satellite', [{x:1024, y: 1023, z: 11}, {x:1023, y: 1023, z: 11}]);
+	 * ```
+	 */
+	refreshTiles(sourceId: string, tileIds?: Array<{
+		x: number;
+		y: number;
+		z: number;
+	}>): void;
+	/**
 	 * Add an image to the style. This image can be displayed on the map like any other icon in the style's
 	 * sprite using the image's ID with
 	 * [`icon-image`](https://maplibre.org/maplibre-style-spec/layers/#layout-symbol-icon-image),
@@ -14437,6 +14466,7 @@ export type * from "@maplibre/maplibre-gl-style-spec";
 
 export {
 	Color,
+	ColorArray,
 	CompositeExpression,
 	DiffCommand,
 	DiffOperations,
@@ -14457,6 +14487,7 @@ export {
 	LayerSpecification,
 	LightSpecification,
 	Map$1 as Map,
+	NumberArray,
 	Padding,
 	Point,
 	ProjectionSpecification,
