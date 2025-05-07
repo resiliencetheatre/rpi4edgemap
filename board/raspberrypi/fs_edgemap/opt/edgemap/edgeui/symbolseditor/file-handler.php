@@ -34,13 +34,24 @@ if ($method === 'POST') {
     $baseDir = "/opt/edgemap-persist"; // Storage directory
     $filePath = realpath($baseDir) . '/' . basename($fileName); // Secure path
 
+    $maxRetries = 5;
+    $retryDelayMicroseconds = 200000; // 200ms
+
+   $attempt = 0;
+    while (!file_exists($filePath) && $attempt < $maxRetries) {
+        usleep($retryDelayMicroseconds);
+        $attempt++;
+    }
+
+    // Final check after retries
     if (!file_exists($filePath)) {
         http_response_code(404);
-        echo "File not found.";
+        echo "File not found after retrying.";
         exit;
     }
 
     echo file_get_contents($filePath);
+
 } else {
     http_response_code(405);
     echo "Method not allowed.";

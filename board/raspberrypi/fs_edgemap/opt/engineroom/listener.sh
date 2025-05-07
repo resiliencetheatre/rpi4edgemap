@@ -279,12 +279,14 @@ while true; do
         if [ "$line" == "encrypt_symbols" ]; then
             chown daemon:daemon /opt/edgemap-persist/symbols.txt*
             /bin/gpg --yes --quiet -ea -r edgemap --output /opt/edgemap-persist/symbols.txt.asc /opt/edgemap-persist/symbols.txt
+            rm /opt/edgemap-persist/symbols.txt
             chown daemon:daemon /opt/edgemap-persist/symbols.txt*
         fi
         
         if [ "$line" == "decrypt_symbols" ]; then
             chown daemon:daemon /opt/edgemap-persist/symbols.txt*
             /bin/gpg --yes --quiet  -d --output /opt/edgemap-persist/symbols.txt /opt/edgemap-persist/symbols.txt.asc 
+            rm /opt/edgemap-persist/symbols.txt.asc
             chown daemon:daemon /opt/edgemap-persist/symbols.txt*
         fi
     fi
