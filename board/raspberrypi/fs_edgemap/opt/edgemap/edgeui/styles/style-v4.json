@@ -64,6 +64,45 @@
                 "fill-color": "#e2dfda"
             }
         },
+        
+        {
+            "id": "building-3d",
+            "type": "fill-extrusion",
+            "source": "protomaps",
+            "source-layer": "buildings",
+            "filter": [
+                "all",
+                [
+                    "!has",
+                    "hide_3d"
+                ]
+            ],
+            "paint": {
+                "fill-extrusion-base": {
+                    "property": "min_height",
+                    "type": "identity"
+                },
+                "fill-extrusion-color": [
+                    "case",
+                    [
+                        "has",
+                        "colour"
+                    ],
+                    [
+                        "get",
+                        "colour"
+                    ],
+                    "hsl(39, 41%, 86%)"
+                ],
+                "fill-extrusion-height": {
+                    "property": "height",
+                    "type": "identity"
+                },
+                "fill-extrusion-opacity": 0.5
+            }
+        },
+        
+        
         {
             "id": "landcover",
             "type": "fill",
@@ -11914,42 +11953,7 @@
 		
             }
         },
-        {
-            "id": "building-3d",
-            "type": "fill-extrusion",
-            "source": "protomaps",
-            "source-layer": "buildings",
-            "filter": [
-                "all",
-                [
-                    "!has",
-                    "hide_3d"
-                ]
-            ],
-            "paint": {
-                "fill-extrusion-base": {
-                    "property": "min_height",
-                    "type": "identity"
-                },
-                "fill-extrusion-color": [
-                    "case",
-                    [
-                        "has",
-                        "colour"
-                    ],
-                    [
-                        "get",
-                        "colour"
-                    ],
-                    "hsl(39, 41%, 86%)"
-                ],
-                "fill-extrusion-height": {
-                    "property": "height",
-                    "type": "identity"
-                },
-                "fill-extrusion-opacity": 0.5
-            }
-        },
+        
         {
             "id": "hills",
             "type": "hillshade",
